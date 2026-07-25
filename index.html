@@ -3,598 +3,908 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SNOWFRAME — фото и видео твоего спуска</title>
-<meta name="description" content="Фото- и видеосъёмка на горнолыжном склоне: спуск, follow-cam, монтаж роликов. Готовые кадры в день катания.">
+<title>DOWNSHOT — фото/видео оператор</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#04070d;
-    --bg2:#071120;
-    --accent:#4a8cff;
-    --accent2:#7db4ff;
-    --white:#f4f8ff;
-    --muted:#9fb0c8;
-    --card:rgba(255,255,255,.04);
-    --card-border:rgba(255,255,255,.09);
-    --radius:22px;
+    --bg:#0a0c10;
+    --surface:#12151b;
+    --surface-2:#191d25;
+    --line:#23272f;
+    --blue:#2f7fff;
+    --blue-light:#7fc1ff;
+    --text:#f4f6f9;
+    --muted:#9aa3b2;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
   body{
     background:var(--bg);
-    color:var(--white);
-    font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
     overflow-x:hidden;
+    cursor:default;
   }
-  h1,h2,h3,.display{font-family:'Unbounded','Inter',sans-serif}
-  a{color:inherit;text-decoration:none}
-  img,svg{max-width:100%;display:block}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
-
-  /* ---------- diagonal light lines like the reference ---------- */
-  .lines{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
-  .lines span{
-    position:absolute;width:1px;height:160%;top:-30%;
-    background:linear-gradient(180deg,transparent,rgba(122,170,255,.16),transparent);
-    transform:rotate(32deg);
+  h1,h2,h3,.display{
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    line-height:1.1;
   }
-  .lines span:nth-child(1){left:12%}
-  .lines span:nth-child(2){left:34%}
-  .lines span:nth-child(3){left:57%}
-  .lines span:nth-child(4){left:79%}
-  .lines span:nth-child(5){left:94%}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  img{display:block;max-width:100%;}
 
-  /* ---------- header ---------- */
+  /* ---------- background texture ---------- */
+  .glow-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(680px 420px at 82% 8%, rgba(47,127,255,0.16), transparent 60%),
+      radial-gradient(500px 500px at 10% 90%, rgba(47,127,255,0.08), transparent 60%);
+  }
+
+  /* ---------- nav ---------- */
   header{
-    position:fixed;top:0;left:0;right:0;z-index:50;
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,12,16,0.78);
     backdrop-filter:blur(14px);
-    background:rgba(4,7,13,.55);
-    border-bottom:1px solid rgba(255,255,255,.06);
+    border-bottom:1px solid var(--line);
+    transform:translateY(0);
+    transition:transform .55s cubic-bezier(.4,0,.2,1), background .4s ease, backdrop-filter .4s ease;
   }
-  .nav{
+  header.hide{transform:translateY(-110%);}
+  nav{
     display:flex;align-items:center;justify-content:space-between;
-    height:66px;gap:18px;
+    padding:20px 32px;max-width:1180px;margin:0 auto;
   }
-  .logo{display:flex;align-items:center;gap:10px;font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;letter-spacing:.06em}
-  .logo svg{width:26px;height:26px}
-  .menu{display:flex;gap:30px;font-size:13.5px;color:var(--muted)}
-  .menu a{transition:color .2s}
-  .menu a:hover{color:var(--white)}
-  .btn{
-    display:inline-flex;align-items:center;gap:12px;
-    border-radius:999px;cursor:pointer;font-weight:600;font-size:14.5px;
-    padding:13px 26px;border:1px solid rgba(255,255,255,.28);
-    color:var(--white);background:transparent;
-    transition:all .25s;white-space:nowrap;
+  .logo{
+    font-family:'Manrope',sans-serif;font-weight:800;font-size:19px;letter-spacing:-0.01em;
+    display:flex;align-items:center;gap:9px;
   }
-  .btn:hover{border-color:var(--white);transform:translateY(-1px)}
-  .btn.small{padding:9px 20px;font-size:13px}
-  .btn.primary{
-    background:var(--white);color:#0a1220;border-color:var(--white);
-    padding:8px 8px 8px 24px;
+  .logo .iris{width:18px;height:18px;flex:none;}
+  .nav-links{display:flex;gap:34px;font-size:14.5px;color:var(--muted);}
+  .nav-links a{transition:color .2s;}
+  .nav-links a:hover{color:var(--text);}
+  .nav-cta{
+    display:inline-flex;align-items:center;gap:8px;
+    background:transparent;border:1px solid var(--line);
+    padding:10px 18px;border-radius:100px;font-size:14px;font-weight:500;
+    transition:.2s;
   }
-  .btn.primary:hover{box-shadow:0 8px 30px rgba(74,140,255,.35)}
-  .btn.primary .arrow{
-    width:38px;height:38px;border-radius:50%;
-    background:linear-gradient(135deg,var(--accent),#2f6de0);
-    display:flex;align-items:center;justify-content:center;flex:none;
-  }
-  .btn.primary .arrow svg{width:15px;height:15px}
+  .nav-cta:hover{border-color:var(--blue);background:rgba(47,127,255,0.08);box-shadow:0 8px 24px -6px rgba(47,127,255,0.5);}
+
+  /* ---------- iris / aperture motif ---------- */
+  .iris circle{fill:none;stroke:var(--blue);stroke-width:1.4;}
+  .iris line{stroke:var(--blue);stroke-width:1.4;}
 
   /* ---------- hero ---------- */
   .hero{
-    position:relative;
-    padding:150px 0 90px;
-    background:
-      radial-gradient(1000px 620px at 50% 8%,rgba(59,120,220,.28),transparent 62%),
-      radial-gradient(700px 500px at 82% 62%,rgba(40,90,180,.16),transparent 65%),
-      linear-gradient(180deg,#071322 0%,var(--bg) 92%);
-    border-radius:0 0 34px 34px;
+    position:relative;z-index:1;
+    min-height:88vh;
+    display:flex;flex-direction:column;justify-content:center;
     overflow:hidden;
+    padding:130px 0 0;
   }
-  .hero-grid{position:relative;z-index:2}
-  .hero h1{
-    font-size:clamp(38px,7vw,84px);
-    font-weight:600;line-height:1.06;letter-spacing:-.01em;
+  .hero-bg{position:absolute;inset:0;z-index:0;}
+  .hero-bg img{
+    width:100%;height:100%;object-fit:cover;object-position:40% 55%;
+    filter:contrast(1.08) brightness(0.72);
   }
-  .hero h1 .l1{display:block}
-  .hero h1 .l2{display:block;text-align:right;margin-top:8px}
-  .hero-sub{
-    max-width:420px;margin:34px 0 0 auto;text-align:right;
-    color:#cfe0f5;font-size:16.5px;line-height:1.55;
+  .hero-bg::after{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(90deg, rgba(10,12,16,0.96) 0%, rgba(10,12,16,0.82) 32%, rgba(10,12,16,0.35) 62%, rgba(10,12,16,0.15) 100%),
+      linear-gradient(0deg, rgba(10,12,16,1) 0%, rgba(10,12,16,0) 26%),
+      linear-gradient(200deg, rgba(47,127,255,0.30), transparent 45%);
   }
-  .hero-sub b{color:var(--white)}
-  .hero-cta{display:flex;justify-content:flex-end;gap:16px;margin-top:36px;flex-wrap:wrap}
-  .hero-note{
-    text-align:right;margin-top:52px;color:var(--muted);font-size:14.5px;
+  .hero-content{
+    position:relative;z-index:2;
+    display:grid;grid-template-columns:0.9fr 1.1fr;gap:36px;align-items:stretch;
   }
-  .hero-visual{
-    position:absolute;left:50%;top:54%;transform:translate(-72%,-50%);
-    width:min(560px,58vw);z-index:1;opacity:.96;
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    color:var(--blue-light);font-size:13px;font-weight:500;
+    margin-bottom:22px;
   }
-  .badge{
-    position:relative;z-index:3;
-    width:190px;padding:26px 18px;margin-top:70px;
-    border:1px solid rgba(140,180,255,.25);
-    border-radius:8px;text-align:center;
-    background:linear-gradient(180deg,rgba(20,40,80,.35),rgba(10,20,40,.15));
-    backdrop-filter:blur(4px);
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 12px 2px var(--blue);}
+  .hero h1{font-size:66px;}
+  .hero h1 .fade{color:var(--muted);font-weight:700;}
+  .hero-copy{
+    color:var(--muted);font-size:16.5px;line-height:1.6;max-width:430px;margin:26px 0 34px;
   }
-  .badge .year{font-size:11px;letter-spacing:.35em;color:var(--accent2);margin-bottom:10px}
-  .badge .title{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:600;line-height:1.35}
-  .badge .laurel{font-size:20px;color:#c9daf5;margin:6px 0}
-  .badge .desc{margin-top:12px;font-size:11.5px;color:var(--muted);line-height:1.5}
-  .badge .desc b{color:#dbe7fa}
+  .hero-ctas{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn-primary{
+    display:inline-flex;align-items:center;gap:10px;
+    background:#fff;color:#0a0c10;font-weight:600;font-size:15px;
+    padding:15px 22px;border-radius:100px;transition:.2s;
+  }
+  .btn-primary .arrow{
+    width:28px;height:28px;border-radius:50%;background:var(--blue);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 34px -8px rgba(47,127,255,0.55);}
+  .btn-outline{
+    display:inline-flex;align-items:center;
+    border:1px solid rgba(255,255,255,0.25);color:var(--text);font-weight:500;font-size:15px;
+    padding:15px 24px;border-radius:100px;transition:.25s;
+  }
+  .btn-outline:hover{border-color:var(--blue-light);color:var(--blue-light);box-shadow:0 10px 28px -8px rgba(47,127,255,0.5);}
 
-  /* ---------- section base ---------- */
-  section{position:relative;padding:110px 0}
-  .sec-head{text-align:center;max-width:760px;margin:0 auto 64px}
-  .sec-head h2{
-    font-size:clamp(28px,4.6vw,48px);font-weight:700;line-height:1.15;
+  .hero-card{
+    position:relative;border-radius:20px;overflow:hidden;min-height:380px;
+    box-shadow:0 40px 90px -25px rgba(0,0,0,0.75);
+    border:1px solid rgba(255,255,255,0.1);
+    transition:box-shadow .35s ease, transform .35s ease;
+    animation:heroCardReveal 2.4s cubic-bezier(.19,.72,.24,1) .15s both;
   }
-  .sec-head h2 .dim{color:rgba(244,248,255,.35)}
-  .sec-head p{margin-top:22px;color:var(--muted);font-size:16px;line-height:1.6}
+  @keyframes heroCardReveal{
+    from{clip-path:circle(0% at 50% 50%);}
+    to{clip-path:circle(150% at 50% 50%);}
+  }
+  .hero-card img{animation:heroCardZoom 2.4s cubic-bezier(.19,.72,.24,1) .15s both;}
+  @keyframes heroCardZoom{
+    from{transform:scale(1.3);filter:blur(10px) grayscale(0.5) contrast(1.1) brightness(0.85);}
+    to{transform:scale(1);filter:blur(0) grayscale(0.5) contrast(1.1) brightness(0.85);}
+  }
+  .hero-card:hover{
+    box-shadow:0 40px 90px -25px rgba(0,0,0,0.75), 0 0 0 1px rgba(47,127,255,0.25), 0 20px 60px -15px rgba(47,127,255,0.55);
+    transform:translateY(-4px);
+  }
+  .hero-card img{
+    width:100%;height:100%;object-fit:cover;object-position:70% 40%;
+    filter:grayscale(0.5) contrast(1.1) brightness(0.85);
+  }
+  .hero-card::after{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(180deg, rgba(10,12,16,0) 45%, rgba(10,12,16,0.9) 100%),
+      linear-gradient(210deg, rgba(47,127,255,0.45), transparent 55%);
+  }
+  .hero-badge{
+    position:absolute;left:16px;bottom:16px;z-index:2;
+    background:rgba(10,12,16,0.65);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:14px;padding:16px 18px;max-width:200px;
+  }
+  .hero-badge .num{font-family:'Manrope';font-weight:800;font-size:22px;line-height:1;}
+  .hero-badge .lbl{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.4;}
+
+  .hero-strapline{
+    position:relative;z-index:2;
+    text-align:center;color:var(--muted);font-size:15px;
+    padding:22px 28px;margin-top:70px;margin-bottom:6px;
+    background:var(--surface);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    box-shadow:0 0 0 1px rgba(47,127,255,0.12), 0 18px 50px -12px rgba(47,127,255,0.45);
+    transition:box-shadow .4s ease, transform .4s ease;
+    animation:straplineSlideUp 1s cubic-bezier(.22,.61,.2,1) .15s both;
+  }
+  @keyframes straplineSlideUp{
+    from{opacity:0;transform:translateY(40px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .hero-strapline:hover{
+    box-shadow:0 0 0 1px rgba(47,127,255,0.22), 0 30px 70px -10px rgba(47,127,255,0.65), -40px 20px 90px -30px rgba(47,127,255,0.4), 40px -10px 90px -30px rgba(127,193,255,0.35);
+    transform:translateY(-3px);
+  }
+  .hero-strapline b{color:var(--text);font-weight:600;}
+
+  /* ---------- hero entrance animation ---------- */
+  @keyframes heroSlideIn{
+    from{opacity:0;transform:translateX(-36px);filter:blur(6px);}
+    60%{filter:blur(0);}
+    to{opacity:1;transform:translateX(0);filter:blur(0);}
+  }
+  .hero-in{
+    opacity:0;
+    animation:heroSlideIn 1.3s cubic-bezier(.25,.1,.25,1) forwards;
+  }
+  .hero-text{will-change:transform, opacity, filter;display:flex;flex-direction:column;justify-content:center;height:100%;}
+
+  /* ---------- section shell ---------- */
+  section{position:relative;z-index:1;padding:100px 0;}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 56px;}
+  .sec-head .tag{
+    display:inline-block;color:var(--blue-light);font-size:12.5px;font-weight:500;
+    letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px;
+  }
+  .sec-head h2{font-size:38px;}
+  .sec-head p{color:var(--muted);font-size:15.5px;margin-top:16px;line-height:1.6;}
+
+  /* ---------- line-by-line reveal-up ---------- */
+  .reveal-line{
+    display:block;overflow:hidden;
+  }
+  .reveal-inner{
+    display:block;
+    transform:translateY(115%);
+    opacity:0;
+    transition:transform 1.1s cubic-bezier(.22,.61,.2,1), opacity 1.1s cubic-bezier(.22,.61,.2,1);
+  }
+  .reveal-group.in-view .tag .reveal-inner{transition-delay:.05s;}
+  .reveal-group.in-view h2 .reveal-line:nth-child(1) .reveal-inner{transition-delay:.22s;}
+  .reveal-group.in-view h2 .reveal-line:nth-child(2) .reveal-inner{transition-delay:.38s;}
+  .reveal-group.in-view p .reveal-line:nth-child(1) .reveal-inner{transition-delay:.56s;}
+  .reveal-group.in-view p .reveal-line:nth-child(2) .reveal-inner{transition-delay:.68s;}
+  p.reveal-group.in-view > .reveal-line:nth-child(1) .reveal-inner{transition-delay:.05s;}
+  p.reveal-group.in-view > .reveal-line:nth-child(2) .reveal-inner{transition-delay:.2s;}
+  .reveal-group.in-view .reveal-inner{
+    transform:translateY(0);
+    opacity:1;
+  }
 
   /* ---------- services ---------- */
-  .services{background:radial-gradient(900px 500px at 50% 0%,rgba(45,95,190,.12),transparent 65%)}
-  .cards{
-    display:grid;grid-template-columns:repeat(5,1fr);gap:18px;align-items:center;
+  .services-row{display:flex;gap:14px;height:400px;}
+  .s-card{
+    position:relative;flex:1;border-radius:18px;overflow:hidden;
+    background:var(--surface);border:1px solid var(--line);
+    transition:flex .6s cubic-bezier(.4,0,.2,1), background .4s, scale .35s cubic-bezier(.4,0,.2,1),
+               translate .9s cubic-bezier(.22,.61,.2,1), opacity .9s cubic-bezier(.22,.61,.2,1);
+    cursor:pointer;
+    opacity:0;translate:90px 0;scale:1;
+    will-change:flex-grow;
   }
-  .card{
-    background:var(--card);border:1px solid var(--card-border);
-    border-radius:var(--radius);padding:18px;
-    transition:transform .3s,box-shadow .3s;
+  .services-row.in-view .s-card{opacity:1;translate:0 0;}
+  .services-row.in-view .s-card:nth-child(1){transition:flex .6s cubic-bezier(.4,0,.2,1), background .4s, scale .35s cubic-bezier(.4,0,.2,1), translate .9s cubic-bezier(.22,.61,.2,1) .05s, opacity .9s cubic-bezier(.22,.61,.2,1) .05s;}
+  .services-row.in-view .s-card:nth-child(2){transition:flex .6s cubic-bezier(.4,0,.2,1), background .4s, scale .35s cubic-bezier(.4,0,.2,1), translate .9s cubic-bezier(.22,.61,.2,1) .16s, opacity .9s cubic-bezier(.22,.61,.2,1) .16s;}
+  .services-row.in-view .s-card:nth-child(3){transition:flex .6s cubic-bezier(.4,0,.2,1), background .4s, scale .35s cubic-bezier(.4,0,.2,1), translate .9s cubic-bezier(.22,.61,.2,1) .27s, opacity .9s cubic-bezier(.22,.61,.2,1) .27s;}
+  .services-row.in-view .s-card:nth-child(4){transition:flex .6s cubic-bezier(.4,0,.2,1), background .4s, scale .35s cubic-bezier(.4,0,.2,1), translate .9s cubic-bezier(.22,.61,.2,1) .38s, opacity .9s cubic-bezier(.22,.61,.2,1) .38s;}
+  .services-row.in-view .s-card:nth-child(5){transition:flex .6s cubic-bezier(.4,0,.2,1), background .4s, scale .35s cubic-bezier(.4,0,.2,1), translate .9s cubic-bezier(.22,.61,.2,1) .49s, opacity .9s cubic-bezier(.22,.61,.2,1) .49s;}
+  .s-card:hover{background:var(--surface-2);scale:1.05;z-index:5;}
+  .s-card.featured{background:var(--surface-2);}
+  .s-card.featured:hover{scale:1.05;z-index:5;}
+  .s-card.door-left{transform-origin:left center;}
+  .s-card.door-right{transform-origin:right center;}
+  .s-card.door-split{transform-origin:center center;}
+  .s-card::before{
+    content:'';position:absolute;inset:0;border-radius:18px;pointer-events:none;z-index:3;
+    box-shadow:0 0 0 1px rgba(47,127,255,0.3), 0 25px 60px -15px rgba(47,127,255,0.5);
+    opacity:0;transition:opacity .45s ease;
   }
-  .card:hover{transform:translateY(-6px)}
-  .card .thumb{
-    height:120px;border-radius:14px;margin-bottom:16px;
-    display:flex;align-items:center;justify-content:center;font-size:38px;
-    background:linear-gradient(135deg,#0c1a30,#12335f 60%,#1b4a8a);
-    border:1px solid rgba(255,255,255,.06);
+  .s-card.featured::before, .s-card:hover::before{opacity:1;}
+  .s-card .s-img{
+    position:absolute;inset:0;
+    width:100%;height:100%;object-fit:cover;object-position:center;
+    filter:grayscale(0.7) brightness(0.55);
+    transition:filter .4s;
   }
-  .card h3{font-size:15px;font-weight:600;margin-bottom:10px}
-  .card p{font-size:12.5px;color:var(--muted);line-height:1.55}
-  .card.featured{
-    background:#f7faff;color:#0b1524;transform:scale(1.07);
-    box-shadow:0 0 60px rgba(120,170,255,.28),0 24px 60px rgba(0,0,0,.5);
-    border-color:#fff;z-index:2;
+  .s-card.featured .s-img, .s-card:hover .s-img{filter:grayscale(0.15) brightness(0.75);}
+  .s-card .s-img-bright{
+    position:absolute;inset:0;
+    width:100%;height:100%;object-fit:cover;object-position:center;
+    filter:grayscale(0) brightness(0.9) contrast(1.05);
+    transition:clip-path .65s cubic-bezier(.4,0,.2,1);
   }
-  .card.featured:hover{transform:scale(1.07) translateY(-6px)}
-  .card.featured p{color:#4c5b72}
-  .card.featured .thumb{background:linear-gradient(135deg,#dce9ff,#9ec2ff)}
-  .card .more{display:inline-block;margin-top:12px;font-size:12.5px;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:1px}
+  .s-card.door-left .s-img-bright{clip-path:inset(0 100% 0 0);}
+  .s-card.door-left:hover .s-img-bright{clip-path:inset(0 0 0 0);}
+  .s-card.door-right .s-img-bright{clip-path:inset(0 0 0 100%);}
+  .s-card.door-right:hover .s-img-bright{clip-path:inset(0 0 0 0);}
+  .s-card.door-split .s-img-bright{clip-path:inset(0 50% 0 50%);}
+  .s-card.door-split:hover .s-img-bright{clip-path:inset(0 0 0 0);}
+  .s-card::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 30%, rgba(10,12,16,0.95) 100%);
+  }
+  .s-card-body{
+    position:absolute;left:0;right:0;bottom:0;padding:22px;z-index:2;
+  }
+  .s-num{font-family:'JetBrains Mono';font-size:12px;color:var(--blue-light);margin-bottom:60px;display:block;}
+  .s-card h3{font-size:17px;font-weight:700;font-family:'Manrope';margin-bottom:8px;}
+  .s-card p{
+    font-size:13px;color:var(--muted);line-height:1.5;
+    max-height:0;opacity:0;overflow:hidden;transition:max-height .55s cubic-bezier(.4,0,.2,1), opacity .5s ease;
+  }
+  .s-card:hover p{max-height:120px;opacity:1;}
 
   /* ---------- portfolio ---------- */
-  .portfolio{background:linear-gradient(180deg,var(--bg) 0%,#060d18 50%,var(--bg) 100%)}
-  .pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .pf-item{
-    position:relative;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;
-    border:1px solid var(--card-border);
-    background:
-      radial-gradient(300px 200px at 30% 30%,rgba(70,130,230,.25),transparent 70%),
-      linear-gradient(150deg,#0a1526,#0c2242);
-    display:flex;align-items:center;justify-content:center;
+  .pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .pf-tile{
+    aspect-ratio:1/1;border-radius:16px;
+    border:1.5px dashed var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:radial-gradient(circle at 50% 30%, rgba(47,127,255,0.06), transparent 70%);
+    transition:.25s;
+    opacity:0;
   }
-  .pf-item::after{
-    content:"";position:absolute;inset:0;
-    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.06) 45%,transparent 60%);
-    transform:translateX(-100%);animation:shine 3.4s infinite;
+  .pf-tile:hover{border-color:var(--blue);background:radial-gradient(circle at 50% 30%, rgba(47,127,255,0.14), transparent 70%);box-shadow:0 0 0 1px rgba(47,127,255,0.25), 0 20px 50px -18px rgba(47,127,255,0.5);}
+
+  .pf-grid.in-view .pf-tile{animation:pfTileIn .85s cubic-bezier(.22,.61,.2,1) both;}
+  .pf-grid.in-view .pf-tile:nth-child(1){animation-delay:.12s;--fx:-70px;--fy:-40px;--fr:-14deg;}
+  .pf-grid.in-view .pf-tile:nth-child(2){animation-delay:.46s;--fx:55px;--fy:-60px;--fr:10deg;}
+  .pf-grid.in-view .pf-tile:nth-child(3){animation-delay:.22s;--fx:-40px;--fy:55px;--fr:9deg;}
+  .pf-grid.in-view .pf-tile:nth-child(4){animation-delay:.58s;--fx:65px;--fy:35px;--fr:-11deg;}
+  .pf-grid.in-view .pf-tile:nth-child(5){animation-delay:.05s;--fx:-60px;--fy:-25px;--fr:13deg;}
+  .pf-grid.in-view .pf-tile:nth-child(6){animation-delay:.36s;--fx:45px;--fy:60px;--fr:-8deg;}
+  @keyframes pfTileIn{
+    from{opacity:0;transform:translate(var(--fx,0), var(--fy,0)) rotate(var(--fr,0deg)) scale(0.7);}
+    to{opacity:1;transform:translate(0,0) rotate(0deg) scale(1);}
   }
-  @keyframes shine{60%{transform:translateX(100%)}100%{transform:translateX(100%)}}
-  .pf-item .tag{
-    position:relative;z-index:1;font-size:12.5px;letter-spacing:.18em;
-    color:#b9cdec;text-transform:uppercase;
-    border:1px solid rgba(185,205,236,.35);border-radius:999px;padding:9px 18px;
-    backdrop-filter:blur(3px);
-  }
-  .pf-item .cam{position:absolute;top:16px;left:16px;font-size:20px;opacity:.5}
+  .pf-tile .pf-cat{font-size:13.5px;font-weight:600;color:var(--text);}
+  .pf-tile .pf-soon{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+  .pf-note{text-align:center;color:var(--muted);font-size:14px;margin-top:30px;}
 
   /* ---------- pricing ---------- */
-  .pricing{background:radial-gradient(1000px 560px at 50% 105%,rgba(50,105,205,.16),transparent 65%)}
-  .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
-  .price{
-    display:flex;flex-direction:column;
-    background:var(--card);border:1px solid var(--card-border);
-    border-radius:26px;padding:34px 30px;position:relative;
+  .price-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch;}
+  .p-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:20px;
+    padding:32px 28px;display:flex;flex-direction:column;
+    transition:box-shadow .35s, translate .5s cubic-bezier(.34,1.56,.64,1), border-color .35s, scale .5s cubic-bezier(.34,1.56,.64,1);
+    opacity:0;scale:0.8;translate:0 0;
   }
-  .price .name{font-family:'Unbounded',sans-serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2)}
-  .price .cost{font-family:'Unbounded',sans-serif;font-size:42px;font-weight:700;margin:16px 0 4px}
-  .price .cost span{font-size:18px;font-weight:400;color:var(--muted)}
-  .price .for{font-size:13px;color:var(--muted);margin-bottom:24px}
-  .price ul{list-style:none;display:flex;flex-direction:column;gap:12px;font-size:14px;color:#d6e2f3;flex:1}
-  .price li{display:flex;gap:10px;line-height:1.45}
-  .price li::before{content:"✓";color:var(--accent);font-weight:700;flex:none}
-  .price .btn{margin-top:28px;justify-content:center}
-  .price.featured{
-    background:linear-gradient(180deg,rgba(74,140,255,.16),rgba(74,140,255,.05));
-    border-color:rgba(120,170,255,.5);
-    box-shadow:0 0 60px rgba(74,140,255,.22);
+  .p-card:hover{border-color:rgba(47,127,255,0.5);box-shadow:0 0 0 1px rgba(47,127,255,0.25), 0 25px 60px -20px rgba(47,127,255,0.5);translate:0 -8px;scale:1.03;}
+  @keyframes pCardIn{
+    from{opacity:0;}
+    to{opacity:1;}
   }
-  .price .pop{
-    position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-    background:linear-gradient(135deg,var(--accent),#2f6de0);
-    font-size:11.5px;font-weight:600;letter-spacing:.08em;
-    border-radius:999px;padding:7px 16px;white-space:nowrap;
+  .price-row.in-view .p-card{animation:pCardIn .9s cubic-bezier(.22,.61,.2,1) both;scale:1;}
+  .price-row.in-view .p-card.featured{scale:1;}
+  .price-row.in-view .p-card:nth-child(1){animation-delay:.05s;}
+  .price-row.in-view .p-card:nth-child(2){animation-delay:.22s;}
+  .price-row.in-view .p-card:nth-child(3){animation-delay:.39s;}
+  .p-card.featured{
+    background:linear-gradient(180deg, rgba(47,127,255,0.10), var(--surface) 40%);
+    border-color:var(--blue);position:relative;translate:0 -10px;
+    box-shadow:0 30px 60px -25px rgba(47,127,255,0.35);
   }
-  .price.featured .btn{background:var(--white);color:#0a1220;border-color:var(--white)}
+  .p-card.featured:hover{translate:0 -18px;scale:1.03;box-shadow:0 0 0 1px rgba(47,127,255,0.35), 0 35px 70px -20px rgba(47,127,255,0.6);}
+  .p-badge{
+    position:absolute;top:-13px;left:28px;background:var(--blue);color:#fff;
+    font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:100px;
+  }
+  .p-name{font-family:'Manrope';font-weight:700;font-size:19px;margin-bottom:4px;}
+  .p-desc{color:var(--muted);font-size:13.5px;margin-bottom:22px;}
+  .p-price{font-family:'Manrope';font-weight:800;font-size:40px;margin-bottom:24px;}
+  .p-price span{font-size:16px;color:var(--muted);font-weight:600;}
+  .p-list{list-style:none;flex:1;margin-bottom:26px;}
+  .p-list li{
+    display:flex;gap:10px;align-items:flex-start;
+    font-size:14px;color:#d3d8e0;padding:9px 0;border-top:1px solid var(--line);
+  }
+  .p-list li:first-child{border-top:none;}
+  .p-list li svg{flex:none;margin-top:3px;}
+  .p-cta{
+    text-align:center;padding:13px;border-radius:100px;font-weight:600;font-size:14.5px;
+    border:1px solid var(--line);transition:.2s;
+  }
+  .p-card.featured .p-cta{background:var(--blue);border-color:var(--blue);}
+  .p-cta:hover{border-color:var(--blue-light);color:var(--blue-light);box-shadow:0 10px 26px -8px rgba(47,127,255,0.5);}
+  .p-card.featured .p-cta:hover{color:#fff;background:#1f6cf0;box-shadow:0 12px 30px -8px rgba(47,127,255,0.65);}
+  .price-note{text-align:center;color:var(--muted);font-size:13px;margin-top:26px;}
 
-  /* ---------- contact / final ---------- */
+  /* ---------- contact / cta ---------- */
   .contact{
-    background:
-      radial-gradient(800px 480px at 72% 20%,rgba(58,118,215,.3),transparent 62%),
-      linear-gradient(180deg,var(--bg),#081426 60%,#040911);
-    border-radius:34px 34px 0 0;overflow:hidden;
+    background:var(--surface);border:1px solid var(--line);border-radius:28px;
+    padding:56px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
+    position:relative;overflow:hidden;
   }
-  .contact-top{display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center;margin-bottom:64px}
-  .contact-top h2{font-size:clamp(34px,5.5vw,62px);font-weight:700;line-height:1.08}
-  .contact-top h2 .blue{color:var(--accent)}
-  .contact-side{color:#cfe0f5;font-size:16px;line-height:1.6;text-align:right}
-  .contact-side b{color:var(--white)}
-  .form-card{
-    background:#f7faff;color:#0b1524;border-radius:28px;
-    padding:44px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
-    box-shadow:0 30px 80px rgba(0,0,0,.5);
+  .contact::before{
+    content:'';position:absolute;left:-120px;top:-120px;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle, rgba(47,127,255,0.28), transparent 70%);
   }
-  .form-card h3{font-size:clamp(22px,3vw,30px);line-height:1.25}
-  .form-card h3 .blue{color:var(--accent)}
-  .form-card .hint{margin-top:14px;font-size:14px;color:#5b6b83;line-height:1.55}
-  form{display:flex;flex-direction:column;gap:14px}
-  .field{
-    border:1px solid #d6dfec;border-radius:14px;background:#fff;
-    padding:14px 18px;font-size:14.5px;font-family:inherit;color:#0b1524;
-    outline:none;width:100%;transition:border-color .2s;
+  .contact-left h2{font-size:42px;position:relative;z-index:1;}
+  .contact-left .accent{color:var(--blue-light);}
+  .contact-left p{color:var(--muted);font-size:15px;margin-top:20px;max-width:380px;line-height:1.6;position:relative;z-index:1;}
+  .contact-form{
+    background:#fff;color:#0a0c10;border-radius:20px;padding:30px;position:relative;z-index:1;
+    transition:box-shadow .35s;
   }
-  .field:focus{border-color:var(--accent)}
-  textarea.field{resize:vertical;min-height:90px}
-  .submit{
-    display:flex;align-items:center;justify-content:center;gap:12px;
-    background:linear-gradient(135deg,var(--accent),#2f6de0);color:#fff;
-    border:none;border-radius:999px;padding:16px 28px;
-    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
-    transition:transform .2s,box-shadow .2s;
-  }
-  .submit:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(74,140,255,.4)}
-  .form-note{font-size:12px;color:#8b98ab;text-align:center}
-  .contact-footer{
-    display:flex;justify-content:space-between;align-items:center;gap:20px;
-    margin-top:60px;padding-top:28px;border-top:1px solid rgba(255,255,255,.08);
-    color:var(--muted);font-size:13px;flex-wrap:wrap;
-  }
-  .contact-footer .mail{color:#cfe0f5;border-bottom:1px solid rgba(207,224,245,.4);padding-bottom:1px}
+  .contact-form:hover{box-shadow:0 0 0 1px rgba(47,127,255,0.4), 0 30px 70px -20px rgba(47,127,255,0.6);}
 
-  /* ---------- responsive ---------- */
-  @media (max-width:1000px){
-    .cards{grid-template-columns:repeat(2,1fr)}
-    .card.featured{transform:none}
-    .card.featured:hover{transform:translateY(-6px)}
-    .price-grid{grid-template-columns:1fr;max-width:460px;margin:0 auto}
-    .pf-grid{grid-template-columns:repeat(2,1fr)}
-    .form-card{grid-template-columns:1fr;padding:32px}
-    .contact-top{grid-template-columns:1fr}
-    .contact-side{text-align:left}
+  /* ---------- contact: 4 corners converging to center ---------- */
+  .corner-piece{
+    opacity:0;
+    transition:transform 1s cubic-bezier(.22,.61,.2,1), opacity 1s cubic-bezier(.22,.61,.2,1);
   }
-  @media (max-width:640px){
-    .menu{display:none}
-    .hero{padding-top:120px}
-    .hero-visual{position:relative;left:0;top:0;transform:none;width:100%;margin:30px 0 10px}
-    .badge{margin:40px auto 0}
-    .hero h1 .l2{text-align:left}
-    .hero-sub,.hero-note{text-align:left;margin-left:0}
-    .hero-cta{justify-content:flex-start}
-    .cards{grid-template-columns:1fr}
-    .pf-grid{grid-template-columns:1fr}
+  .corner-tl{transform:translate(-90px,-70px);}
+  .corner-bl{transform:translate(-90px,70px);}
+  .corner-tr{transform:translate(90px,-70px);}
+  .corner-br{transform:translate(90px,70px);}
+  .contact.in-view .corner-piece{opacity:1;transform:translate(0,0);}
+  .contact.in-view .corner-tl{transition-delay:.05s;}
+  .contact.in-view .corner-tr{transition-delay:.16s;}
+  .contact.in-view .corner-bl{transition-delay:.27s;}
+  .contact.in-view .corner-br{transition-delay:.38s;}
+  .contact-form h3{font-family:'Manrope';font-weight:800;font-size:20px;margin-bottom:4px;color:#0a0c10;}
+  .contact-form .sub{font-size:13px;color:#5a6270;margin-bottom:20px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:#5a6270;margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%;border:1px solid #dfe2e8;border-radius:10px;padding:11px 13px;
+    font-family:'Inter';font-size:14px;background:#f7f8fa;color:#0a0c10;
+  }
+  .field textarea{resize:none;height:64px;}
+  .field input:focus, .field textarea:focus{outline:2px solid var(--blue);background:#fff;box-shadow:0 0 0 5px rgba(47,127,255,0.18);}
+  .submit-btn{
+    width:100%;background:#0a0c10;color:#fff;border:none;border-radius:10px;
+    padding:13px;font-weight:600;font-size:14.5px;cursor:pointer;margin-top:6px;transition:.2s;
+    font-family:'Inter';
+  }
+  .submit-btn:hover{background:var(--blue);box-shadow:0 12px 30px -8px rgba(47,127,255,0.6);}
+  .form-alt{font-size:12px;color:#8790a0;margin-top:12px;text-align:center;}
+
+  footer{
+    border-top:1px solid var(--line);padding:34px 0;position:relative;z-index:1;
+  }
+  .foot-row{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;}
+  .foot-row .logo{font-size:15px;}
+  .foot-links{display:flex;gap:20px;}
+  .foot-links a{transition:color .2s;}
+  .foot-links a:hover{color:var(--text);}
+
+  @media(max-width:860px){
+    .hero{min-height:auto;padding:110px 0 0;}
+    .hero-bg::after{
+      background:
+        linear-gradient(0deg, rgba(10,12,16,0.97) 15%, rgba(10,12,16,0.55) 55%, rgba(10,12,16,0.25) 100%);
+    }
+    .hero h1{font-size:44px;}
+    .hero-content{grid-template-columns:1fr;}
+    .hero-text{height:auto;}
+    .hero-copy{max-width:100%;}
+    .hero-card{aspect-ratio:16/9;min-height:0;order:-1;margin-bottom:8px;}
+    .services-row{flex-direction:column;height:auto;}
+    .s-card{height:150px;flex:none !important;}
+    .s-card p{max-height:120px;opacity:1;}
+    .pf-grid{grid-template-columns:repeat(2,1fr);}
+    .price-row{grid-template-columns:1fr;}
+    .p-card.featured{translate:0 0;}
+    .contact{grid-template-columns:1fr;padding:32px 22px;}
+    .contact-left h2{font-size:32px;}
+    .nav-links{display:none;}
+    .foot-row{flex-direction:column;gap:14px;text-align:center;}
+  }
+
+  /* ---------- glowing cursor ---------- */
+  #cursor-glow{
+    position:fixed;top:0;left:0;width:22px;height:22px;
+    border-radius:50%;pointer-events:none;z-index:9999;
+    background:radial-gradient(circle, rgba(127,193,255,0.9), rgba(47,127,255,0.35) 45%, transparent 72%);
+    filter:blur(4px);
+    transform:translate(-50%,-50%);
+    opacity:0;
+    transition:width .6s cubic-bezier(.22,.61,.2,1), height .6s cubic-bezier(.22,.61,.2,1),
+               opacity .6s cubic-bezier(.22,.61,.2,1), filter .6s ease, background .6s ease;
+    mix-blend-mode:screen;
+  }
+  #cursor-glow.active{
+    opacity:1;
+    width:100px;height:100px;filter:blur(10px);
+    background:radial-gradient(circle, rgba(127,193,255,0.85), rgba(47,127,255,0.4) 45%, transparent 75%);
+  }
+  @media(hover:none), (pointer:coarse){
+    #cursor-glow{display:none;}
   }
 </style>
 </head>
 <body>
+<div id="cursor-glow"></div>
 
-<!-- ================= HEADER ================= -->
+<div class="glow-bg"></div>
+
 <header>
-  <div class="wrap nav">
-    <a class="logo" href="#top">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#4a8cff" stroke-width="1.6" stroke-linecap="round">
-        <path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1"/>
-        <circle cx="12" cy="12" r="3.2" stroke="#f4f8ff"/>
-      </svg>
-      SNOWFRAME
-    </a>
-    <nav class="menu">
-      <a href="#services">услуги</a>
-      <a href="#portfolio">портфолио</a>
-      <a href="#pricing">тарифы</a>
-      <a href="#contact">контакты</a>
-    </nav>
-    <a class="btn small" href="#contact">Оставить заявку</a>
-  </div>
+  <nav>
+    <div class="logo">
+      <svg class="iris" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5"/><circle cx="10" cy="10" r="3"/><line x1="10" y1="0.5" x2="10" y2="4.5"/><line x1="10" y1="15.5" x2="10" y2="19.5"/><line x1="0.5" y1="10" x2="4.5" y2="10"/><line x1="15.5" y1="10" x2="19.5" y2="10"/></svg>
+      DOWNSHOT
+    </div>
+    <div class="nav-links">
+      <a href="#services">Услуги</a>
+      <a href="#portfolio">Портфолио</a>
+      <a href="#pricing">Тарифы</a>
+      <a href="#contact">Контакты</a>
+    </div>
+    <a href="#contact" class="nav-cta">Оставить заявку</a>
+  </nav>
 </header>
 
-<!-- ================= HERO ================= -->
-<section class="hero" id="top">
-  <div class="lines"><span></span><span></span><span></span><span></span><span></span></div>
+<main>
 
-  <svg class="hero-visual" viewBox="0 0 560 460" fill="none" aria-hidden="true">
-    <defs>
-      <radialGradient id="glow" cx="50%" cy="42%" r="55%">
-        <stop offset="0%" stop-color="#3b78dc" stop-opacity=".55"/>
-        <stop offset="55%" stop-color="#1c3f7e" stop-opacity=".22"/>
-        <stop offset="100%" stop-color="#04070d" stop-opacity="0"/>
-      </radialGradient>
-      <linearGradient id="slope" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#9cc2f5" stop-opacity=".5"/>
-        <stop offset="100%" stop-color="#9cc2f5" stop-opacity="0"/>
-      </linearGradient>
-      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#7db4ff"/>
-        <stop offset="100%" stop-color="#274a86"/>
-      </linearGradient>
-    </defs>
-    <ellipse cx="280" cy="205" rx="250" ry="200" fill="url(#glow)"/>
-    <!-- slope -->
-    <path d="M20 385 L540 245" stroke="url(#slope)" stroke-width="2"/>
-    <path d="M60 420 L540 292" stroke="url(#slope)" stroke-width="1" opacity=".5"/>
-    <!-- snow spray -->
-    <g fill="#bcd6f8">
-      <circle cx="205" cy="330" r="26" opacity=".14"/>
-      <circle cx="180" cy="345" r="17" opacity=".2"/>
-      <circle cx="162" cy="332" r="9" opacity=".28"/>
-      <circle cx="222" cy="352" r="12" opacity=".22"/>
-      <circle cx="148" cy="349" r="5" opacity=".4"/>
-      <circle cx="196" cy="309" r="6" opacity=".35"/>
-      <circle cx="238" cy="336" r="5" opacity=".4"/>
-      <circle cx="132" cy="338" r="3" opacity=".5"/>
-    </g>
-    <!-- skier silhouette -->
-    <g transform="translate(210 150) rotate(14)">
-      <!-- skis -->
-      <path d="M-58 168 Q-50 160 130 152 Q142 152 146 158" stroke="url(#rim)" stroke-width="7" stroke-linecap="round" fill="none"/>
-      <path d="M-52 184 Q-42 176 138 168 Q150 168 154 174" stroke="#1d3a68" stroke-width="7" stroke-linecap="round" fill="none"/>
-      <!-- legs -->
-      <path d="M38 158 L58 108 L96 96" stroke="#0b1626" stroke-width="21" stroke-linecap="round" fill="none"/>
-      <path d="M70 162 L84 116 L100 98" stroke="#111e33" stroke-width="21" stroke-linecap="round" fill="none"/>
-      <!-- torso -->
-      <path d="M96 98 Q112 62 96 34" stroke="#0b1626" stroke-width="30" stroke-linecap="round" fill="none"/>
-      <path d="M99 96 Q114 62 99 36" stroke="#4a8cff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".8"/>
-      <!-- arms -->
-      <path d="M100 58 L146 76 L168 112" stroke="#0d1a2c" stroke-width="14" stroke-linecap="round" fill="none"/>
-      <path d="M94 52 L52 64 L20 52" stroke="#0b1626" stroke-width="14" stroke-linecap="round" fill="none"/>
-      <!-- poles -->
-      <path d="M168 112 L198 170" stroke="#5f7ba6" stroke-width="3" stroke-linecap="round"/>
-      <path d="M20 52 L-30 96" stroke="#5f7ba6" stroke-width="3" stroke-linecap="round"/>
-      <!-- head / helmet -->
-      <circle cx="92" cy="16" r="17" fill="#0b1626"/>
-      <path d="M78 12 A17 17 0 0 1 100 1" stroke="#7db4ff" stroke-width="3" stroke-linecap="round" fill="none"/>
-      <!-- goggles glint -->
-      <path d="M82 16 q9 6 19 2" stroke="#4a8cff" stroke-width="4" stroke-linecap="round" fill="none"/>
-    </g>
-    <!-- speed lines -->
-    <g stroke="#6d9fe8" stroke-linecap="round" opacity=".55">
-      <path d="M368 118 L448 96" stroke-width="2"/>
-      <path d="M382 150 L478 128" stroke-width="1.4"/>
-      <path d="M372 86 L426 70" stroke-width="1.2"/>
-    </g>
-  </svg>
-
-  <div class="wrap hero-grid">
-    <h1>
-      <span class="l1">Поймай момент.</span>
-      <span class="l2">Останься в кадре.</span>
-    </h1>
-
-    <p class="hero-sub">
-      Фото и видео твоего спуска на горных лыжах —
-      <b>с обработкой, монтажом и отдачей материала в тот же день.</b>
-    </p>
-
-    <div class="hero-cta">
-      <a class="btn primary" href="#contact">
-        Оставить заявку
-        <span class="arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
-        </span>
-      </a>
-      <a class="btn" href="#portfolio">Смотреть работы</a>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <img
+        src="https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=1800&q=80"
+        alt="Горнолыжник на трассе слалома"
+        loading="eager" decoding="async">
     </div>
-
-    <div class="badge">
-      <div class="year">СЕЗОН 2026</div>
-      <div class="laurel">❮ ❯</div>
-      <div class="title">200+ снятых спусков</div>
-      <div class="desc">Работаю на склоне <b>каждый день сезона</b> — от первых заездов до закрытия трасс</div>
+    <div class="wrap hero-content">
+      <div class="hero-text">
+        <div class="eyebrow hero-in" style="animation-delay:.15s"><span class="dot"></span>Сезон 25/26 · открыт для новых проектов</div>
+        <h1 class="hero-in" style="animation-delay:.35s">Твой спуск<br><span class="fade">Мой кадр</span></h1>
+        <p class="hero-copy hero-in" style="animation-delay:.55s">Снимаю фото и видео там, где обычному оператору не угнаться: на трассе, в парке, в порошке. Для райдеров, школ, курортов и брендов, которым нужен контент со скоростью в кадре.</p>
+        <div class="hero-ctas hero-in" style="animation-delay:.75s">
+          <a href="#contact" class="btn-primary">Оставить заявку
+            <span class="arrow">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 11L11 2M11 2H4M11 2V9" stroke="#0a0c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </a>
+          <a href="#pricing" class="btn-outline">Смотреть тарифы</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <img
+          src="https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1200&q=80"
+          alt="Команда инструкторов на склоне"
+          loading="eager" decoding="async">
+        <div class="hero-badge">
+          <div class="num">120+</div>
+          <div class="lbl">отснятых спусков за прошлый сезон, от личных сторис до рекламы курорта</div>
+        </div>
+      </div>
     </div>
+    <div class="wrap hero-strapline">Фото/видео оператор для горнолыжного контента — <b>снимаю то, что обычно остаётся за кадром.</b></div>
+  </section>
 
-    <p class="hero-note">Личный оператор на склоне — просто катайся, остальное сниму я.</p>
-  </div>
-</section>
-
-<!-- ================= SERVICES ================= -->
-<section class="services" id="services">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Снято для настоящих <span class="dim">эмоций</span></h2>
-      <p>Один оператор — весь цикл: от съёмки на склоне до готового ролика в твоём телефоне.</p>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <div class="thumb">📸</div>
-        <h3>Фотосъёмка спуска</h3>
-        <p>Серия динамичных кадров с лучших точек трассы. Снег из-под кантов, скорость и эмоции — всё в фокусе.</p>
-      </div>
-      <div class="card">
-        <div class="thumb">🎥</div>
-        <h3>Видеосъёмка спуска</h3>
-        <p>Съёмка со штатива и с рук: стабилизированная картинка твоего заезда от старта до финиша.</p>
-      </div>
-      <div class="card featured">
-        <div class="thumb">🎿</div>
-        <h3>Follow-cam</h3>
-        <p>Еду за тобой по склону с камерой — эффект полного погружения, как в фильмах о фрирайде.</p>
-        <span class="more">Самый популярный формат</span>
-      </div>
-      <div class="card">
-        <div class="thumb">🎬</div>
-        <h3>Монтаж для соцсетей</h3>
-        <p>Вертикальные ролики под Reels и Shorts: динамичная склейка, музыка, титры — готово к публикации.</p>
-      </div>
-      <div class="card">
-        <div class="thumb">✨</div>
-        <h3>Цветокоррекция и ретушь</h3>
-        <p>Обработка каждого кадра: чистый снег, сочное небо, естественные цвета без «перешарпа».</p>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ================= PORTFOLIO ================= -->
-<section class="portfolio" id="portfolio">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Портфолио</h2>
-      <p>Свежие спуски этого сезона уже монтируются — совсем скоро здесь будут фото и видео с трасс.</p>
-    </div>
-    <div class="pf-grid">
-      <div class="pf-item"><span class="cam">📷</span><span class="tag">материал скоро</span></div>
-      <div class="pf-item"><span class="cam">🎥</span><span class="tag">материал скоро</span></div>
-      <div class="pf-item"><span class="cam">📷</span><span class="tag">материал скоро</span></div>
-      <div class="pf-item"><span class="cam">🎬</span><span class="tag">материал скоро</span></div>
-      <div class="pf-item"><span class="cam">📷</span><span class="tag">материал скоро</span></div>
-      <div class="pf-item"><span class="cam">🎥</span><span class="tag">материал скоро</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= PRICING ================= -->
-<section class="pricing" id="pricing">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Тарифы</h2>
-      <p>Прозрачные цены без скрытых доплат. Обработка и отдача материала входят в каждый тариф.</p>
-    </div>
-    <div class="price-grid">
-
-      <div class="price">
-        <div class="name">Спуск</div>
-        <div class="cost">1000 <span>₽</span></div>
-        <div class="for">Попробовать и получить первые крутые кадры</div>
-        <ul>
-          <li>30 минут съёмки</li>
-          <li>Фотосъёмка с одной точки склона</li>
-          <li>15–20 обработанных кадров</li>
-          <li>Базовая цветокоррекция</li>
-          <li>Отдача материала в течение 24 часов</li>
-        </ul>
-        <a class="btn" href="#contact" data-tariff="Спуск — 1000 ₽">Выбрать тариф</a>
-      </div>
-
-      <div class="price featured">
-        <div class="pop">Популярный выбор</div>
-        <div class="name">Склон</div>
-        <div class="cost">1500 <span>₽</span></div>
-        <div class="for">Фото + видео: полный сет для соцсетей</div>
-        <ul>
-          <li>1 час съёмки</li>
-          <li>Фото + видео спуска с двух точек</li>
-          <li>30+ кадров с ретушью</li>
-          <li>Ролик 15–30 секунд под Reels / Shorts</li>
-          <li>Музыка и динамичная склейка</li>
-          <li>Отдача материала в день съёмки</li>
-        </ul>
-        <a class="btn" href="#contact" data-tariff="Склон — 1500 ₽">Выбрать тариф</a>
-      </div>
-
-      <div class="price">
-        <div class="name">Вершина</div>
-        <div class="cost">3000 <span>₽</span></div>
-        <div class="for">Полное сопровождение — как личный оператор</div>
-        <ul>
-          <li>2+ часа съёмки</li>
-          <li>Follow-cam: еду за тобой по склону</li>
-          <li>60+ обработанных кадров</li>
-          <li>Ролик до 1 минуты с монтажом и музыкой</li>
-          <li>Полная цветокоррекция всего материала</li>
-          <li>Приоритетная отдача — первым в очереди</li>
-        </ul>
-        <a class="btn" href="#contact" data-tariff="Вершина — 3000 ₽">Выбрать тариф</a>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ================= CONTACT ================= -->
-<section class="contact" id="contact">
-  <div class="lines"><span></span><span></span><span></span></div>
-  <div class="wrap" style="position:relative;z-index:2">
-
-    <div class="contact-top">
-      <h2><span class="blue">Готов</span> поймать<br>твой спуск</h2>
-      <p class="contact-side">
-        Снимаю на склоне всю зиму.<br>
-        <b>Напиши, когда катаешься</b> — договоримся о точке встречи и времени.
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="sec-head reveal-group">
+      <span class="tag"><span class="reveal-line"><span class="reveal-inner">Услуги</span></span></span>
+      <h2>
+        <span class="reveal-line"><span class="reveal-inner">Снимаю под ваш кейс,</span></span>
+        <span class="reveal-line"><span class="reveal-inner">не по шаблону</span></span>
+      </h2>
+      <p>
+        <span class="reveal-line"><span class="reveal-inner">От быстрого ролика для сторис до полноценного рекламного пакета для курорта</span></span>
+        <span class="reveal-line"><span class="reveal-inner">— формат съёмки собирается под задачу, а не наоборот.</span></span>
       </p>
     </div>
-
-    <div class="form-card">
-      <div>
-        <h3>Оставь заявку <span class="blue">на съёмку.</span><br>Отвечу в тот же день!</h3>
-        <p class="hint">Заполни форму — письмо откроется в твоей почте, останется только нажать «Отправить». Или напиши напрямую: <a href="mailto:jimmyyobike@onet.pl" style="color:#4a8cff">jimmyyobike@onet.pl</a></p>
+    <div class="services-row reveal-group">
+      <div class="s-card door-left">
+        <img class="s-img" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+<img class="s-img-bright" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+        <div class="s-card-body">
+          <span class="s-num">01</span>
+          <h3>Личные сторис</h3>
+          <p>Вертикальные ролики и фото во время катания — для личных соцсетей и портфолио райдера.</p>
+        </div>
       </div>
-      <form id="lead-form">
-        <input class="field" type="text" id="f-name" placeholder="Как тебя зовут?" required>
-        <input class="field" type="email" id="f-email" placeholder="Твой e-mail" required>
-        <select class="field" id="f-tariff">
-          <option value="">Выбери тариф (необязательно)</option>
-          <option>Спуск — 1000 ₽</option>
-          <option>Склон — 1500 ₽</option>
-          <option>Вершина — 3000 ₽</option>
-        </select>
-        <textarea class="field" id="f-msg" placeholder="Когда и где катаешься? Что хочешь снять?"></textarea>
-        <button class="submit" type="submit">
-          Отправить заявку
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
-        </button>
-        <div class="form-note">Заявка уйдёт на jimmyyobike@onet.pl через твой почтовый клиент</div>
-      </form>
+      <div class="s-card door-left">
+        <img class="s-img" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+<img class="s-img-bright" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+        <div class="s-card-body">
+          <span class="s-num">02</span>
+          <h3>Школы и инструкторы</h3>
+          <p>Фото и видео учеников в процессе обучения — для продвижения инструктора и школы катания.</p>
+        </div>
+      </div>
+      <div class="s-card featured door-split">
+        <img class="s-img" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=700&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=500&q=75 500w,
+            https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=900&q=75 900w,
+            https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=1400&q=75 1400w"
+          sizes="(max-width: 860px) 100vw, 50vw">
+<img class="s-img-bright" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=700&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=500&q=75 500w,
+            https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=900&q=75 900w,
+            https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=1400&q=75 1400w"
+          sizes="(max-width: 860px) 100vw, 50vw">
+        <div class="s-card-body">
+          <span class="s-num">03</span>
+          <h3>Курорты и бренды</h3>
+          <p>Рекламные ролики и фотопакеты для сайта, буклетов и соцсетей курорта или спортивного бренда.</p>
+        </div>
+      </div>
+      <div class="s-card door-right">
+        <img class="s-img" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+<img class="s-img-bright" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+        <div class="s-card-body">
+          <span class="s-num">04</span>
+          <h3>Фрирайд-сопровождение</h3>
+          <p>Съёмка на скорости в потоке катания — экшн-кадры без потери динамики и качества.</p>
+        </div>
+      </div>
+      <div class="s-card door-right">
+        <img class="s-img" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+<img class="s-img-bright" alt="" loading="lazy" decoding="async"
+          src="https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=600&q=75"
+          srcset="
+            https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=400&q=75 400w,
+            https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=700&q=75 700w,
+            https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=1100&q=75 1100w"
+          sizes="(max-width: 860px) 100vw, 22vw">
+        <div class="s-card-body">
+          <span class="s-num">05</span>
+          <h3>Соревнования и события</h3>
+          <p>Фестивали, ski-day компаний, соревнования — репортажная съёмка от старта до награждения.</p>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="contact-footer">
-      <span>SNOWFRAME — фото/видеооператор на склоне</span>
-      <a class="mail" href="mailto:jimmyyobike@onet.pl">jimmyyobike@onet.pl</a>
-      <span>2026©</span>
+  <!-- PORTFOLIO -->
+  <section id="portfolio">
+    <div class="sec-head reveal-group">
+      <span class="tag"><span class="reveal-line"><span class="reveal-inner">Портфолио</span></span></span>
+      <h2>
+        <span class="reveal-line"><span class="reveal-inner">Материалы сезона</span></span>
+        <span class="reveal-line"><span class="reveal-inner">в работе</span></span>
+      </h2>
+      <p>
+        <span class="reveal-line"><span class="reveal-inner">Раздел наполняется по мере съёмок — ниже категории,</span></span>
+        <span class="reveal-line"><span class="reveal-inner">которые появятся здесь в первую очередь.</span></span>
+      </p>
     </div>
+    <div class="pf-grid reveal-group">
+      <div class="pf-tile"><span class="pf-cat">Фрирайд</span><span class="pf-soon">скоро</span></div>
+      <div class="pf-tile"><span class="pf-cat">Reels / сторис</span><span class="pf-soon">скоро</span></div>
+      <div class="pf-tile"><span class="pf-cat">Курорт-реклама</span><span class="pf-soon">скоро</span></div>
+      <div class="pf-tile"><span class="pf-cat">Соревнования</span><span class="pf-soon">скоро</span></div>
+      <div class="pf-tile"><span class="pf-cat">Фото-туры</span><span class="pf-soon">скоро</span></div>
+      <div class="pf-tile"><span class="pf-cat">Бренд-съёмки</span><span class="pf-soon">скоро</span></div>
+    </div>
+    <p class="pf-note reveal-group">
+      <span class="reveal-line"><span class="reveal-inner">Хотите попасть в первую подборку сезона?</span></span>
+      <span class="reveal-line"><span class="reveal-inner">Оставьте заявку — свяжусь и предложу удобную дату.</span></span>
+    </p>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="sec-head reveal-group">
+      <span class="tag"><span class="reveal-line"><span class="reveal-inner">Тарифы</span></span></span>
+      <h2>
+        <span class="reveal-line"><span class="reveal-inner">Три формата,</span></span>
+        <span class="reveal-line"><span class="reveal-inner">один результат — кадр в движении</span></span>
+      </h2>
+      <p>
+        <span class="reveal-line"><span class="reveal-inner">Стоимость зависит от длительности и объёма съёмки.</span></span>
+        <span class="reveal-line"><span class="reveal-inner">Все пакеты включают обработку и цветокоррекцию.</span></span>
+      </p>
+    </div>
+    <div class="price-row reveal-group">
+
+      <div class="p-card">
+        <div class="p-name">Спуск</div>
+        <div class="p-desc">Быстрая мини-сессия на одной трассе</div>
+        <div class="p-price">1 000 <span>₽</span></div>
+        <ul class="p-list">
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>30 минут съёмки</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1 локация / трасса</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>15 обработанных фото</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовая цветокоррекция</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Передача в тот же день</li>
+        </ul>
+        <a href="#contact" class="p-cta">Выбрать тариф</a>
+      </div>
+
+      <div class="p-card featured">
+        <div class="p-badge">Оптимальный выбор</div>
+        <div class="p-name">Заезд</div>
+        <div class="p-desc">Фото + короткое видео для соцсетей</div>
+        <div class="p-price">1 500 <span>₽</span></div>
+        <ul class="p-list">
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>60 минут, до 2 локаций</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>25 обработанных фото</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Вертикальный ролик 30–45 сек</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Монтаж под ритм трека</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Передача в течение 24 часов</li>
+        </ul>
+        <a href="#contact" class="p-cta">Выбрать тариф</a>
+      </div>
+
+      <div class="p-card">
+        <div class="p-name">Съёмочный день</div>
+        <div class="p-desc">Полный пакет для бренда, школы или курорта</div>
+        <div class="p-price">3 000 <span>₽</span></div>
+        <ul class="p-list">
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>2–3 часа, локации без ограничений</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>40+ обработанных фото</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Ролик до 2 минут, несколько планов</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>FPV-съёмка по запросу</li>
+          <li><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 8l3 3 6-7" stroke="#2f7fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Экспресс-доставка материалов</li>
+        </ul>
+        <a href="#contact" class="p-cta">Выбрать тариф</a>
+      </div>
+
+    </div>
+    <p class="price-note reveal-group">
+      <span class="reveal-line"><span class="reveal-inner">Итоговая стоимость может отличаться в зависимости от локации, погоды и выезда за пределы курорта</span></span>
+      <span class="reveal-line"><span class="reveal-inner">— точный расчёт после короткого брифа.</span></span>
+    </p>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact reveal-group">
+      <div class="contact-left">
+        <h2 class="corner-piece corner-tl">Готов снять <span class="accent">ваш</span><br>лучший спуск</h2>
+        <p class="corner-piece corner-bl">Свободен для проектов сезона 25/26. Если нужен яркий контент со скоростью в кадре — оставьте заявку, отвечу в течение дня.</p>
+      </div>
+      <div class="contact-form">
+        <form id="leadForm">
+          <div class="corner-piece corner-tr">
+            <h3>Оставить заявку</h3>
+            <div class="sub">Расскажите пару слов о задаче — подберу подходящий тариф</div>
+            <div class="field">
+              <label for="name">Имя</label>
+              <input id="name" type="text" placeholder="Как к вам обращаться" required>
+            </div>
+            <div class="field">
+              <label for="email">E-mail</label>
+              <input id="email" type="email" placeholder="you@mail.com" required>
+            </div>
+            <div class="field">
+              <label for="message">Сообщение</label>
+              <textarea id="message" placeholder="Дата, место, формат съёмки"></textarea>
+            </div>
+          </div>
+          <div class="corner-piece corner-br">
+            <button type="submit" class="submit-btn">Отправить заявку</button>
+            <div class="form-alt">Или сразу на почту: <b>jimmyyobike@onet.pl</b></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
 
   </div>
-</section>
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="logo">DOWNSHOT</div>
+    <div>© 2026 Downshot Studio</div>
+  </div>
+</footer>
 
 <script>
-  // подстановка тарифа при клике «Выбрать тариф»
-  document.querySelectorAll('[data-tariff]').forEach(function(el){
-    el.addEventListener('click', function(){
-      var sel = document.getElementById('f-tariff');
-      sel.value = el.getAttribute('data-tariff');
-    });
-  });
-
-  // отправка заявки через mailto
-  document.getElementById('lead-form').addEventListener('submit', function(e){
+  document.getElementById('leadForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var name  = document.getElementById('f-name').value.trim();
-    var email = document.getElementById('f-email').value.trim();
-    var tariff= document.getElementById('f-tariff').value;
-    var msg   = document.getElementById('f-msg').value.trim();
-
-    var subject = 'Заявка на съёмку — ' + name;
-    var body =
-      'Имя: ' + name + '\n' +
-      'E-mail: ' + email + '\n' +
-      (tariff ? 'Тариф: ' + tariff + '\n' : '') +
-      (msg ? '\n' + msg : '');
-
-    window.location.href = 'mailto:jimmyyobike@onet.pl'
-      + '?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
+    var name = document.getElementById('name').value;
+    var email = document.getElementById('email').value;
+    var message = document.getElementById('message').value;
+    var subject = encodeURIComponent('Заявка на съёмку — ' + name);
+    var body = encodeURIComponent('Имя: ' + name + '\nEmail: ' + email + '\n\n' + message);
+    window.location.href = 'mailto:jimmyyobike@onet.pl?subject=' + subject + '&body=' + body;
   });
+
+  (function(){
+    var header = document.querySelector('header');
+    var lastY = window.scrollY;
+    var ticking = false;
+
+    function onScroll(){
+      var y = window.scrollY;
+      if(y > lastY && y > 120){
+        header.classList.add('hide');
+      } else {
+        header.classList.remove('hide');
+      }
+      lastY = y;
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', function(){
+      if(!ticking){
+        requestAnimationFrame(onScroll);
+        ticking = true;
+      }
+    });
+  })();
+  (function(){
+    var glow = document.getElementById('cursor-glow');
+    if(!glow || window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+
+    window.addEventListener('mousemove', function(e){
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+    });
+
+    var hoverSelector = 'a, button, .s-card, .pf-tile, .p-card, .hero-card, .nav-cta, ' +
+      '.p-cta, .contact-form, .hero-strapline, input, textarea, .submit-btn';
+
+    document.addEventListener('mouseover', function(e){
+      if(e.target.closest(hoverSelector)){ glow.classList.add('active'); }
+    });
+    document.addEventListener('mouseout', function(e){
+      if(e.target.closest(hoverSelector) && !e.relatedTarget?.closest(hoverSelector)){
+        glow.classList.remove('active');
+      }
+    });
+  })();
+
+  (function(){
+    var heroText = document.querySelector('.hero-text');
+    var heroCard = document.querySelector('.hero-card');
+    var heroStrapline = document.querySelector('.hero-strapline');
+    if(!heroText && !heroCard && !heroStrapline) return;
+    var maxScroll = 380;
+    var ticking2 = false;
+
+    function onHeroScroll(){
+      var y = window.scrollY;
+      var progress = Math.min(y / maxScroll, 1);
+      if(heroText){
+        heroText.style.transform = 'translateX(' + (-progress * 60) + 'px)';
+        heroText.style.opacity = String(1 - progress);
+        heroText.style.filter = 'blur(' + (progress * 6) + 'px)';
+      }
+      if(heroCard){
+        heroCard.style.transform = 'translateY(' + (-progress * 30) + 'px) scale(' + (1 - progress * 0.08) + ')';
+        heroCard.style.opacity = String(1 - progress);
+        heroCard.style.filter = 'blur(' + (progress * 6) + 'px)';
+      }
+      if(heroStrapline){
+        heroStrapline.style.transform = 'translateY(' + (progress * 40) + 'px)';
+        heroStrapline.style.opacity = String(1 - progress);
+        heroStrapline.style.filter = 'blur(' + (progress * 6) + 'px)';
+      }
+      ticking2 = false;
+    }
+
+    window.addEventListener('scroll', function(){
+      if(!ticking2){
+        requestAnimationFrame(onHeroScroll);
+        ticking2 = true;
+      }
+    }, {passive:true});
+  })();
+
+  (function(){
+    var groups = document.querySelectorAll('.reveal-group');
+    if(!groups.length || !('IntersectionObserver' in window)) {
+      groups.forEach(function(g){ g.classList.add('in-view'); });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        entry.target.classList.toggle('in-view', entry.isIntersecting);
+      });
+    }, {threshold:0.35});
+    groups.forEach(function(g){ io.observe(g); });
+  })();
 </script>
 
 </body>
