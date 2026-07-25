@@ -292,8 +292,8 @@
   .s-card-body{
     position:absolute;left:0;right:0;bottom:0;padding:22px;z-index:2;
   }
-  .s-num{font-family:'JetBrains Mono';font-size:12px;color:var(--blue-light);margin-bottom:60px;display:block;}
-  .s-card h3{font-size:17px;font-weight:700;font-family:'Manrope';margin-bottom:8px;}
+  .s-num{font-family:'JetBrains Mono';font-size:12px;color:var(--blue-light);margin-bottom:14px;display:block;}
+  .s-card h3{font-size:17px;font-weight:700;font-family:'Manrope';margin-bottom:8px;min-height:38px;}
   .s-card p{
     font-size:13px;color:var(--muted);line-height:1.5;
     max-height:0;opacity:0;overflow:hidden;transition:max-height .55s cubic-bezier(.4,0,.2,1), opacity .5s ease;
@@ -449,6 +449,7 @@
     .services-row{flex-direction:column;height:auto;}
     .s-card{height:150px;flex:none !important;}
     .s-card p{max-height:120px;opacity:1;}
+    .s-card h3{min-height:0;}
     .pf-grid{grid-template-columns:repeat(2,1fr);}
     .price-row{grid-template-columns:1fr;}
     .p-card.featured{translate:0 0;}
