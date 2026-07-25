@@ -1,0 +1,26 @@
+name: Fetch hero image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download image
+        run: |
+          mkdir -p assets
+          curl -sSL --fail -o assets/hero-ski.jpg \
+            "https://abrakadabra.fun/uploads/posts/2022-03/1648287772_3-abrakadabra-fun-p-oboi-dlya-rabochego-stola-gornie-lizhi-4.jpg"
+          file assets/hero-ski.jpg | grep -qi 'image' || (echo "Downloaded file is not an image" && exit 1)
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/hero-ski.jpg
+          git commit -m "Add hero background image (slalom skier)"
+          git push
