@@ -96,9 +96,9 @@
   .hero-bg::after{
     content:'';position:absolute;inset:0;
     background:
-      linear-gradient(90deg, rgba(10,12,16,0.96) 0%, rgba(10,12,16,0.82) 32%, rgba(10,12,16,0.35) 62%, rgba(10,12,16,0.15) 100%),
+      linear-gradient(270deg, rgba(10,12,16,0.96) 0%, rgba(10,12,16,0.82) 32%, rgba(10,12,16,0.35) 62%, rgba(10,12,16,0.15) 100%),
       linear-gradient(0deg, rgba(10,12,16,1) 0%, rgba(10,12,16,0) 26%),
-      linear-gradient(200deg, rgba(47,127,255,0.30), transparent 45%);
+      linear-gradient(160deg, rgba(47,127,255,0.30), transparent 45%);
   }
   .hero-content{
     position:relative;z-index:2;width:100%;
@@ -156,7 +156,7 @@
 
   /* ---------- hero entrance animation ---------- */
   @keyframes heroSlideIn{
-    from{opacity:0;transform:translateX(-36px);filter:blur(6px);}
+    from{opacity:0;transform:translateX(36px);filter:blur(6px);}
     60%{filter:blur(0);}
     to{opacity:1;transform:translateX(0);filter:blur(0);}
   }
@@ -164,7 +164,7 @@
     opacity:0;
     animation:heroSlideIn 1.3s cubic-bezier(.25,.1,.25,1) forwards;
   }
-  .hero-text{will-change:transform, opacity, filter;display:flex;flex-direction:column;justify-content:center;height:100%;}
+  .hero-text{will-change:transform, opacity, filter;display:flex;flex-direction:column;justify-content:center;height:100%;margin-left:auto;max-width:490px;}
 
   /* ---------- section shell ---------- */
   section{position:relative;z-index:1;padding:100px 0;}
@@ -818,7 +818,7 @@
       var y = window.scrollY;
       var progress = Math.min(y / maxScroll, 1);
       if(heroText){
-        heroText.style.transform = 'translateX(' + (-progress * 60) + 'px)';
+        heroText.style.transform = 'translateX(' + (progress * 60) + 'px)';
         heroText.style.opacity = String(1 - progress);
         heroText.style.filter = 'blur(' + (progress * 6) + 'px)';
       }
