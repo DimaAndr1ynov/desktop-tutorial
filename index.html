@@ -417,9 +417,14 @@
   .form-alt{font-size:12px;color:#8790a0;margin-top:12px;text-align:center;}
 
   footer{
-    border-top:1px solid var(--line);padding:34px 0;position:relative;z-index:1;
+    padding:70px 0 40px;position:relative;z-index:1;
   }
-  .foot-row{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;}
+  footer .aurora::after{
+    background:
+      linear-gradient(180deg, #0a0c10 0%, rgba(10,12,16,0) 45%, rgba(10,12,16,0) 80%, rgba(10,12,16,0.6) 100%),
+      radial-gradient(ellipse 130% 120% at 50% 100%, transparent 30%, rgba(10,12,16,0.6) 100%);
+  }
+  .foot-row{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;position:relative;z-index:1;}
   .foot-row .logo{font-size:15px;}
   .foot-links{display:flex;gap:20px;}
   .foot-links a{transition:color .2s;}
@@ -775,6 +780,7 @@
 </main>
 
 <footer>
+  <div class="aurora" aria-hidden="true"></div>
   <div class="wrap foot-row">
     <div class="logo">DOWNSHOT</div>
     <div>© 2026 Downshot Studio</div>
