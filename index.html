@@ -419,11 +419,15 @@
   footer{
     padding:70px 0 40px;position:relative;z-index:1;
   }
-  footer .aurora::after{
-    background:
-      linear-gradient(180deg, #0a0c10 0%, rgba(10,12,16,0) 45%, rgba(10,12,16,0) 80%, rgba(10,12,16,0.6) 100%),
-      radial-gradient(ellipse 130% 120% at 50% 100%, transparent 30%, rgba(10,12,16,0.6) 100%);
+  #contact .aurora{
+    bottom:-160px;
   }
+  #contact .aurora::after{
+    background:
+      linear-gradient(180deg, #0a0c10 0%, rgba(10,12,16,0) 20%, rgba(10,12,16,0) 82%, rgba(10,12,16,0.65) 100%),
+      radial-gradient(ellipse 130% 100% at 50% 60%, transparent 35%, rgba(10,12,16,0.55) 100%);
+  }
+  #contact .contact{z-index:1;}
   .foot-row{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;position:relative;z-index:1;}
   .foot-row .logo{font-size:15px;}
   .foot-links{display:flex;gap:20px;}
@@ -744,6 +748,7 @@
 
   <!-- CONTACT -->
   <section id="contact">
+    <div class="aurora" aria-hidden="true"></div>
     <div class="contact reveal-group">
       <div class="contact-left">
         <h2 class="corner-piece corner-tl">Готов снять <span class="accent">ваш</span><br>лучший спуск</h2>
@@ -780,7 +785,6 @@
 </main>
 
 <footer>
-  <div class="aurora" aria-hidden="true"></div>
   <div class="wrap foot-row">
     <div class="logo">DOWNSHOT</div>
     <div>© 2026 Downshot Studio</div>
