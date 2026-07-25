@@ -264,14 +264,26 @@
   /* ---------- portfolio ---------- */
   .pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
   .pf-tile{
-    aspect-ratio:1/1;border-radius:16px;
-    border:1.5px dashed var(--line);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    background:radial-gradient(circle at 50% 30%, rgba(47,127,255,0.06), transparent 70%);
+    position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;
+    border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:6px;
+    padding:20px;
+    background:radial-gradient(circle at 50% 30%, rgba(47,127,255,0.08), transparent 70%);
     transition:.25s;
     opacity:0;
   }
-  .pf-tile:hover{border-color:var(--blue);background:radial-gradient(circle at 50% 30%, rgba(47,127,255,0.14), transparent 70%);box-shadow:0 0 0 1px rgba(47,127,255,0.25), 0 20px 50px -18px rgba(47,127,255,0.5);}
+  .pf-tile:hover{border-color:var(--blue);box-shadow:0 0 0 1px rgba(47,127,255,0.25), 0 20px 50px -18px rgba(47,127,255,0.5);}
+  .pf-img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    filter:brightness(.72) saturate(1.05);
+    transition:transform .6s cubic-bezier(.22,.61,.2,1), filter .4s ease;
+  }
+  .pf-tile:hover .pf-img{transform:scale(1.06);filter:brightness(.88) saturate(1.1);}
+  .pf-tile::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg, transparent 42%, rgba(10,12,16,0.9) 100%);
+  }
+  .pf-tile .pf-cat, .pf-tile .pf-soon{position:relative;z-index:1;}
 
   .pf-grid.in-view .pf-tile{animation:pfTileIn .85s cubic-bezier(.22,.61,.2,1) both;}
   .pf-grid.in-view .pf-tile:nth-child(1){animation-delay:.12s;--fx:-70px;--fy:-40px;--fr:-14deg;}
@@ -313,8 +325,8 @@
   }
   #portfolio .sec-head, #portfolio .pf-grid, #portfolio .pf-note{position:relative;z-index:1;}
 
-  .pf-tile .pf-cat{font-size:13.5px;font-weight:600;color:var(--text);}
-  .pf-tile .pf-soon{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+  .pf-tile .pf-cat{font-size:15px;font-weight:700;font-family:'Manrope';color:var(--text);}
+  .pf-tile .pf-soon{font-family:'JetBrains Mono';font-size:11px;color:#b7c1d2;letter-spacing:.03em;line-height:1.45;}
   .pf-note{text-align:center;color:var(--muted);font-size:14px;margin-top:30px;}
 
   /* ---------- pricing ---------- */
@@ -663,17 +675,41 @@
         <span class="reveal-line"><span class="reveal-inner">в работе</span></span>
       </h2>
       <p>
-        <span class="reveal-line"><span class="reveal-inner">Раздел наполняется по мере съёмок — ниже категории,</span></span>
-        <span class="reveal-line"><span class="reveal-inner">которые появятся здесь в первую очередь.</span></span>
+        <span class="reveal-line"><span class="reveal-inner">Шесть направлений, в которых я снимаю. Пока здесь референсные кадры —</span></span>
+        <span class="reveal-line"><span class="reveal-inner">по мере съёмок сезона заменю их собственными работами.</span></span>
       </p>
     </div>
     <div class="pf-grid reveal-group">
-      <div class="pf-tile"><span class="pf-cat">Фрирайд</span><span class="pf-soon">скоро</span></div>
-      <div class="pf-tile"><span class="pf-cat">Reels / сторис</span><span class="pf-soon">скоро</span></div>
-      <div class="pf-tile"><span class="pf-cat">Курорт-реклама</span><span class="pf-soon">скоро</span></div>
-      <div class="pf-tile"><span class="pf-cat">Соревнования</span><span class="pf-soon">скоро</span></div>
-      <div class="pf-tile"><span class="pf-cat">Фото-туры</span><span class="pf-soon">скоро</span></div>
-      <div class="pf-tile"><span class="pf-cat">Бренд-съёмки</span><span class="pf-soon">скоро</span></div>
+      <div class="pf-tile">
+        <img class="pf-img" alt="Фрирайд: спуск вне трассы" loading="lazy" decoding="async" onerror="this.remove()"
+          src="https://images.unsplash.com/photo-1646297226339-febd1eaee532?auto=format&fit=crop&w=800&q=75">
+        <span class="pf-cat">Фрирайд</span><span class="pf-soon">пухляк, лес и внетрассовые линии</span>
+      </div>
+      <div class="pf-tile">
+        <img class="pf-img" alt="Вертикальные ролики для соцсетей" loading="lazy" decoding="async" onerror="this.remove()"
+          src="https://images.unsplash.com/photo-1529774848151-535301a504f7?auto=format&fit=crop&w=800&q=75">
+        <span class="pf-cat">Reels / сторис</span><span class="pf-soon">вертикалки под музыку для соцсетей</span>
+      </div>
+      <div class="pf-tile">
+        <img class="pf-img" alt="Имиджевая съёмка курорта" loading="lazy" decoding="async" onerror="this.remove()"
+          src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=800&q=75">
+        <span class="pf-cat">Курорт-реклама</span><span class="pf-soon">имиджевые кадры трасс и подъёмников</span>
+      </div>
+      <div class="pf-tile">
+        <img class="pf-img" alt="Репортаж с соревнований" loading="lazy" decoding="async" onerror="this.remove()"
+          src="https://images.unsplash.com/photo-1582048551464-8b1d42010271?auto=format&fit=crop&w=800&q=75">
+        <span class="pf-cat">Соревнования</span><span class="pf-soon">старты, финиши и эмоции подиума</span>
+      </div>
+      <div class="pf-tile">
+        <img class="pf-img" alt="Фото-тур в горах" loading="lazy" decoding="async" onerror="this.remove()"
+          src="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=800&q=75">
+        <span class="pf-cat">Фото-туры</span><span class="pf-soon">бэккантри-походы с камерой</span>
+      </div>
+      <div class="pf-tile">
+        <img class="pf-img" alt="Бренд-съёмка экипировки" loading="lazy" decoding="async" onerror="this.remove()"
+          src="https://images.unsplash.com/photo-1616429553002-faf23468952d?auto=format&fit=crop&w=800&q=75">
+        <span class="pf-cat">Бренд-съёмки</span><span class="pf-soon">экипировка и продукт в действии</span>
+      </div>
     </div>
     <p class="pf-note reveal-group">
       <span class="reveal-line"><span class="reveal-inner">Хотите попасть в первую подборку сезона?</span></span>
