@@ -9,6 +9,7 @@
 
 - `index.html` — весь сайт (инлайн CSS + JS, дизайн «DOWNSHOT»: тёмная тема, scroll-анимации, светящийся курсор)
 - `assets/hero-ski.jpg` — фон hero-блока (слаломист, 2048×1152)
+- `photos/` — сюда владелец загружает фото через веб-интерфейс GitHub (Upload files); Claude по запросу привязывает их к сайту (портфолио, hero-карточка и т.д.)
 - `.github/workflows/deploy-pages.yml` — деплой на GitHub Pages при пуше в `main` (+ ручной запуск)
 - `.github/workflows/fetch-hero-image.yml` — одноразовый ручной workflow: скачивает картинку по URL и коммитит в `assets/` (нужен потому, что из среды Claude Code внешние фото-хостинги заблокированы, а у раннеров GitHub доступ есть)
 
