@@ -284,6 +284,33 @@
     from{opacity:0;transform:translate(var(--fx,0), var(--fy,0)) rotate(var(--fr,0deg)) scale(0.7);}
     to{opacity:1;transform:translate(0,0) rotate(0deg) scale(1);}
   }
+  /* ---------- aurora background (portfolio) ---------- */
+  #portfolio{overflow:hidden;}
+  .aurora{
+    position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.45;
+  }
+  .aurora::before{
+    content:'';position:absolute;inset:-40%;
+    background:repeating-linear-gradient(100deg,
+      #8b5cf6 10%, #3b82f6 15%, #ec4899 20%, #8b5cf6 25%, #3b82f6 30%);
+    background-size:300% 100%;
+    filter:blur(80px);
+    animation:auroraShift 20s linear infinite;
+  }
+  .aurora::after{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at center, transparent 0%, rgba(10,12,16,0.9) 78%);
+  }
+  @keyframes auroraShift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .aurora::before{animation:none;}
+  }
+  #portfolio .sec-head, #portfolio .pf-grid, #portfolio .pf-note{position:relative;z-index:1;}
+
   .pf-tile .pf-cat{font-size:13.5px;font-weight:600;color:var(--text);}
   .pf-tile .pf-soon{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
   .pf-note{text-align:center;color:var(--muted);font-size:14px;margin-top:30px;}
@@ -617,6 +644,7 @@
 
   <!-- PORTFOLIO -->
   <section id="portfolio">
+    <div class="aurora" aria-hidden="true"></div>
     <div class="sec-head reveal-group">
       <span class="tag"><span class="reveal-line"><span class="reveal-inner">Портфолио</span></span></span>
       <h2>
