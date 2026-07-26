@@ -19,7 +19,7 @@
     --muted:#9aa3b2;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth;overflow-x:clip;}
   body{
     background:var(--bg);
     color:var(--text);
@@ -355,7 +355,7 @@
   .p-card.featured:hover{translate:0 -18px;scale:1.03;box-shadow:0 0 0 1px rgba(47,127,255,0.35), 0 35px 70px -20px rgba(47,127,255,0.6);}
   .p-badge{
     position:absolute;top:-13px;left:28px;background:var(--blue);color:#fff;
-    font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:100px;
+    font-size:12px;font-weight:600;padding:5px 12px;border-radius:100px;
   }
   .p-name{font-family:'Manrope';font-weight:700;font-size:19px;margin-bottom:4px;}
   .p-desc{color:var(--muted);font-size:13.5px;margin-bottom:22px;}
@@ -447,25 +447,54 @@
   .foot-links a:hover{color:var(--text);}
 
   @media(max-width:860px){
-    .hero{min-height:auto;padding:110px 0 0;}
+    section{padding:64px 0;}
+    .wrap{padding:0 20px;}
+    .sec-head{margin-bottom:36px;}
+    .sec-head h2{font-size:30px;}
+    .sec-head p{font-size:15px;}
+
+    .hero{min-height:auto;padding:104px 0 0;}
     .hero-bg::after{
       background:
-        linear-gradient(0deg, rgba(10,12,16,0.97) 15%, rgba(10,12,16,0.55) 55%, rgba(10,12,16,0.25) 100%);
+        linear-gradient(0deg, rgba(10,12,16,0.97) 12%, rgba(10,12,16,0.82) 45%, rgba(10,12,16,0.62) 75%, rgba(10,12,16,0.5) 100%);
     }
-    .hero h1{font-size:44px;}
+    .hero h1{font-size:42px;}
     .hero-content{grid-template-columns:1fr;}
-    .hero-text{height:auto;}
-    .hero-copy{max-width:100%;}
-    .services-row{flex-direction:column;height:auto;}
-    .s-card{height:150px;flex:none !important;}
-    .s-card p{max-height:120px;opacity:1;}
-    .s-card h3{min-height:0;}
-    .pf-grid{grid-template-columns:repeat(2,1fr);}
-    .price-row{grid-template-columns:1fr;}
+    .hero-text{height:auto;max-width:100%;margin-left:0;}
+    .hero-copy{max-width:100%;font-size:15.5px;margin:20px 0 28px;}
+    .hero-ctas{gap:10px;}
+    .btn-primary, .btn-outline{flex:1 1 auto;justify-content:center;}
+    .hero-strapline{margin-top:44px;padding:18px 20px;font-size:14px;}
+
+    /* появление снизу, а не сбоку — иначе элементы торчат за правый край */
+    .s-card{translate:0 40px;}
+    .corner-tl, .corner-bl, .corner-tr, .corner-br{transform:translate(0,40px);}
+
+    .services-row{flex-direction:column;height:auto;gap:12px;}
+    .s-card{height:auto;min-height:210px;flex:none !important;}
+    .s-card .s-img, .s-card .s-img-bright{filter:grayscale(0.1) brightness(0.42);}
+    .s-card::after{background:linear-gradient(180deg, rgba(10,12,16,0.35) 0%, rgba(10,12,16,0.88) 55%, rgba(10,12,16,0.97) 100%);}
+    .s-card p{max-height:140px;opacity:1;color:#c6cedb;}
+    .s-card h3{min-height:0;font-size:18px;}
+    .s-num{margin-bottom:8px;}
+
+    .pf-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
+    .pf-tile{padding:14px;gap:4px;}
+    .pf-img{filter:brightness(.5) saturate(1.05);}
+    .pf-tile::after{background:linear-gradient(180deg, transparent 25%, rgba(10,12,16,0.92) 100%);}
+    .pf-tile .pf-cat{font-size:13.5px;}
+    .pf-tile .pf-soon{font-size:12px;}
+
+    .price-row{grid-template-columns:1fr;gap:16px;}
+    .p-card{padding:26px 22px;}
     .p-card.featured{translate:0 0;}
+    .p-price{font-size:34px;}
+
     .contact{grid-template-columns:1fr;padding:32px 22px;}
-    .contact-left h2{font-size:32px;}
+    .contact-left h2{font-size:30px;}
     .nav-links{display:none;}
+    .nav-cta{padding:13px 20px;}
+    nav{padding:16px 20px;}
     .foot-row{flex-direction:column;gap:14px;text-align:center;}
   }
 
@@ -552,8 +581,8 @@
         <span class="reveal-line"><span class="reveal-inner">не по шаблону</span></span>
       </h2>
       <p>
-        <span class="reveal-line"><span class="reveal-inner">От быстрого ролика для сторис до полноценного рекламного пакета для курорта</span></span>
-        <span class="reveal-line"><span class="reveal-inner">— формат съёмки собирается под задачу, а не наоборот.</span></span>
+        <span class="reveal-line"><span class="reveal-inner">От быстрого ролика для сторис до рекламного пакета для курорта:</span></span>
+        <span class="reveal-line"><span class="reveal-inner">формат съёмки собирается под задачу, а не наоборот.</span></span>
       </p>
     </div>
     <div class="services-row reveal-group">
