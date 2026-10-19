@@ -110,6 +110,10 @@
   .me{margin-top:auto;border-top:1px solid var(--line);padding:16px 8px 0;}
   .me b{display:block;font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .role{display:inline-block;font-size:11.5px;border-radius:6px;padding:2px 7px;margin-bottom:12px;}
+  .me-acts{display:flex;gap:6px;flex-wrap:wrap;}
+  .login-links{display:flex;justify-content:space-between;gap:12px;margin-top:16px;font-size:14px;}
+  .login-links a{color:var(--muted);transition:color .15s;}
+  .login-links a:hover{color:var(--blue-light);}
   .role.admin{background:rgba(47,127,255,.15);color:var(--blue-light);}
   .role.manager{background:rgba(192,132,252,.14);color:#d8b4fe;}
   .role.operator{background:rgba(74,222,128,.12);color:var(--ok);}
@@ -387,6 +391,7 @@
         <button class="link" type="button" id="bBack">← Другой номер</button>
       </form>
     </div>
+    <div class="login-links"><a href="index.html">← На сайт</a><a href="account.html">Кабинет клиента</a></div>
   </div>
 </div>
 
@@ -414,17 +419,23 @@
     <div class="me">
       <b id="meName"></b>
       <span class="role" id="meRole"></span>
-      <button class="btn ghost sm" type="button" id="bLogout" title="Выйти">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10.5 11l3-3-3-3M13.5 8H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="lbl">Выйти</span>
-      </button>
+      <div class="me-acts">
+        <a class="btn ghost sm" href="index.html" title="Открыть сайт">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M1.8 8h12.4M8 1.8c1.7 1.8 2.5 3.9 2.5 6.2S9.7 12.4 8 14.2C6.3 12.4 5.5 10.3 5.5 8S6.3 3.6 8 1.8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          <span class="lbl">На сайт</span>
+        </a>
+        <button class="btn ghost sm" type="button" id="bLogout" title="Выйти">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10.5 11l3-3-3-3M13.5 8H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="lbl">Выйти</span>
+        </button>
+      </div>
     </div>
   </aside>
 
   <main class="main">
     <div class="test-banner" id="appBanner" hidden>
       <span class="pill">ТЕСТ</span>
-      <span>Тестовый режим: SMS не отправляются, данные и файлы хранятся только в этом браузере. Ответы клиента приходят из его <a href="account.html" target="_blank" style="text-decoration:underline">личного кабинета</a>.</span>
+      <span>Тестовый режим: SMS не отправляются, данные и файлы хранятся только в этом браузере. Ответы клиента приходят из его <a href="account.html" style="text-decoration:underline">личного кабинета</a>.</span>
     </div>
 
     <!-- Клиенты -->
