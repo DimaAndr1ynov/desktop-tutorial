@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Личный кабинет — DOWNSHOT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c10;
+    --surface:#12151b;
+    --surface-2:#191d25;
+    --line:#23272f;
+    --blue:#2f7fff;
+    --blue-light:#7fc1ff;
+    --text:#f4f6f9;
+    --muted:#9aa3b2;
+    --danger:#ff6b6b;
+    --ok:#4ade80;
+    --gutter:clamp(18px, 4vw, 48px);
+    --pad-l:max(var(--gutter), env(safe-area-inset-left));
+    --pad-r:max(var(--gutter), env(safe-area-inset-right));
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scrollbar-width:none;}
+  html::-webkit-scrollbar, body::-webkit-scrollbar{display:none;width:0;height:0;}
+  body{
+    background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+    min-height:100vh;min-height:100svh;display:flex;flex-direction:column;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font:inherit;color:inherit;}
+  .glow-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(680px 420px at 82% 8%, rgba(47,127,255,0.16), transparent 60%),
+      radial-gradient(500px 500px at 10% 90%, rgba(47,127,255,0.08), transparent 60%);
+  }
+
+  header{position:relative;z-index:2;border-bottom:1px solid var(--line);background:rgba(10,12,16,0.78);backdrop-filter:blur(14px);}
+  nav{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    max-width:clamp(1180px, 72vw, 1760px);margin:0 auto;
+    padding:clamp(14px, 1.4vw, 24px) var(--pad-r) clamp(14px, 1.4vw, 24px) var(--pad-l);
+  }
+  .logo{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(17px, .4vw + 13px, 24px);display:flex;align-items:center;gap:9px;}
+  .logo .iris{width:1em;height:1em;flex:none;}
+  .iris circle{fill:none;stroke:var(--blue);stroke-width:1.4;}
+  .iris line{stroke:var(--blue);stroke-width:1.4;}
+  .back{
+    color:var(--muted);font-size:clamp(14px, .25vw + 11px, 16px);
+    border:1px solid var(--line);border-radius:100px;padding:.6em 1.2em;transition:.2s;white-space:nowrap;
+  }
+  .back:hover{color:var(--text);border-color:var(--blue);}
+
+  main{
+    position:relative;z-index:1;flex:1;width:100%;
+    display:flex;justify-content:center;align-items:flex-start;
+    padding:clamp(32px, 6vw, 96px) var(--pad-r) clamp(40px, 6vw, 96px) var(--pad-l);
+  }
+
+  .test-banner{
+    display:flex;gap:10px;align-items:flex-start;
+    background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.35);color:#fde68a;
+    border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:18px;
+  }
+  .test-banner b{color:#fff7cc;font-family:'JetBrains Mono',monospace;font-weight:500;white-space:nowrap;}
+  .test-banner .pill{
+    flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;
+    background:rgba(250,204,21,0.18);border-radius:6px;padding:2px 7px;margin-top:1px;
+  }
+
+  .card{
+    width:100%;background:var(--surface);border:1px solid var(--line);border-radius:24px;
+    padding:clamp(24px, 3vw, 44px);
+    box-shadow:0 0 0 1px rgba(47,127,255,0.08), 0 30px 80px -30px rgba(47,127,255,0.35);
+  }
+  .auth{max-width:460px;width:100%;}
+  .cabinet{max-width:820px;width:100%;}
+
+  .eyebrow{color:var(--blue-light);font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:block;}
+  h1{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-size:clamp(26px, 1.4vw + 18px, 40px);}
+  .lead{color:var(--muted);font-size:clamp(14.5px, .2vw + 12px, 17px);line-height:1.6;margin:12px 0 24px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:7px;}
+  .input{
+    width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;font-family:'Inter',sans-serif;font-size:16px;color:var(--text);transition:.2s;
+  }
+  .input::placeholder{color:#5d6574;}
+  .input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,127,255,0.18);}
+  .input.code{font-family:'JetBrains Mono',monospace;font-size:22px;letter-spacing:.45em;text-align:center;padding-left:calc(15px + .45em);}
+  .input[aria-invalid="true"]{border-color:var(--danger);}
+
+  .btn{
+    width:100%;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    background:var(--blue);color:#fff;border:none;border-radius:12px;
+    padding:15px;font-weight:600;font-size:15.5px;cursor:pointer;transition:.2s;margin-top:6px;
+  }
+  .btn:hover{background:#1f6cf0;box-shadow:0 12px 30px -8px rgba(47,127,255,0.6);}
+  .btn:disabled{opacity:.55;cursor:default;box-shadow:none;}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+  .btn.ghost:hover{border-color:var(--blue-light);color:var(--blue-light);background:transparent;}
+  .link{background:none;border:none;color:var(--blue-light);cursor:pointer;font-size:14px;padding:4px 0;}
+  .link:disabled{color:var(--muted);cursor:default;}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;}
+  .error{color:var(--danger);font-size:13.5px;min-height:20px;margin-top:6px;line-height:1.45;}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);line-height:1.5;margin:6px 0 4px;cursor:pointer;}
+  .check input{margin-top:3px;accent-color:var(--blue);width:16px;height:16px;flex:none;}
+  .phone-shown{color:var(--text);font-weight:600;white-space:nowrap;}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  [hidden]{display:none !important;}
+
+  /* ---------- кабинет ---------- */
+  .cab-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+  .id-card{
+    display:grid;grid-template-columns:repeat(3, 1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:22px;
+  }
+  .id-cell{background:var(--surface-2);padding:18px 20px;min-width:0;}
+  .id-cell .k{font-size:12px;color:var(--muted);margin-bottom:8px;display:block;}
+  .id-cell .v{font-family:'Manrope',sans-serif;font-weight:700;font-size:clamp(16px, .4vw + 13px, 20px);overflow-wrap:anywhere;}
+  .id-cell .v.mono{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--blue-light);letter-spacing:.04em;}
+  .copy{
+    margin-left:8px;background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);
+    font-size:12px;padding:3px 8px;cursor:pointer;vertical-align:middle;transition:.2s;
+  }
+  .copy:hover{color:var(--text);border-color:var(--blue);}
+
+  .section-title{font-family:'Manrope',sans-serif;font-weight:700;font-size:18px;margin:6px 0 12px;}
+  .name-form{display:flex;gap:10px;margin-bottom:26px;}
+  .name-form .input{flex:1;min-width:0;}
+  .name-form .btn{width:auto;margin:0;padding:0 22px;flex:none;}
+  .saved{color:var(--ok);font-size:13px;min-height:18px;margin:-18px 0 18px;}
+
+  .req-list{list-style:none;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:26px;}
+  .req-list li{padding:14px 18px;border-top:1px solid var(--line);font-size:14px;line-height:1.5;}
+  .req-list li:first-child{border-top:none;}
+  .req-list time{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;font-family:'JetBrains Mono',monospace;}
+  .empty{color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:16px;padding:18px;margin-bottom:26px;line-height:1.55;}
+  .cab-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .cab-actions .btn{margin:0;}
+
+  /* ---------- переписка со студией (в стиле мессенджера, как в CRM) ---------- */
+  .chatbox{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:26px;}
+  .thread{
+    display:flex;flex-direction:column;height:clamp(280px, 46vh, 440px);overflow-y:auto;padding:8px clamp(10px, 2.5vw, 24px) 12px;
+    scrollbar-width:thin;scrollbar-color:#2a303b transparent;background-color:#0c0f14;
+    background-image:
+      radial-gradient(600px 360px at 10% 0%, rgba(47,127,255,.10), transparent 60%),
+      radial-gradient(500px 360px at 100% 100%, rgba(139,92,246,.08), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.035' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M20 18v12M14 24h12M15.8 19.8l8.4 8.4M24.2 19.8l-8.4 8.4'/%3E%3Cpath d='M78 70l10 -16 10 16z'/%3E%3Ccircle cx='92' cy='22' r='5'/%3E%3Cpath d='M30 92c6-6 12 6 18 0s12 6 18 0'/%3E%3Cpath d='M100 96v8M96 100h8'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .thread .none{margin:auto;background:rgba(20,24,31,.82);color:#c9d1dd;padding:12px 16px;border-radius:14px;font-size:13.5px;line-height:1.55;text-align:center;max-width:320px;}
+  .day{display:flex;justify-content:center;position:sticky;top:4px;z-index:2;margin:10px 0 6px;pointer-events:none;}
+  .day span{background:rgba(20,24,31,.82);backdrop-filter:blur(8px);color:#c9d1dd;font-size:12px;font-weight:500;padding:4px 12px;border-radius:100px;}
+  .bubble{
+    position:relative;max-width:min(80%, 460px);padding:6px 10px 7px 11px;margin-top:2px;border-radius:16px;
+    font-size:14.5px;line-height:1.42;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 1px 1.5px rgba(0,0,0,.3);
+  }
+  .bubble.first{margin-top:8px;}
+  /* для клиента: сообщения студии слева, свои справа синим */
+  .bubble.out{align-self:flex-start;background:#1c212a;}
+  .bubble.in{align-self:flex-end;background:linear-gradient(160deg, #3b8bff, #2a6fe6);color:#fff;}
+  .bubble.out.tail{border-bottom-left-radius:4px;}
+  .bubble.in.tail{border-bottom-right-radius:4px;}
+  .bubble.out:not(.first){border-top-left-radius:6px;}
+  .bubble.in:not(.first){border-top-right-radius:6px;}
+  .bubble.out:not(.tail){border-bottom-left-radius:6px;}
+  .bubble.in:not(.tail){border-bottom-right-radius:6px;}
+  .bubble.tail::after{content:'';position:absolute;bottom:0;width:10px;height:14px;}
+  .bubble.out.tail::after{left:-6px;background:radial-gradient(circle at 0 0, transparent 9.5px, #1c212a 10px);}
+  .bubble.in.tail::after{right:-6px;background:radial-gradient(circle at 100% 0, transparent 9.5px, #2a6fe6 10px);}
+  .bubble .spacer{display:inline-block;width:42px;height:1px;}
+  .bubble.file .spacer{display:block;height:14px;width:auto;}
+  .bubble .stamp{position:absolute;right:9px;bottom:5px;font-size:11px;line-height:1;opacity:.72;white-space:nowrap;}
+  .bubble.out .stamp{color:var(--muted);}
+  .fmsg{display:flex;align-items:center;gap:10px;background:none;border:none;padding:4px 2px 0;cursor:pointer;text-align:left;color:inherit;min-width:170px;max-width:100%;}
+  .fmsg:disabled{cursor:default;opacity:.7;}
+  .fico{flex:none;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(47,127,255,.2);color:var(--blue-light);}
+  .fname{min-width:0;display:flex;flex-direction:column;}
+  .fname b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .fname small{font-size:12px;opacity:.75;}
+  .fmsg:not(:disabled):hover .fname small{text-decoration:underline;}
+
+  .reply{display:flex;align-items:flex-end;gap:6px;padding:8px 10px;background:var(--surface);border-top:1px solid var(--line);}
+  .field-wrap{flex:1;min-width:0;display:flex;background:var(--surface-2);border:1px solid transparent;border-radius:21px;padding:0 14px;transition:border-color .15s;}
+  .field-wrap:focus-within{border-color:rgba(47,127,255,.55);}
+  .field-wrap textarea{
+    flex:1;min-width:0;display:block;background:none;border:none;outline:none;resize:none;color:var(--text);
+    font-family:'Inter',sans-serif;font-size:15px;line-height:1.4;padding:10px 0;height:41px;max-height:140px;
+    scrollbar-width:none;overflow-y:auto;
+  }
+  .field-wrap textarea::-webkit-scrollbar{display:none;}
+  .field-wrap textarea::placeholder{color:#69717f;}
+  .send{flex:none;width:42px;height:42px;border-radius:50%;border:none;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s, background .15s, color .15s;}
+  .send svg{transform:translateX(1px);}
+  .send:hover:not(:disabled){background:#1f6cf0;transform:scale(1.05);}
+  .send:disabled{background:none;color:#4b5361;cursor:default;}
+  .cfiles{display:flex;flex-direction:column;gap:8px;margin-bottom:26px;}
+  .cfile{display:flex;align-items:center;gap:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+  .cfile .nm{flex:1;min-width:0;}
+  .cfile .nm b{display:block;font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cfile .nm span{font-size:12px;color:var(--muted);}
+  .cfile .btn{width:auto;margin:0;padding:8px 14px;font-size:13.5px;flex:none;}
+
+  @media (max-width:640px){
+    .id-card{grid-template-columns:1fr;}
+    .cab-actions{grid-template-columns:1fr;}
+  }
+  @media (max-width:380px){
+    .back{font-size:13px;padding:.55em .9em;}
+    .name-form{flex-direction:column;}
+    .name-form .btn{padding:14px;}
+  }
+</style>
+</head>
+<body>
+<div class="glow-bg"></div>
+
+<header>
+  <nav>
+    <a href="index.html" class="logo" aria-label="DOWNSHOT — на главную">
+      <svg class="iris" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5"/><circle cx="10" cy="10" r="3"/><line x1="10" y1="0.5" x2="10" y2="4.5"/><line x1="10" y1="15.5" x2="10" y2="19.5"/><line x1="0.5" y1="10" x2="4.5" y2="10"/><line x1="15.5" y1="10" x2="19.5" y2="10"/></svg>
+      DOWNSHOT
+    </a>
+    <a href="index.html" class="back">← На сайт</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ВХОД / РЕГИСТРАЦИЯ -->
+  <div class="auth" id="authView" hidden>
+    <div class="test-banner" id="testBanner" hidden>
+      <span class="pill">ТЕСТ</span>
+      <span>Тестовый режим: SMS не отправляются. Номер <b id="tbPhone"></b>, код <b id="tbCode"></b>.</span>
+    </div>
+
+    <div class="card">
+      <!-- шаг 1: телефон -->
+      <form id="stepPhone" novalidate>
+        <span class="eyebrow">Личный кабинет</span>
+        <h1>Вход по номеру телефона</h1>
+        <p class="lead">Пришлём код подтверждения. Если вы у нас впервые, после кода создадим кабинет.</p>
+        <div class="field">
+          <label for="phone">Номер телефона</label>
+          <input class="input" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (900) 000-00-00">
+        </div>
+        <div class="error" id="phoneError" role="alert"></div>
+        <button class="btn" type="submit" id="phoneBtn">Получить код</button>
+      </form>
+
+      <!-- шаг 2: код -->
+      <form id="stepCode" novalidate hidden>
+        <span class="eyebrow">Подтверждение</span>
+        <h1>Введите код</h1>
+        <p class="lead">Код отправлен на <span class="phone-shown" id="codePhone"></span></p>
+        <div class="field">
+          <label for="code">Код из SMS</label>
+          <input class="input code" id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+        </div>
+        <div class="error" id="codeError" role="alert"></div>
+        <button class="btn" type="submit" id="codeBtn">Войти</button>
+        <div class="row">
+          <button class="link" type="button" id="changePhone">← Изменить номер</button>
+          <button class="link" type="button" id="resend" disabled>Отправить снова</button>
+        </div>
+      </form>
+
+      <!-- шаг 3: регистрация -->
+      <form id="stepRegister" novalidate hidden>
+        <span class="eyebrow">Регистрация</span>
+        <h1>Как к вам обращаться?</h1>
+        <p class="lead">Номер <span class="phone-shown" id="regPhone"></span> подтверждён. Осталось указать имя, и мы присвоим вам ID клиента.</p>
+        <div class="field">
+          <label for="regName">Имя</label>
+          <input class="input" id="regName" type="text" autocomplete="given-name" maxlength="60" placeholder="Например, Алексей">
+        </div>
+        <label class="check"><input type="checkbox" id="consent"> Согласен на обработку персональных данных для связи по заявкам</label>
+        <div class="error" id="regError" role="alert"></div>
+        <button class="btn" type="submit" id="regBtn">Создать кабинет</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- КАБИНЕТ -->
+  <div class="cabinet" id="cabinetView" hidden>
+    <div class="test-banner" id="testBanner2" hidden>
+      <span class="pill">ТЕСТ</span>
+      <span>Тестовый режим: данные кабинета хранятся только в этом браузере.</span>
+    </div>
+    <div class="card">
+      <div class="cab-head">
+        <div>
+          <span class="eyebrow">Личный кабинет</span>
+          <h1 id="hello">Здравствуйте!</h1>
+        </div>
+      </div>
+
+      <div class="id-card">
+        <div class="id-cell">
+          <span class="k">ID клиента</span>
+          <span class="v mono" id="uId"></span><button class="copy" type="button" id="copyId">Копировать</button>
+        </div>
+        <div class="id-cell">
+          <span class="k">Телефон</span>
+          <span class="v" id="uPhone"></span>
+        </div>
+        <div class="id-cell">
+          <span class="k">Клиент с</span>
+          <span class="v" id="uSince"></span>
+        </div>
+      </div>
+
+      <div class="section-title">Имя</div>
+      <form class="name-form" id="nameForm">
+        <input class="input" id="uName" type="text" maxlength="60" autocomplete="given-name" aria-label="Имя">
+        <button class="btn ghost" type="submit">Сохранить</button>
+      </form>
+      <div class="saved" id="nameSaved" role="status"></div>
+
+      <div class="section-title">Сообщения от студии</div>
+      <div class="chatbox">
+        <div class="thread" id="thread"></div>
+        <form class="reply" id="replyForm">
+          <div class="field-wrap"><textarea id="replyText" rows="1" maxlength="1000" placeholder="Сообщение" aria-label="Ответ студии"></textarea></div>
+          <button class="send" type="submit" id="replySend" disabled aria-label="Отправить"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.4 11.1 19.2 4.3c.7-.3 1.4.4 1.1 1.1l-6.8 14.8c-.3.7-1.4.7-1.6-.1l-1.6-5.4a1 1 0 0 0-.7-.7L4.5 12.7c-.8-.2-.8-1.3-.1-1.6Z" fill="currentColor"/></svg></button>
+        </form>
+      </div>
+
+      <div class="section-title">Файлы от студии</div>
+      <div class="cfiles" id="cfiles"></div>
+
+      <div class="section-title">Мои заявки</div>
+      <ul class="req-list" id="reqList" hidden></ul>
+      <div class="empty" id="reqEmpty">Заявок пока нет. Оставьте заявку на главной: мы подставим ваш ID и телефон, чтобы было проще вас найти.</div>
+
+      <div class="cab-actions">
+        <a class="btn" href="index.html#contact">Оставить заявку</a>
+        <button class="btn ghost" type="button" id="logout">Выйти</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="assets/auth.js"></script>
+<script src="assets/crm-data.js"></script>
+<script>
+(function(){
+  var A = window.DSAuth;
+  var $ = function(id){ return document.getElementById(id); };
+  var phone = null, resendTimer = null;
+
+  if (A.MODE === 'test') {
+    $('testBanner').hidden = false;
+    $('testBanner2').hidden = false;
+    $('tbPhone').textContent = A.formatPhone(A.TEST_PHONE);
+    $('tbCode').textContent = A.TEST_CODE;
+  }
+
+  function show(step){
+    ['stepPhone','stepCode','stepRegister'].forEach(function(s){ $(s).hidden = s !== step; });
+    var focusId = {stepPhone:'phone', stepCode:'code', stepRegister:'regName'}[step];
+    setTimeout(function(){ $(focusId).focus(); }, 30);
+  }
+  function busy(btn, on, label){
+    btn.disabled = on;
+    btn.innerHTML = on ? '<span class="spinner"></span>' : label;
+  }
+  function fail(errId, inputId, msg){
+    $(errId).textContent = msg;
+    if (inputId) $(inputId).setAttribute('aria-invalid', 'true');
+  }
+  function clearErr(errId, inputId){
+    $(errId).textContent = '';
+    if (inputId) $(inputId).removeAttribute('aria-invalid');
+  }
+
+  /* ---------- шаг 1 ---------- */
+  $('phone').addEventListener('input', function(e){
+    var el = e.target;
+    el.value = A.formatPhone(el.value);
+    clearErr('phoneError', 'phone');
+  });
+  $('stepPhone').addEventListener('submit', function(e){
+    e.preventDefault();
+    var p = A.normalizePhone($('phone').value);
+    if (!p) return fail('phoneError', 'phone', 'Введите номер полностью: +7 и 10 цифр');
+    var btn = $('phoneBtn');
+    busy(btn, true);
+    A.requestCode(p).then(function(){
+      phone = p;
+      $('codePhone').textContent = A.formatPhone(p);
+      $('code').value = '';
+      clearErr('codeError', 'code');
+      startResend();
+      show('stepCode');
+    }).catch(function(err){
+      fail('phoneError', 'phone', err.message);
+    }).then(function(){ busy(btn, false, 'Получить код'); });
+  });
+
+  /* ---------- шаг 2 ---------- */
+  function startResend(){
+    var left = 30, b = $('resend');
+    clearInterval(resendTimer);
+    b.disabled = true;
+    b.textContent = 'Отправить снова через ' + left + ' с';
+    resendTimer = setInterval(function(){
+      left--;
+      if (left <= 0){ clearInterval(resendTimer); b.disabled = false; b.textContent = 'Отправить снова'; }
+      else b.textContent = 'Отправить снова через ' + left + ' с';
+    }, 1000);
+  }
+  $('resend').addEventListener('click', function(){
+    A.requestCode(phone).then(startResend).catch(function(err){ fail('codeError', null, err.message); });
+  });
+  $('changePhone').addEventListener('click', function(){ clearInterval(resendTimer); show('stepPhone'); });
+  $('code').addEventListener('input', function(e){
+    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    clearErr('codeError', 'code');
+    if (e.target.value.length === 6) $('stepCode').requestSubmit ? $('stepCode').requestSubmit() : $('codeBtn').click();
+  });
+  $('stepCode').addEventListener('submit', function(e){
+    e.preventDefault();
+    var code = $('code').value;
+    if (code.length !== 6) return fail('codeError', 'code', 'Код состоит из 6 цифр');
+    var btn = $('codeBtn');
+    if (btn.disabled) return;
+    busy(btn, true);
+    A.verifyCode(phone, code).then(function(res){
+      clearInterval(resendTimer);
+      if (res.needsRegistration){
+        $('regPhone').textContent = A.formatPhone(phone);
+        show('stepRegister');
+      } else {
+        renderCabinet(res.user);
+      }
+    }).catch(function(err){
+      fail('codeError', 'code', err.message);
+      $('code').select();
+    }).then(function(){ busy(btn, false, 'Войти'); });
+  });
+
+  /* ---------- шаг 3 ---------- */
+  $('regName').addEventListener('input', function(){ clearErr('regError', 'regName'); });
+  $('stepRegister').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('regName').value.trim();
+    if (name.length < 2) return fail('regError', 'regName', 'Укажите имя (минимум 2 буквы)');
+    if (!$('consent').checked) return fail('regError', null, 'Нужно согласие на обработку данных');
+    var btn = $('regBtn');
+    busy(btn, true);
+    A.register(phone, name).then(renderCabinet).catch(function(err){
+      fail('regError', null, err.message);
+    }).then(function(){ busy(btn, false, 'Создать кабинет'); });
+  });
+
+  /* ---------- кабинет ---------- */
+  function fmtDate(ts, withTime){
+    var o = {day:'numeric', month:'long', year:'numeric'};
+    if (withTime){ o.hour = '2-digit'; o.minute = '2-digit'; }
+    return new Date(ts).toLocaleString('ru-RU', o);
+  }
+  function renderCabinet(user){
+    $('authView').hidden = true;
+    $('cabinetView').hidden = false;
+    $('hello').textContent = user.name ? 'Здравствуйте, ' + user.name + '!' : 'Здравствуйте!';
+    $('uId').textContent = user.id;
+    $('uPhone').textContent = A.formatPhone(user.phone);
+    $('uSince').textContent = fmtDate(user.createdAt);
+    $('uName').value = user.name || '';
+    var list = $('reqList'), reqs = user.requests || [];
+    list.innerHTML = '';
+    reqs.forEach(function(r){
+      var li = document.createElement('li');
+      var t = document.createElement('time');
+      t.textContent = fmtDate(r.at, true);
+      li.appendChild(t);
+      li.appendChild(document.createTextNode(r.message || 'Без текста'));
+      list.appendChild(li);
+    });
+    list.hidden = !reqs.length;
+    $('reqEmpty').hidden = !!reqs.length;
+    renderInbox(user);
+  }
+
+  /* ---------- сообщения и файлы от студии (из CRM) ---------- */
+  function renderInbox(user){
+    var C = window.DSCRM, th = $('thread');
+    var msgs = C.thread(user.id), lastDay = '';
+    th.innerHTML = '';
+    if (!msgs.length){
+      th.innerHTML = '<div class="none">Здесь появятся сообщения от студии. Мы дублируем их по SMS на ваш номер.</div>';
+    }
+    function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function near(a, b){ return a && b && a.dir === b.dir && new Date(a.at).toDateString() === new Date(b.at).toDateString() && Math.abs(b.at - a.at) < 5 * 60000; }
+    msgs.forEach(function(m, i){
+      var day = new Date(m.at).toDateString();
+      if (day !== lastDay){
+        var now = new Date(), y = new Date(); y.setDate(now.getDate() - 1);
+        var label = day === now.toDateString() ? 'Сегодня' : day === y.toDateString() ? 'Вчера' : new Date(m.at).toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
+        var sep = el('div', 'day'); sep.appendChild(el('span', '', label)); th.appendChild(sep);
+        lastDay = day;
+      }
+      var b = el('div', 'bubble ' + m.dir + (near(msgs[i - 1], m) ? '' : ' first') + (near(m, msgs[i + 1]) ? '' : ' tail') + (m.kind === 'file' ? ' file' : ''));
+      b.title = fmtDate(m.at, true);
+      if (m.kind === 'file'){
+        var alive = C.fileExists(m.fileId);
+        var fb = el('button', 'fmsg'); fb.type = 'button'; fb.disabled = !alive;
+        var ico = el('span', 'fico'); ico.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M11.5 2.5H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 17.5h8a1.5 1.5 0 0 0 1.5-1.5V6.5l-4-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.5 2.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+        var nm = el('span', 'fname'); nm.appendChild(el('b', '', m.text)); nm.appendChild(el('small', '', alive ? C.fmtSize(m.size || 0) + ' · скачать' : 'файл удалён'));
+        fb.appendChild(ico); fb.appendChild(nm);
+        if (alive) fb.addEventListener('click', function(){ C.download(m.fileId, user.id).catch(function(err){ alert(err.message); }); });
+        b.appendChild(fb);
+      } else {
+        b.appendChild(el('span', 'txt', m.text));
+      }
+      b.appendChild(el('span', 'spacer'));
+      b.appendChild(el('span', 'stamp', new Date(m.at).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})));
+      th.appendChild(b);
+    });
+    th.scrollTop = th.scrollHeight;
+
+    var box = $('cfiles'), files = C.files(user.id);
+    box.innerHTML = '';
+    if (!files.length){
+      box.innerHTML = '<div class="empty" style="margin:0">Фото и видео со съёмок появятся здесь.</div>';
+    }
+    files.forEach(function(f){
+      var row = document.createElement('div');
+      row.className = 'cfile';
+      var nm = document.createElement('div');
+      nm.className = 'nm';
+      var b = document.createElement('b'); b.textContent = f.name; b.title = f.name;
+      var sp = document.createElement('span'); sp.textContent = C.fmtSize(f.size) + ' · ' + fmtDate(f.at, true);
+      nm.appendChild(b); nm.appendChild(sp);
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'btn ghost'; btn.textContent = 'Скачать';
+      btn.addEventListener('click', function(){
+        C.download(f.id, user.id).catch(function(err){ alert(err.message); });
+      });
+      row.appendChild(nm); row.appendChild(btn);
+      box.appendChild(row);
+    });
+  }
+  $('replyForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var u = A.currentUser(), t = $('replyText').value.trim();
+    if (!u || !t) return;
+    window.DSCRM.clientReply(u.id, t);
+    $('replyText').value = '';
+    syncReply();
+    renderInbox(u);
+  });
+  function syncReply(){
+    var ta = $('replyText');
+    ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+    $('replySend').disabled = !ta.value.trim();
+  }
+  $('replyText').addEventListener('input', syncReply);
+  // Enter — отправить, Shift+Enter — новая строка (на телефонах Enter переносит строку)
+  $('replyText').addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !matchMedia('(pointer:coarse)').matches){
+      e.preventDefault();
+      if (this.value.trim()) $('replyForm').requestSubmit();
+    }
+  });
+  // сообщение из CRM в другой вкладке появится без перезагрузки
+  window.addEventListener('storage', function(e){
+    var u = A.currentUser();
+    if (e.key === 'downshot_crm_v1' && u && !$('cabinetView').hidden) renderInbox(u);
+  });
+  $('nameForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var u = A.updateUser({name: $('uName').value});
+    if (u){
+      renderCabinet(u);
+      $('nameSaved').textContent = 'Сохранено';
+      setTimeout(function(){ $('nameSaved').textContent = ''; }, 2000);
+    }
+  });
+  $('copyId').addEventListener('click', function(){
+    var id = $('uId').textContent, b = this;
+    var done = function(){ b.textContent = 'Скопировано'; setTimeout(function(){ b.textContent = 'Копировать'; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(id).then(done, function(){});
+  });
+  $('logout').addEventListener('click', function(){
+    A.logout();
+    $('cabinetView').hidden = true;
+    $('authView').hidden = false;
+    $('phone').value = '';
+    show('stepPhone');
+  });
+
+  /* ---------- старт ---------- */
+  var current = A.currentUser();
+  if (current) renderCabinet(current);
+  else { $('authView').hidden = false; show('stepPhone'); }
+})();
+</script>
+</body>
+</html>
