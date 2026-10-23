@@ -254,36 +254,46 @@
     d.projects.forEach(function (p) { if (p.assigneeId === staffId && c[p.status] !== undefined) c[p.status]++; });
     return c;
   }
+  // Демо-проекты для тестового режима. Исполнителей берём из тех, кто есть (операторы и монтажёры), поэтому
+  // демо работает и без демо-сотрудников: на двух тестовых учётках проекты просто распределятся между ними.
   function seedDemoProjects(d, now) {
     var HOUR = 3600000, M = 60000, db = clientsDb();
-    var byName = function (name) { for (var k in d.staff) if (d.staff[k].name === name) return k; return ''; };
+    var pool = function (role) {
+      return Object.keys(d.staff).map(function (k) { return d.staff[k]; })
+        .filter(function (s) { return s.active && s.role === role && workerRole(d, s.role); })
+        .sort(function (a, b) { return a.createdAt - b.createdAt; }).map(function (s) { return s.id; });
+    };
+    var ops = pool('operator'), eds = pool('editor');
+    if (!ops.length && !eds.length) return 0;
+    if (!ops.length) ops = eds;
+    if (!eds.length) eds = ops;
+    var op = function (i) { return ops[i % ops.length]; }, ed = function (i) { return eds[i % eds.length]; };
     var clients = Object.keys(db.users).filter(function (k) { return db.users[k].demo; });
-    var S = { irina: byName('Ирина Соколова'), sergey: byName('Сергей Белов'), anast: byName('Анастасия Лебедева'), viktor: byName('Виктор Ильин'),
-      maxim: byName('Максим Орлов'), pavel: byName('Павел Громов'), olesya: byName('Олеся Кузнецова') };
     var dayEnd = function (k) { return startOfDay(now) + (k + 1) * DAY - M; };
     var ses = function (staff, daysAgo, startH, hours) { var from = startOfDay(now) - daysAgo * DAY + startH * HOUR; return { staffId: staff, from: from, to: from + hours * HOUR }; };
     var open = function (staff, minAgo) { return { staffId: staff, from: now - minAgo * M }; };
     var n = 0;
     var mk = function (o) {
-      if (!o.as) return;
       var age = o.age || 3, hist = [{ t: now - age * DAY, type: 'created', by: 'ST-ADMN' }];
       if (o.sessions && o.sessions.length) hist.push({ t: o.sessions[0].from, type: 'start', by: o.sessions[0].staffId });
-      (o.hist || []).forEach(function (h) { hist.push(h); });
+      if (o.from && o.from !== o.as) hist.push({ t: now - (o.ago || 2) * DAY, type: 'transfer', from: o.from, to: o.as, by: 'ST-ADMN' });
       var p = { id: uid('PR', 6), title: o.title, clientId: o.cl >= 0 && clients[o.cl] ? clients[o.cl] : '', type: o.type, assigneeId: o.as, deadline: o.dl,
         note: o.note || '', status: o.status, createdAt: now - age * DAY, createdBy: 'ST-ADMN', sessions: o.sessions || [], history: hist, demo: true };
       if (o.status === 'done') { p.doneAt = o.doneAt; p.result = o.result; hist.push({ t: o.doneAt, type: 'done', by: o.as }); }
       d.projects.push(p); n++;
     };
-    mk({ title: 'Заезд · Роза Хутор', type: 'shoot', as: S.sergey, cl: 0, status: 'work', dl: dayEnd(1), sessions: [ses(S.sergey, 1, 10, 2.5), open(S.sergey, 40)], note: 'Две локации, вертикальный ролик и фото' });
-    mk({ title: 'Школа катания · 3 часа', type: 'shoot', as: S.anast, cl: 1, status: 'pause', dl: dayEnd(2), sessions: [ses(S.anast, 1, 11, 1.8)] });
-    mk({ title: 'Фрирайд-сопровождение', type: 'shoot', as: S.irina, cl: 3, status: 'todo', dl: dayEnd(3), sessions: [] });
-    mk({ title: 'Соревнования клуба · репортаж', type: 'shoot', as: S.sergey, cl: 4, status: 'done', dl: dayEnd(-3), age: 9, sessions: [ses(S.sergey, 5, 9, 3.2), ses(S.sergey, 4, 10, 2)], doneAt: now - 3 * DAY, result: 'Отснято три заезда, 412 кадров. Материал передан монтажёру, отчёт готов.' });
-    mk({ title: 'Съёмочный день · бренд экипировки', type: 'shoot', as: S.sergey, cl: 5, status: 'pause', dl: dayEnd(2), age: 6, sessions: [ses(S.viktor, 3, 10, 2)], hist: [{ t: now - 2 * DAY, type: 'transfer', from: S.viktor, to: S.sergey, by: 'ST-ADMN' }] });
-    mk({ title: 'Спуск · 30 минут', type: 'shoot', as: S.irina, cl: 2, status: 'done', dl: dayEnd(-6), age: 8, sessions: [ses(S.irina, 6, 12, 1.1)], doneAt: now - 6 * DAY, result: 'Съёмка на одной трассе, отдано 15 обработанных фото.' });
-    mk({ title: 'Монтаж ролика · Заезд', type: 'edit', as: S.pavel, cl: 0, status: 'work', dl: dayEnd(0), sessions: [ses(S.pavel, 1, 12, 3), open(S.pavel, 70)] });
-    mk({ title: 'Рилс 30 сек · сторис', type: 'edit', as: S.maxim, cl: 6, status: 'pause', dl: dayEnd(-1), age: 7, sessions: [ses(S.maxim, 2, 13, 1.2)] });
-    mk({ title: 'Обработка 25 фото', type: 'edit', as: S.pavel, cl: 3, status: 'done', dl: dayEnd(-1), age: 6, sessions: [ses(S.pavel, 3, 14, 1.5), ses(S.pavel, 2, 10, 1)], doneAt: now - 2 * DAY, result: 'Цветокоррекция и ретушь 25 кадров, выгрузка архива клиенту.' });
-    mk({ title: 'Монтаж · соревнования клуба', type: 'edit', as: S.maxim, cl: 4, status: 'pause', dl: dayEnd(3), age: 5, sessions: [ses(S.olesya, 4, 10, 4)], hist: [{ t: now - 3 * DAY, type: 'transfer', from: S.olesya, to: S.maxim, by: 'ST-ADMN' }] });
+    // у исполнителя одновременно идёт один проект: если операторов и монтажёров поровну нет, монтаж ставим на паузу
+    var sameWorker = op(0) === ed(0);
+    mk({ title: 'Заезд · Роза Хутор', type: 'shoot', as: op(0), cl: 0, status: 'work', dl: dayEnd(1), sessions: [ses(op(0), 1, 10, 2.5), open(op(0), 40)], note: 'Две локации, вертикальный ролик и фото' });
+    mk({ title: 'Школа катания · 3 часа', type: 'shoot', as: op(1), cl: 1, status: 'pause', dl: dayEnd(2), sessions: [ses(op(1), 1, 11, 1.8)] });
+    mk({ title: 'Фрирайд-сопровождение', type: 'shoot', as: op(2), cl: 3, status: 'todo', dl: dayEnd(3), sessions: [] });
+    mk({ title: 'Соревнования клуба · репортаж', type: 'shoot', as: op(0), cl: 4, status: 'done', dl: dayEnd(-3), age: 9, sessions: [ses(op(0), 5, 9, 3.2), ses(op(0), 4, 10, 2)], doneAt: now - 3 * DAY, result: 'Отснято три заезда, 412 кадров. Материал передан монтажёру, отчёт готов.' });
+    mk({ title: 'Съёмочный день · бренд экипировки', type: 'shoot', as: op(0), from: op(3), cl: 5, status: 'pause', dl: dayEnd(2), age: 6, sessions: [ses(op(3), 3, 10, 2)] });
+    mk({ title: 'Спуск · 30 минут', type: 'shoot', as: op(2), cl: 2, status: 'done', dl: dayEnd(-6), age: 8, sessions: [ses(op(2), 6, 12, 1.1)], doneAt: now - 6 * DAY, result: 'Съёмка на одной трассе, отдано 15 обработанных фото.' });
+    mk({ title: 'Монтаж ролика · Заезд', type: 'edit', as: ed(0), cl: 0, status: sameWorker ? 'pause' : 'work', dl: dayEnd(0), sessions: sameWorker ? [ses(ed(0), 1, 12, 3)] : [ses(ed(0), 1, 12, 3), open(ed(0), 70)] });
+    mk({ title: 'Рилс 30 сек · сторис', type: 'edit', as: ed(1), cl: 6, status: 'pause', dl: dayEnd(-1), age: 7, sessions: [ses(ed(1), 2, 13, 1.2)] });
+    mk({ title: 'Обработка 25 фото', type: 'edit', as: ed(0), cl: 3, status: 'done', dl: dayEnd(-1), age: 6, sessions: [ses(ed(0), 3, 14, 1.5), ses(ed(0), 2, 10, 1)], doneAt: now - 2 * DAY, result: 'Цветокоррекция и ретушь 25 кадров, выгрузка архива клиенту.' });
+    mk({ title: 'Монтаж · соревнования клуба', type: 'edit', as: ed(1), from: ed(2), cl: 4, status: 'pause', dl: dayEnd(3), age: 5, ago: 3, sessions: [ses(ed(2), 4, 10, 4)] });
     return n;
   }
   function rolePerms(data, role) {
@@ -855,7 +865,7 @@
         d.staff[id] = { id: id, phone: phone, name: x[0], role: x[1], active: true, createdAt: now - (30 + i) * DAY, salary: x[2], status: stat, log: log, demo: true };
         n++;
       });
-      seedDemoProjects(d, now);
+      if (!d.projects.some(function (p) { return p.demo; })) seedDemoProjects(d, now);
       save(d);
       return n;
     },
@@ -996,6 +1006,31 @@
         .sort(function (a, b) { return (b.doneAt || b.runningSince || 0) - (a.doneAt || a.runningSince || 0); });
       out.projMs = out.report.reduce(function (a, e) { return a + e.mineMonthMs; }, 0);
       return out;
+    },
+
+    /* ---------- демо-режим проектов (только тестовый режим) ---------- */
+    hasDemoProjects: function () {
+      return load().projects.some(function (p) { return p.demo; });
+    },
+    // Добавляет демо-проекты на уже существующих операторов и монтажёров. Если исполнителей нет, а у вас есть
+    // право управлять сотрудниками, сначала создаёт демо-сотрудников (вместе с ними появятся и демо-проекты).
+    seedDemoProjectsOnly: function () {
+      need('projects.manage');
+      var d = load(), now = Date.now();
+      if (d.projects.some(function (p) { return p.demo; })) return 0;
+      var n = seedDemoProjects(d, now);
+      if (!n) {
+        if (can('staff.edit')) { api.seedDemoStaff(); return load().projects.filter(function (p) { return p.demo; }).length; }
+        fail('Нет исполнителей: добавьте оператора или монтажёра');
+      }
+      save(d);
+      return n;
+    },
+    clearDemoProjects: function () {
+      need('projects.manage');
+      var d = load();
+      d.projects = d.projects.filter(function (p) { return !p.demo; });
+      save(d);
     },
 
     fmtSize: function (b) {
