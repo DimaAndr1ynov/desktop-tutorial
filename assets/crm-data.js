@@ -781,6 +781,75 @@
       save(d);
     },
 
+    /* ---------- демо-данные личного кабинета (только тестовый режим, для самого клиента) ---------- */
+    hasCabinetDemo: function (clientId) {
+      var d = load();
+      return d.messages.concat(d.files).some(function (x) { return x.clientId === clientId && x.demo; }) ||
+        ((clientsDb().users[clientId] || {}).requests || []).some(function (r) { return r.demo; });
+    },
+    seedCabinetDemo: function (clientId) {
+      var db = clientsDb(), u = db.users[clientId];
+      if (!u || api.hasCabinetDemo(clientId)) return Promise.resolve(0);
+      var d = load(), now = Date.now(), staff = Object.keys(d.staff)[0];
+      var ago = function (days, hour, min) { var t = new Date(now - days * DAY); t.setHours(hour, min || 0, 0, 0); return t.getTime(); };
+      var shots = [['Спуск_01.jpg', '#3b82f6', '#0f172a'], ['Спуск_02.jpg', '#8b5cf6', '#0f172a'], ['Заезд_фрирайд.jpg', '#06b6d4', '#082f49']];
+      var mk = function (s) {
+        return new Promise(function (res) {
+          var text = 'DOWNSHOT · демо-кадр ' + s[0];
+          try {
+            var c = document.createElement('canvas'); c.width = 960; c.height = 600;
+            var g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 960, 600);
+            gr.addColorStop(0, s[1]); gr.addColorStop(1, s[2]);
+            g.fillStyle = gr; g.fillRect(0, 0, 960, 600);
+            g.fillStyle = 'rgba(255,255,255,.9)'; g.font = '700 54px sans-serif'; g.fillText('DOWNSHOT', 60, 300);
+            g.font = '28px sans-serif'; g.fillText('демо-кадр · ' + s[0], 60, 350);
+            c.toBlob(function (b) { res(b || new Blob([text], { type: 'text/plain' })); }, 'image/jpeg', 0.85);
+          } catch (e) { res(new Blob([text], { type: 'text/plain' })); }
+        });
+      };
+      var notes = new Blob(['Это демо-файл личного кабинета. Настоящие фото и видео студия загрузит после съёмки.'], { type: 'text/plain' });
+      return Promise.all(shots.map(mk)).then(function (blobs) {
+        blobs.push(notes);
+        var names = shots.map(function (s) { return s[0]; }).concat(['Как_скачать_оригиналы.txt']);
+        var when = [[3, 15, 40], [3, 15, 41], [2, 11, 5], [3, 15, 30]];
+        return Promise.all(blobs.map(function (b, i) {
+          var meta = { id: uid('F', 10), clientId: clientId, name: names[i], size: b.size, type: b.type || 'application/octet-stream', at: ago(when[i][0], when[i][1], when[i][2]), staffId: staff, demo: true };
+          return blobOp('readwrite', function (st) { return st.put(b, meta.id); }).then(function () { return meta; });
+        }));
+      }).then(function (metas) {
+        var d2 = load();
+        metas.forEach(function (m) { d2.files.push(m); });
+        var msg = function (days, h, min, dir, text) { d2.messages.push({ id: uid('M', 8), clientId: clientId, dir: dir, text: text, at: ago(days, h, min), staffId: dir === 'out' ? staff : undefined, status: 'test', demo: true }); };
+        var fmsg = function (meta) { d2.messages.push({ id: uid('M', 8), clientId: clientId, dir: 'out', kind: 'file', fileId: meta.id, text: meta.name, size: meta.size, at: meta.at + 60000, staffId: staff, status: 'test', demo: true }); };
+        msg(5, 12, 10, 'out', 'Здравствуйте! Это DOWNSHOT. Получили вашу заявку, на какое число планируете съёмку?');
+        msg(5, 12, 26, 'in', 'Добрый день! В субботу утром, около 10:00, трасса у подъёмника.');
+        msg(5, 12, 31, 'out', 'Отлично, записали. Будем на склоне в 9:45, дрон и камеры с нами.');
+        msg(3, 15, 22, 'out', 'Съёмка готова! Первые кадры загрузили, остальное допишем до вечера.');
+        fmsg(metas[0]); fmsg(metas[1]);
+        msg(3, 16, 2, 'in', 'Класс, огромное спасибо!');
+        msg(2, 11, 0, 'out', 'Добавили ещё один кадр и короткую памятку, как скачать оригиналы.');
+        fmsg(metas[2]);
+        d2.messages.sort(function (a, b) { return a.at - b.at; });
+        save(d2);
+        var db2 = clientsDb(), u2 = db2.users[clientId];
+        u2.requests = (u2.requests || []).concat([
+          { at: ago(6, 14, 5), email: '', message: 'Хочу тариф «Заезд» на субботу, снимаем фрирайд.', demo: true },
+          { at: ago(1, 9, 30), email: '', message: 'Можно добавить второй заезд в тот же день?', demo: true }
+        ]).sort(function (a, b) { return b.at - a.at; });
+        A._store.save(db2);
+        return metas.length;
+      });
+    },
+    clearCabinetDemo: function (clientId) {
+      var d = load(), gone = d.files.filter(function (f) { return f.clientId === clientId && f.demo; });
+      d.messages = d.messages.filter(function (m) { return !(m.clientId === clientId && m.demo); });
+      d.files = d.files.filter(function (f) { return !(f.clientId === clientId && f.demo); });
+      save(d);
+      gone.forEach(function (f) { blobOp('readwrite', function (st) { return st.delete(f.id); }); });
+      var db = clientsDb(), u = db.users[clientId];
+      if (u) { u.requests = (u.requests || []).filter(function (r) { return !r.demo; }); A._store.save(db); }
+    },
+
     STAFF_STATUSES: STAFF_STATUSES,
     NORM_HOURS: NORM_HOURS,
 
