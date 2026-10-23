@@ -187,6 +187,7 @@
   .empty{color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:16px;padding:18px;margin-bottom:26px;line-height:1.55;}
   .cab-actions{display:flex;flex-direction:column;gap:10px;}
   .cab-actions .btn{margin:0;padding:12px;font-size:14.5px;}
+  .logout{margin:0;padding:11px;font-size:14.5px;gap:8px;}
 
   /* ---------- переписка со студией (в стиле мессенджера, как в CRM) ---------- */
   .chatbox{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:26px;}
@@ -257,14 +258,11 @@
     .profile{position:static;gap:18px;max-height:none;overflow:visible;}
     .facts{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:18px 24px;}
     .fact{border-bottom:none;padding-bottom:0;}
-    .cab-actions{flex-direction:row;}
-    .cab-actions .btn{flex:1;}
     .cab-menu{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;}
     .cab-menu button{border-color:var(--line);padding:10px 12px;font-size:14px;gap:8px;}
   }
   @media (max-width:480px){
     .facts{grid-template-columns:minmax(0, 1fr);}
-    .cab-actions{flex-direction:column;}
   }
   @media (max-width:400px){
     .cab-menu{grid-template-columns:minmax(0, 1fr);}
@@ -374,7 +372,6 @@
 
         <div class="cab-actions">
           <a class="btn" href="index.html#contact">Оставить заявку</a>
-          <button class="btn ghost" type="button" id="logout">Выйти</button>
         </div>
 
         <!-- разделы кабинета: переключают правую часть -->
@@ -384,6 +381,11 @@
           <button type="button" data-view="requests"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3.5" y="3" width="13" height="14.5" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7.5h6M7 10.5h6M7 13.5h3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Мои заявки</span><em class="cnt" id="cntReqs" hidden></em></button>
           <button type="button" data-view="settings"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.5"/><path d="M10 1.8v2.3M10 15.9v2.3M1.8 10h2.3M15.9 10h2.3M4.2 4.2l1.6 1.6M14.2 14.2l1.6 1.6M4.2 15.8l1.6-1.6M14.2 5.8l1.6-1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Настройки</span></button>
         </div>
+
+        <button class="btn ghost logout" type="button" id="logout">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10.5 11l3-3-3-3M13.5 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Выйти
+        </button>
       </aside>
 
       <!-- правая часть: переписка, файлы, заявки -->
