@@ -561,6 +561,42 @@
   @media (max-width:380px){
     .nav button.on .lbl{display:none;}
   }
+  /* ---------- светлая тема ---------- */
+  :root{
+    color-scheme:light;
+    --bg:#f3f5f9;
+    --surface:#ffffff;
+    --surface-2:#f6f8fb;
+    --surface-3:#ffffff;
+    --line:#dfe4ec;
+    --blue:#2563eb;
+    --blue-light:#1d5fd6;
+    --text:#161b26;
+    --muted:#667085;
+    --danger:#d92d20;
+    --ok:#12804a;
+    --warn:#b45309;
+  }
+  .input::placeholder, .textarea::placeholder{color:#98a2b3;}
+  .btn:hover{background:#1d4fd0;}
+  .logo small{border-color:rgba(37,99,235,.35);}
+  .test-banner, .demo-bar{background:rgba(250,204,21,.16);border-color:rgba(202,138,4,.45);color:#7a4b00;}
+  .test-banner b{color:#5c3a00;}
+  .test-banner .pill{background:rgba(250,204,21,.35);}
+  .role.admin{background:rgba(37,99,235,.12);color:#1d4ed8;}
+  .role.manager{background:rgba(147,51,234,.12);color:#7e22ce;}
+  .role.operator{background:rgba(22,163,74,.12);color:#15803d;}
+  .role.editor{background:rgba(234,88,12,.12);color:#c2410c;}
+  .role.cashier{background:rgba(202,138,4,.15);color:#8a5a00;}
+  .ss-shoot{color:#7e22ce;} .ss-lunch{color:#c2410c;}
+  .overlay{background:rgba(22,27,38,.45);}
+  .toast{box-shadow:0 12px 30px rgba(16,24,40,.18);}
+  .toast.err{color:#b42318;}
+  .msgs{scrollbar-color:#c3cad6 transparent;background-color:#e8edf5;
+    background-image:radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,.08), transparent 60%),radial-gradient(700px 500px at 100% 100%, rgba(139,92,246,.07), transparent 60%);}
+  .msg{box-shadow:0 1px 1.5px rgba(16,24,40,.15);}
+  .msg.in{background:#ffffff;color:var(--text);}
+  .msg.in.tail::after{background:radial-gradient(circle at 0 0, transparent 9.5px, #ffffff 10px);}
 </style>
 </head>
 <body>
