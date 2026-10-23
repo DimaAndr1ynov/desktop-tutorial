@@ -119,6 +119,9 @@
 
   /* ---------- кабинет ---------- */
   .cab-head{margin-bottom:24px;}
+  .demo-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px dashed var(--line);border-radius:14px;padding:10px 14px;margin:-8px 0 20px;font-size:13px;color:var(--muted);line-height:1.45;}
+  .demo-strip span{flex:1 1 220px;}
+  .demo-strip .btn{padding:.5em 1em;font-size:13px;}
 
   /* две колонки: слева профиль клиента, справа переписка, файлы и заявки */
   .cab-layout{display:grid;grid-template-columns:clamp(260px, 26vw, 320px) minmax(0, 1fr);gap:20px;align-items:start;}
@@ -486,6 +489,11 @@
         <h1 id="hello">Здравствуйте!</h1>
       </div>
 
+      <div class="demo-strip" id="demoStrip" hidden>
+        <span id="demoText"></span>
+        <button class="btn ghost" type="button" id="demoBtn"></button>
+      </div>
+
       <section class="panel" id="panel-messages" data-panel="messages">
         <div class="section-title">Сообщения от студии</div>
         <div class="chatbox">
@@ -709,6 +717,7 @@
     $('reqEmpty').hidden = !!reqs.length;
     setCount('cntReqs', reqs.length);
     renderInbox(user);
+    syncDemo(user);
   }
 
   /* ---------- сообщения и файлы от студии (из CRM) ---------- */
@@ -771,6 +780,23 @@
       box.appendChild(row);
     });
   }
+  /* ---------- демо-данные кабинета (только тестовый режим) ---------- */
+  function syncDemo(user){
+    var strip = $('demoStrip');
+    strip.hidden = A.MODE !== 'test';
+    if (strip.hidden) return;
+    var on = window.DSCRM.hasCabinetDemo(user.id);
+    $('demoText').textContent = on ? 'Демо-режим: в кабинет добавлены примеры сообщений, файлов и заявок.' : 'Тестовый режим: можно добавить примеры сообщений, файлов и заявок, чтобы увидеть кабинет наполненным.';
+    $('demoBtn').textContent = on ? 'Выключить демо-режим' : 'Включить демо-режим';
+  }
+  $('demoBtn').addEventListener('click', function(){
+    var u = A.currentUser(), C = window.DSCRM, btn = this;
+    if (!u) return;
+    btn.disabled = true;
+    if (C.hasCabinetDemo(u.id)){ C.clearCabinetDemo(u.id); done(); }
+    else C.seedCabinetDemo(u.id).then(done, function(err){ alert(err.message); btn.disabled = false; });
+    function done(){ btn.disabled = false; renderCabinet(A.currentUser()); }
+  });
   $('replyForm').addEventListener('submit', function(e){
     e.preventDefault();
     var u = A.currentUser(), t = $('replyText').value.trim();
