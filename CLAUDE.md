@@ -93,6 +93,7 @@
 - Ветка разработки: `claude/photo-video-operator-site-fijp9n`; перед новой правкой пересоздавать её от `origin/main` (`git checkout -B <ветка> origin/main`), т.к. PR мержатся squash'ем
 - Публикация: PR → squash-merge в `main` → деплой Pages запускается автоматически
 - НО: коммиты, сделанные workflow-ботом (fetch-*-image), деплой НЕ триггерят — после них запускать `deploy-pages.yml` вручную (workflow_dispatch)
+- **Автосохранение:** хук Stop (`.claude/settings.json` → `.claude/autosave.sh`) после каждого ответа Claude коммитит снимок рабочей папки в ветку `claude/autosave` и пушит её. Рабочая ветка и `main` не меняются, живой сайт не затрагивается. В `main`/на сайт — только через PR и после явного подтверждения владельца
 - Репозиторий публичный (это требование бесплатного GitHub Pages)
 - Проверка вёрстки: Playwright + Chromium `/opt/pw-browsers/chromium`, скриншоты; scroll-анимации на fullPage-скриншоте включать принудительно:
   `document.querySelectorAll('.reveal-group').forEach(g => g.classList.add('in-view'))`
