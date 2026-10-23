@@ -14,9 +14,12 @@
 
   // Все права, которые можно выдать роли (порядок = порядок строк в таблице прав).
   var PERMS = [
+    { id: 'dashboard.view', title: 'Дашборд: клиенты, заявки, выручка' },
     { id: 'clients.view', title: 'Видеть клиентов' },
     { id: 'clients.edit', title: 'Создавать и редактировать клиентов' },
     { id: 'clients.delete', title: 'Удалять клиентов' },
+    { id: 'payments.view', title: 'Видеть оплаты' },
+    { id: 'payments.edit', title: 'Вносить оплаты' },
     { id: 'staff.edit', title: 'Сотрудники и права ролей' },
     { id: 'dialogs', title: 'Читать переписку' },
     { id: 'messages.send', title: 'Писать клиенту (SMS)' },
@@ -27,12 +30,39 @@
   // Права по умолчанию; администратор может поменять их в разделе «Сотрудники» (хранятся в data.rolePerms).
   var ROLES = {
     admin: { title: 'Администратор', locked: true, can: PERMS.map(function (p) { return p.id; }) },
-    manager: { title: 'Менеджер', can: ['clients.view', 'clients.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
     operator: { title: 'Оператор', can: ['dialogs', 'messages.send', 'files.upload', 'files.download'] },
     editor: { title: 'Монтажёр', can: ['dialogs', 'files.upload', 'files.download'] },
-    cashier: { title: 'Кассир', can: ['clients.view', 'dialogs', 'messages.send', 'files.download'] }
+    cashier: { title: 'Кассир', can: ['clients.view', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.download'] }
   };
   var ROLE_ORDER = ['admin', 'manager', 'operator', 'editor', 'cashier'];
+
+  // Тарифы из лендинга (цены в рублях) и способы оплаты.
+  var TARIFFS = [
+    { id: 'run', title: 'Спуск', price: 1000 },
+    { id: 'ride', title: 'Заезд', price: 1500 },
+    { id: 'day', title: 'Съёмочный день', price: 3000 },
+    { id: 'other', title: 'Другое', price: 0 }
+  ];
+  var METHODS = [
+    { id: 'card', title: 'Карта' },
+    { id: 'cash', title: 'Наличные' },
+    { id: 'transfer', title: 'Перевод' }
+  ];
+  var DAY = 86400000;
+
+  // Статусы смены. Часы считаются только в тех, где counted: true (обед и «не на смене» не идут в отработанное время).
+  var STAFF_STATUSES = [
+    { id: 'work', title: 'В работе', counted: true },
+    { id: 'shoot', title: 'На съёмке', counted: true },
+    { id: 'break', title: 'Перерыв', counted: true },
+    { id: 'lunch', title: 'На обеде', counted: false },
+    { id: 'off', title: 'Не на смене', counted: false },
+    { id: 'vacation', title: 'В отпуске', counted: false },
+    { id: 'sick', title: 'На больничном', counted: false }
+  ];
+  var NORM_HOURS = 160; // месячная норма часов для расчёта выполнения и ставки в час
+  var SALARY_DEFAULT = { admin: 120000, manager: 75000, operator: 55000, editor: 65000, cashier: 50000 };
 
   var STATUSES = [
     { id: 'new', title: 'Новый' },
@@ -63,7 +93,42 @@
   }
   // v2: роль «Сотрудник» стала «Оператором», добавлены тестовые учётки остальных ролей.
   function migrate(data) {
-    if (data.v >= 2) return false;
+    var changed = false;
+    if (!(data.v >= 2)) { migrateV2(data); changed = true; }
+    if (!(data.v >= 3)) {
+      // v3: дашборд и оплаты. Если администратор уже менял права роли, новые права по умолчанию дописываем,
+      // иначе роль осталась бы без доступа к оплатам и дашборду.
+      var fresh = ['dashboard.view', 'payments.view', 'payments.edit'];
+      for (var role in (data.rolePerms || {})) {
+        if (!ROLES[role] || ROLES[role].locked) continue;
+        fresh.forEach(function (p) {
+          if (ROLES[role].can.indexOf(p) !== -1 && data.rolePerms[role].indexOf(p) === -1) data.rolePerms[role].push(p);
+        });
+      }
+      data.payments = data.payments || [];
+      data.v = 3;
+      changed = true;
+    }
+    if (!(data.v >= 4)) {
+      // v4: имена вместо общих названий, оклады, статусы смены и журнал времени
+      var names = { 'ST-ADMN': ['Администратор', 'Андрей Волков'], 'ST-EMPL': ['Оператор', 'Ирина Соколова'], 'ST-EDTR': ['Монтажёр', 'Максим Орлов'], 'ST-MNGR': ['Менеджер', 'Елена Миронова'], 'ST-CASH': ['Кассир', 'Наталья Крылова'] };
+      var openId = data.session && data.session.id;
+      for (var id in data.staff) {
+        var st = data.staff[id];
+        if (names[id] && st.name === names[id][0]) st.name = names[id][1];
+        if (typeof st.salary !== 'number') st.salary = SALARY_DEFAULT[st.role] || 0;
+        if (!st.status) {
+          st.status = id === openId ? 'work' : 'off';
+          st.log = [{ s: st.status, t: Date.now() }];
+        }
+      }
+      data.v = 4;
+      changed = true;
+    }
+    if (!data.payments) { data.payments = []; changed = true; }
+    return changed;
+  }
+  function migrateV2(data) {
     var now = Date.now(), phones = {};
     for (var k in data.staff) {
       var s = data.staff[k];
@@ -76,8 +141,34 @@
       });
     data.rolePerms = data.rolePerms || {};
     data.v = 2;
+  }
+  /* ---------- статусы смены и учёт часов ---------- */
+  function statusDef(id) { return STAFF_STATUSES.filter(function (s) { return s.id === id; })[0]; }
+  // Меняет статус и дописывает запись в журнал; false, если статус не изменился.
+  function pushStatus(s, status, at) {
+    if (!statusDef(status)) fail('Неизвестный статус');
+    s.log = s.log || [];
+    if ((s.status || 'off') === status && s.log.length) return false;
+    s.log.push({ s: status, t: at || Date.now() });
+    s.status = status;
+    if (s.log.length > 600) s.log.splice(0, s.log.length - 600);
     return true;
   }
+  function startOfDay(t) { var x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); }
+  function startOfMonth(t) { var x = new Date(t); x.setDate(1); x.setHours(0, 0, 0, 0); return x.getTime(); }
+  // Отработанное время (мс) за сегодня и за месяц: сумма интервалов в учитываемых статусах.
+  function hoursOf(s, now) {
+    var res = { today: 0, month: 0 }, log = s.log || [], d0 = startOfDay(now), m0 = startOfMonth(now);
+    for (var i = 0; i < log.length; i++) {
+      var def = statusDef(log[i].s);
+      if (!def || !def.counted) continue;
+      var a = log[i].t, b = log[i + 1] ? log[i + 1].t : now;
+      res.today += Math.max(0, Math.min(b, now) - Math.max(a, d0));
+      res.month += Math.max(0, Math.min(b, now) - Math.max(a, m0));
+    }
+    return res;
+  }
+  function since(s) { var l = s.log || []; return l.length ? l[l.length - 1].t : s.createdAt; }
   function rolePerms(data, role) {
     if (!ROLES[role]) return [];
     if (ROLES[role].locked) return ROLES[role].can;
@@ -184,11 +275,17 @@
         for (var k in d.staff) if (d.staff[k].phone === phone && d.staff[k].active) s = d.staff[k];
         if (!s) fail('Доступ отключён');
         d.session = { id: s.id, at: Date.now() };
+        // вошёл — значит начал смену (отпуск и больничный не трогаем: их ставит администратор)
+        if ((d.staff[s.id].status || 'off') === 'off') pushStatus(d.staff[s.id], 'work');
         save(d);
-        return s;
+        return d.staff[s.id];
       });
     },
-    logout: function () { var d = load(); d.session = null; save(d); },
+    logout: function () {
+      var d = load(), s = d.session && d.staff[d.session.id];
+      if (s && ['work', 'shoot', 'break', 'lunch'].indexOf(s.status) !== -1) pushStatus(s, 'off'); // вышел — смена закончена
+      d.session = null; save(d);
+    },
 
     /* ---------- персонал (только админ) ---------- */
     staffList: function () {
@@ -209,6 +306,13 @@
       if (!rec) { rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec; }
       rec.name = st.name.trim(); rec.phone = phone; rec.role = st.role;
       if (typeof st.active === 'boolean') rec.active = st.active;
+      if (st.salary !== undefined && st.salary !== '') {
+        var sal = Math.round(Number(st.salary));
+        if (!(sal >= 0) || sal > 10000000) fail('Оклад: число от 0 до 10 000 000 ₽');
+        rec.salary = sal;
+      } else if (typeof rec.salary !== 'number') rec.salary = SALARY_DEFAULT[rec.role] || 0;
+      if (!rec.log) { rec.status = 'off'; rec.log = [{ s: 'off', t: Date.now() }]; }
+      if (st.status && st.status !== rec.status) pushStatus(rec, st.status);
       save(d);
       return rec;
     },
@@ -240,7 +344,8 @@
         return {
           id: u.id, name: u.name || '', phone: u.phone, createdAt: u.createdAt,
           status: u.status || 'new', note: u.note || '', assignee: u.assignee || '',
-          requests: u.requests || [], lastMessage: last || null,
+          requests: u.requests || [], lastMessage: last || null, demo: !!u.demo,
+          paid: (d.payments || []).reduce(function (s, p) { return p.clientId === u.id ? s + p.amount : s; }, 0),
           activity: Math.max(u.createdAt || 0, last ? last.at : 0, (u.requests && u.requests[0]) ? u.requests[0].at : 0)
         };
       }).sort(function (a, b) { return b.activity - a.activity; });
@@ -272,6 +377,7 @@
       var d = load(), gone = d.files.filter(function (f) { return f.clientId === id; });
       d.messages = d.messages.filter(function (m) { return m.clientId !== id; });
       d.files = d.files.filter(function (f) { return f.clientId !== id; });
+      d.payments = (d.payments || []).filter(function (p) { return p.clientId !== id; });
       save(d);
       gone.forEach(function (f) { blobOp('readwrite', function (st) { return st.delete(f.id); }); });
     },
@@ -357,6 +463,290 @@
       save(d);
       return blobOp('readwrite', function (st) { return st.delete(fileId); });
     },
+    TARIFFS: TARIFFS,
+    METHODS: METHODS,
+
+    /* ---------- оплаты ---------- */
+    payments: function (clientId) {
+      need('payments.view');
+      return (load().payments || []).filter(function (p) { return !clientId || p.clientId === clientId; })
+        .sort(function (a, b) { return b.at - a.at; });
+    },
+    addPayment: function (p) {
+      need('payments.edit');
+      var amount = Math.round(Number(p.amount));
+      if (!(amount > 0) || amount > 10000000) fail('Укажите сумму от 1 до 10 000 000 ₽');
+      if (!clientsDb().users[p.clientId]) fail('Клиент не найден');
+      if (!METHODS.some(function (m) { return m.id === p.method; })) fail('Выберите способ оплаты');
+      var tariff = TARIFFS.some(function (t) { return t.id === p.tariff; }) ? p.tariff : 'other';
+      var d = load();
+      var rec = { id: uid('P', 8), clientId: p.clientId, amount: amount, tariff: tariff, method: p.method,
+        note: String(p.note || '').trim().slice(0, 200), at: Date.now(), staffId: me().id };
+      d.payments.push(rec);
+      save(d);
+      return rec;
+    },
+    removePayment: function (id) {
+      need('clients.delete');
+      var d = load();
+      d.payments = (d.payments || []).filter(function (p) { return p.id !== id; });
+      save(d);
+    },
+
+    /* ---------- дашборд ---------- */
+    // period: '7' | '30' | '90' | 'all'. Все суммы в рублях.
+    stats: function (period) {
+      need('dashboard.view');
+      var d = load(), db = clientsDb(), now = Date.now();
+      var days = period === 'all' ? 0 : (parseInt(period, 10) || 30);
+      var from = days ? now - days * DAY : 0, prevFrom = days ? from - days * DAY : 0;
+      var users = Object.keys(db.users).map(function (k) { return db.users[k]; });
+      var pays = d.payments || [];
+      var inP = function (t) { return t >= from; };
+      var inPrev = function (t) { return days && t >= prevFrom && t < from; };
+      var sum = function (arr) { return arr.reduce(function (s, p) { return s + p.amount; }, 0); };
+
+      var reqs = [];
+      users.forEach(function (u) { (u.requests || []).forEach(function (r) { reqs.push({ at: r.at, clientId: u.id, name: u.name, message: r.message }); }); });
+
+      var payP = pays.filter(function (p) { return inP(p.at); }), payPrev = pays.filter(function (p) { return inPrev(p.at); });
+      var out = {
+        period: period, days: days,
+        clients: {
+          total: users.length,
+          added: users.filter(function (u) { return inP(u.createdAt); }).length,
+          addedPrev: users.filter(function (u) { return inPrev(u.createdAt); }).length
+        },
+        requests: {
+          total: reqs.length,
+          added: reqs.filter(function (r) { return inP(r.at); }).length,
+          addedPrev: reqs.filter(function (r) { return inPrev(r.at); }).length
+        },
+        revenue: { total: sum(pays), period: sum(payP), prev: sum(payPrev), count: payP.length,
+          avg: payP.length ? Math.round(sum(payP) / payP.length) : 0 },
+        statuses: {}, tariffs: {}, methods: {}
+      };
+
+      // воронка по статусам (по всем клиентам)
+      STATUSES.forEach(function (s) { out.statuses[s.id] = 0; });
+      users.forEach(function (u) { out.statuses[u.status || 'new'] = (out.statuses[u.status || 'new'] || 0) + 1; });
+      var payers = {}; pays.forEach(function (p) { payers[p.clientId] = true; });
+      out.paidClients = Object.keys(payers).filter(function (id) { return db.users[id]; }).length;
+
+      // выручка по тарифам и способам оплаты за период
+      TARIFFS.forEach(function (t) { out.tariffs[t.id] = { sum: 0, count: 0 }; });
+      METHODS.forEach(function (m) { out.methods[m.id] = { sum: 0, count: 0 }; });
+      payP.forEach(function (p) {
+        var t = out.tariffs[p.tariff] || out.tariffs.other; t.sum += p.amount; t.count++;
+        var m = out.methods[p.method]; if (m) { m.sum += p.amount; m.count++; }
+      });
+
+      // график выручки: 7 дней = 7 столбцов, 30 дней = 30, 90 дней = 13 недель, всё время = 12 месяцев
+      var buckets = [], i;
+      var startOfDay = function (t) { var x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
+      var fmtD = function (t) { return new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }); };
+      if (period === 'all') {
+        var m0 = new Date(now); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+        for (i = 11; i >= 0; i--) {
+          var a = new Date(m0.getFullYear(), m0.getMonth() - i, 1), b = new Date(m0.getFullYear(), m0.getMonth() - i + 1, 1);
+          buckets.push({ from: a.getTime(), to: b.getTime(), label: a.toLocaleDateString('ru-RU', { month: 'short' }), sum: 0, count: 0 });
+        }
+      } else if (days === 90) {
+        for (i = 12; i >= 0; i--) {
+          var e = startOfDay(now) + DAY - i * 7 * DAY;
+          buckets.push({ from: e - 7 * DAY, to: e, label: fmtD(e - 7 * DAY), sum: 0, count: 0 });
+        }
+      } else {
+        var n = days === 7 ? 7 : 30;
+        for (i = n - 1; i >= 0; i--) {
+          var s0 = startOfDay(now) - i * DAY;
+          buckets.push({ from: s0, to: s0 + DAY, label: fmtD(s0), sum: 0, count: 0 });
+        }
+      }
+      pays.forEach(function (p) {
+        for (var k = 0; k < buckets.length; k++) if (p.at >= buckets[k].from && p.at < buckets[k].to) { buckets[k].sum += p.amount; buckets[k].count++; break; }
+      });
+      out.chart = buckets;
+
+      // требует внимания
+      var msgsBy = {}; d.messages.forEach(function (m) { msgsBy[m.clientId] = m; });
+      var mini = function (u) { return { id: u.id, name: u.name || 'Без имени', status: u.status || 'new' }; };
+      out.attention = {
+        unanswered: users.filter(function (u) { return msgsBy[u.id] && msgsBy[u.id].dir === 'in'; })
+          .map(function (u) { var o = mini(u); o.at = msgsBy[u.id].at; o.text = msgsBy[u.id].text; return o; })
+          .sort(function (a, b) { return a.at - b.at; }),
+        noAssignee: users.filter(function (u) { return (u.status || 'new') === 'new' && !u.assignee; })
+          .map(function (u) { var o = mini(u); o.at = u.createdAt; return o; }).sort(function (a, b) { return a.at - b.at; }),
+        unpaid: users.filter(function (u) { return (u.status === 'shoot' || u.status === 'done') && !payers[u.id]; })
+          .map(function (u) { var o = mini(u); o.at = u.createdAt; return o; }).sort(function (a, b) { return a.at - b.at; })
+      };
+
+      // нагрузка: клиентов на сотрудника
+      var load_ = {};
+      users.forEach(function (u) { if (u.assignee) load_[u.assignee] = (load_[u.assignee] || 0) + 1; });
+      out.workload = Object.keys(load_).map(function (id) { return { id: id, name: d.staff[id] ? d.staff[id].name : 'Удалённый сотрудник', count: load_[id] }; })
+        .sort(function (a, b) { return b.count - a.count; });
+      out.unassigned = users.filter(function (u) { return !u.assignee; }).length;
+
+      // последние события
+      var feed = [];
+      users.forEach(function (u) { feed.push({ at: u.createdAt, kind: 'client', clientId: u.id, name: u.name || 'Без имени' }); });
+      reqs.forEach(function (r) { feed.push({ at: r.at, kind: 'request', clientId: r.clientId, name: r.name || 'Без имени', text: r.message }); });
+      pays.forEach(function (p) {
+        var u = db.users[p.clientId];
+        if (u) feed.push({ at: p.at, kind: 'payment', clientId: p.clientId, name: u.name || 'Без имени', amount: p.amount, tariff: p.tariff });
+      });
+      out.feed = feed.sort(function (a, b) { return b.at - a.at; }).slice(0, 8);
+      out.hasDemo = users.some(function (u) { return u.demo; });
+      return out;
+    },
+
+    /* ---------- демо-данные (только тестовый режим) ---------- */
+    hasDemo: function () {
+      return Object.keys(clientsDb().users).some(function (k) { return clientsDb().users[k].demo; });
+    },
+    seedDemo: function () {
+      need('clients.edit');
+      if (api.hasDemo()) return 0;
+      var db = clientsDb(), d = load(), now = Date.now();
+      var ago = function (days, hour) { var t = new Date(now - days * DAY); t.setHours(hour || 12, (days * 7) % 60, 0, 0); return t.getTime(); };
+      var price = function (id) { return TARIFFS.filter(function (t) { return t.id === id; })[0].price; };
+      var staffIds = Object.keys(d.staff).filter(function (k) { return d.staff[k].active; });
+      var operator = d.staff['ST-EMPL'] ? 'ST-EMPL' : staffIds[0], manager = d.staff['ST-MNGR'] ? 'ST-MNGR' : staffIds[0];
+      var demo = [
+        { name: 'Алексей Смирнов', phone: '+79001000001', d: 27, status: 'done', as: operator, req: [[27, 'Хочу тариф «Заезд» на субботу, снимаем фрирайд.']], pay: [[20, 'ride', 'card'], [6, 'run', 'cash']] },
+        { name: 'Марина Ковалёва', phone: '+79001000002', d: 24, status: 'done', as: manager, req: [[24, 'Нужна съёмка для школы катания, 3 часа.']], pay: [[18, 'day', 'transfer'], [4, 'ride', 'card']] },
+        { name: 'Игорь Белов', phone: '+79001000003', d: 21, status: 'done', as: operator, req: [[21, 'Спуск на одной трассе, 30 минут.']], pay: [[15, 'run', 'cash']] },
+        { name: 'Ольга Назарова', phone: '+79001000004', d: 17, status: 'shoot', as: manager, req: [[17, 'Заезд и ролик для соцсетей, две локации.']], pay: [[9, 'ride', 'card']] },
+        { name: 'Денис Орлов', phone: '+79001000005', d: 12, status: 'work', as: '', req: [[12, 'Соревнования клуба, нужен репортаж.'], [5, 'Уточните стоимость на весь день.']], pay: [], msg: [[1, 'in', 'Подтвердите, пожалуйста, дату съёмки.']] },
+        { name: 'Светлана Ли', phone: '+79001000006', d: 8, status: 'shoot', as: operator, req: [[8, 'Съёмочный день для бренда экипировки.']], pay: [[3, 'day', 'transfer']] },
+        { name: 'Артём Громов', phone: '+79001000007', d: 4, status: 'new', as: '', req: [[4, 'Можно снять FPV-пролёт над склоном?']], pay: [], msg: [[1, 'in', 'Здравствуйте, жду ответа по FPV.']] },
+        { name: 'Вера Тихонова', phone: '+79001000008', d: 2, status: 'new', as: '', req: [[2, 'Хочу попробовать, подскажите, какой тариф лучше.']], pay: [] },
+        { name: 'Павел Руднев', phone: '+79001000009', d: 26, status: 'lost', as: manager, req: [[26, 'Спросил цены, не подошло по датам.']], pay: [] }
+      ];
+      demo.forEach(function (x) {
+        if (phoneTaken(db.users, x.phone)) return;
+        var id = A._generateId(db.users);
+        db.users[id] = { id: id, phone: x.phone, name: x.name, createdAt: ago(x.d, 11), status: x.status, assignee: x.as, note: '', demo: true,
+          requests: x.req.map(function (r) { return { at: ago(r[0], 14), email: '', message: r[1] }; }).sort(function (a, b) { return b.at - a.at; }) };
+        x.pay.forEach(function (p) {
+          d.payments.push({ id: uid('P', 8), clientId: id, amount: price(p[1]), tariff: p[1], method: p[2], note: '', at: ago(p[0], 16), staffId: manager, demo: true });
+        });
+        (x.msg || []).forEach(function (m) {
+          d.messages.push({ id: uid('M', 8), clientId: id, dir: m[1], text: m[2], at: ago(m[0], 10), staffId: m[1] === 'out' ? operator : undefined, status: 'test', demo: true });
+        });
+      });
+      A._store.save(db); save(d);
+      return demo.length;
+    },
+    clearDemo: function () {
+      need('clients.delete');
+      var db = clientsDb(), d = load(), ids = {};
+      Object.keys(db.users).forEach(function (k) { if (db.users[k].demo) { ids[k] = true; delete db.users[k]; } });
+      A._store.save(db);
+      d.payments = (d.payments || []).filter(function (p) { return !ids[p.clientId]; });
+      d.messages = d.messages.filter(function (m) { return !ids[m.clientId]; });
+      d.files = d.files.filter(function (f) { return !ids[f.clientId]; });
+      save(d);
+    },
+
+    STAFF_STATUSES: STAFF_STATUSES,
+    NORM_HOURS: NORM_HOURS,
+
+    /* ---------- смена: статусы и часы ---------- */
+    // Свой статус меняет любой сотрудник, чужой только тот, у кого staff.edit.
+    setStatus: function (staffId, status) {
+      var d = load(), cur = me();
+      if (!cur) fail('Нужно войти');
+      if (staffId !== cur.id) need('staff.edit');
+      var rec = d.staff[staffId];
+      if (!rec) fail('Сотрудник не найден');
+      if (pushStatus(rec, status)) save(d);
+      return rec.status;
+    },
+    myShift: function () {
+      var s = me();
+      if (!s) return null;
+      var h = hoursOf(s, Date.now());
+      return { status: s.status || 'off', since: since(s), todayMs: h.today, monthMs: h.month };
+    },
+    // Кто сейчас в каком статусе: видно всем, кто смотрит дашборд или управляет сотрудниками (без окладов).
+    team: function () {
+      if (!can('dashboard.view') && !can('staff.edit')) fail('Недостаточно прав');
+      var d = load();
+      return Object.keys(d.staff).map(function (k) { return d.staff[k]; })
+        .filter(function (s) { return s.active; })
+        .sort(function (a, b) { return ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) || a.createdAt - b.createdAt; })
+        .map(function (s) { return { id: s.id, name: s.name, role: s.role, status: s.status || 'off', since: since(s) }; });
+    },
+    // Полная картина по команде для администратора: оклады, часы за сегодня и за месяц.
+    staffOverview: function () {
+      need('staff.edit');
+      var d = load(), now = Date.now();
+      return Object.keys(d.staff).map(function (k) {
+        var s = d.staff[k], h = hoursOf(s, now);
+        return { id: s.id, name: s.name, phone: s.phone, role: s.role, active: s.active, demo: !!s.demo, createdAt: s.createdAt,
+          salary: s.salary || 0, status: s.status || 'off', since: since(s), todayMs: h.today, monthMs: h.month };
+      }).sort(function (a, b) { return a.createdAt - b.createdAt; });
+    },
+
+    /* ---------- демо-сотрудники (только тестовый режим) ---------- */
+    hasDemoStaff: function () {
+      var d = load();
+      return Object.keys(d.staff).some(function (k) { return d.staff[k].demo; });
+    },
+    seedDemoStaff: function () {
+      need('staff.edit');
+      var d = load(), now = Date.now();
+      if (api.hasDemoStaff()) return 0;
+      var d0 = startOfDay(now), m0 = startOfMonth(now), HOUR = 3600000;
+      var list = [
+        ['Сергей Белов', 'operator', 55000, 'work'], ['Анастасия Лебедева', 'operator', 55000, 'lunch'],
+        ['Павел Громов', 'editor', 65000, 'work'], ['Олеся Кузнецова', 'editor', 65000, 'vacation'],
+        ['Дарья Фёдорова', 'manager', 75000, 'break'], ['Роман Зайцев', 'manager', 75000, 'shoot'],
+        ['Светлана Попова', 'cashier', 50000, 'off'], ['Виктор Ильин', 'operator', 55000, 'sick']
+      ];
+      var used = {}; Object.keys(d.staff).forEach(function (k) { used[d.staff[k].phone] = true; });
+      var n = 0;
+      list.forEach(function (x, i) {
+        var phone = '+7900200000' + (i + 1);
+        if (used[phone]) return;
+        var id = uid('ST-', 4), log = [], stat = x[3];
+        // прошлые дни этого месяца: смена с 9 до 18, обед с 13 до 14; пятидневка (выходные пропускаем)
+        for (var day = m0; day < d0; day += DAY) {
+          var wd = new Date(day).getDay();
+          if (wd === 0 || wd === 6) continue;
+          if (stat === 'vacation' && day >= d0 - 5 * DAY) continue;
+          if (stat === 'sick' && day >= d0 - 3 * DAY) continue;
+          var j = ((i * 7 + new Date(day).getDate()) % 5) * 6 * 60000; // небольшой разброс по приходу и уходу
+          log.push({ s: 'work', t: day + 9 * HOUR + j }, { s: 'lunch', t: day + 13 * HOUR + j / 2 }, { s: 'work', t: day + 14 * HOUR + j / 2 }, { s: 'off', t: day + 18 * HOUR + j });
+        }
+        // сегодня: смена начата недавно, чтобы текущий статус не уходил в будущее
+        // начало текущей смены: с 9:00, но не раньше чем за 5,5 часа до «сейчас», чтобы вечером за сегодня не набегало 11 часов
+        var start = Math.max(d0, Math.min(now - 60000, Math.max(d0 + 9 * HOUR, now - 5.5 * HOUR)));
+        if (stat === 'work') log.push({ s: 'work', t: start });
+        else if (stat === 'lunch') log.push({ s: 'work', t: start }, { s: 'lunch', t: Math.max(start + 60000, now - 25 * 60000) });
+        else if (stat === 'break') log.push({ s: 'work', t: start }, { s: 'break', t: Math.max(start + 60000, now - 10 * 60000) });
+        else if (stat === 'shoot') log.push({ s: 'work', t: start }, { s: 'shoot', t: Math.max(start + 60000, now - HOUR) });
+        else if (stat === 'vacation' || stat === 'sick') log.push({ s: stat, t: d0 - (stat === 'vacation' ? 5 : 3) * DAY + 1 });
+        else if (!log.length || log[log.length - 1].s !== 'off') log.push({ s: 'off', t: d0 - HOUR });
+        d.staff[id] = { id: id, phone: phone, name: x[0], role: x[1], active: true, createdAt: now - (30 + i) * DAY, salary: x[2], status: stat, log: log, demo: true };
+        n++;
+      });
+      save(d);
+      return n;
+    },
+    clearDemoStaff: function () {
+      need('staff.edit');
+      var d = load(), cur = me();
+      Object.keys(d.staff).forEach(function (k) { if (d.staff[k].demo && k !== cur.id) delete d.staff[k]; });
+      // клиенты не должны ссылаться на удалённых сотрудников
+      var db = clientsDb(), touched = false;
+      Object.keys(db.users).forEach(function (k) { var u = db.users[k]; if (u.assignee && !d.staff[u.assignee]) { u.assignee = ''; touched = true; } });
+      if (touched) A._store.save(db);
+      save(d);
+    },
+
     fmtSize: function (b) {
       return b < 1024 ? b + ' Б' : b < 1048576 ? (b / 1024).toFixed(0) + ' КБ' : (b / 1048576).toFixed(1) + ' МБ';
     }
