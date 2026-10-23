@@ -307,6 +307,150 @@
   .toast.err{border-color:rgba(255,107,107,.5);color:#ffd0d0;}
   .toast.ok{border-color:rgba(74,222,128,.4);}
 
+  /* ---------- дашборд ---------- */
+  .seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;}
+  .seg button{background:none;border:none;border-radius:8px;padding:6px 13px;color:var(--muted);cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap;}
+  .seg button:hover{color:var(--text);}
+  .seg button.on{background:var(--surface-3);color:var(--text);}
+  .demo-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:14px 0 0;padding:10px 14px;
+    border:1px dashed rgba(250,204,21,.45);border-radius:12px;background:rgba(250,204,21,.06);font-size:13px;line-height:1.5;color:#fde68a;}
+  .dash{display:flex;flex-direction:column;gap:16px;margin-top:16px;}
+  .kpis{display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:14px;}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .kpi.hl{border-color:rgba(47,127,255,.55);box-shadow:0 18px 40px -26px rgba(47,127,255,.7);}
+  .kpi .k{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .kpi .v{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(26px, 1vw + 20px, 34px);line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+  .kpi .s{font-size:13px;color:var(--muted);line-height:1.45;display:flex;flex-direction:column;gap:2px;}
+  .delta{font-size:12.5px;font-weight:600;}
+  .delta.up{color:var(--ok);} .delta.down{color:var(--danger);} .delta.flat{color:var(--muted);}
+  .panels{display:grid;grid-template-columns:repeat(6, minmax(0,1fr));gap:14px;}
+  .pn{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0;grid-column:span 2;}
+  .pn.c4{grid-column:span 4;} .pn.c6{grid-column:span 6;}
+  .pn-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .pn-h h3{font-size:16px;}
+  .pn-h span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .chart-wrap{overflow-x:auto;scrollbar-width:thin;}
+  .chart-wrap svg{display:block;min-width:560px;width:100%;height:auto;}
+  .chart-wrap .grid{stroke:var(--line);stroke-width:1;}
+  .chart-wrap .bar{fill:var(--blue);}
+  .chart-wrap .bar:hover{fill:var(--blue-light);}
+  .chart-wrap text{fill:var(--muted);font-family:'Inter',sans-serif;font-size:11.5px;}
+  .chart-empty,.pn-empty{color:var(--muted);font-size:14px;text-align:center;padding:36px 10px;border:1px dashed var(--line);border-radius:12px;line-height:1.5;}
+  .pn-empty{padding:16px 10px;}
+  .row-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;}
+  .row-bar .lbl{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row-bar .val{font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .row-bar .val em{font-style:normal;color:var(--muted);margin-left:6px;}
+  .row-bar .track{grid-column:1 / -1;height:7px;border-radius:4px;background:var(--surface-3);overflow:hidden;}
+  .row-bar .fill{display:block;height:100%;border-radius:4px;background:var(--blue);}
+  .row-bar .fill.muted{background:#4b5361;} .row-bar .fill.ok{background:var(--ok);} .row-bar .fill.warn{background:var(--warn);} .row-bar .fill.vio{background:#c084fc;}
+  .rows{display:flex;flex-direction:column;gap:12px;}
+  .note{font-size:13px;color:var(--muted);line-height:1.5;}
+  .note b{color:var(--text);font-variant-numeric:tabular-nums;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{font-size:12.5px;padding:3px 10px;border-radius:100px;background:var(--surface-3);color:var(--muted);font-variant-numeric:tabular-nums;}
+  .chip b{color:var(--text);font-weight:600;}
+  .att-group{display:flex;flex-direction:column;gap:6px;}
+  .att-h{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+  .att-h b{color:var(--text);}
+  .att-item{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:8px 11px;cursor:pointer;transition:.15s;}
+  .att-item:hover{border-color:var(--blue);}
+  .att-item .a{min-width:0;display:flex;flex-direction:column;}
+  .att-item .a b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .att-item .a span{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .att-item time{flex:none;font-size:12px;color:var(--muted);white-space:nowrap;}
+  .att-ok{font-size:13px;color:var(--ok);}
+  .feed{display:flex;flex-direction:column;}
+  .feed-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--line);padding:10px 2px;cursor:pointer;}
+  .feed-item:first-child{border-top:none;}
+  .feed-item:hover b{color:var(--blue-light);}
+  .feed-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+  .feed-dot.client{background:rgba(47,127,255,.16);color:var(--blue-light);}
+  .feed-dot.request{background:rgba(192,132,252,.16);color:#d8b4fe;}
+  .feed-dot.payment{background:rgba(74,222,128,.14);color:var(--ok);}
+  .feed-item .t{min-width:0;display:flex;flex-direction:column;}
+  .feed-item .t b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s;}
+  .feed-item .t span{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .feed-item time{font-size:12px;color:var(--muted);white-space:nowrap;}
+
+  /* оплаты в карточке клиента */
+  .pay-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:7px;}
+  .pay-row .pr-main{display:flex;flex-direction:column;}
+  .pay-row .pr-main b{font-variant-numeric:tabular-nums;}
+  .pay-row .pr-main span{font-size:12.5px;color:var(--muted);}
+  .pay-row time{grid-column:1;font-size:12px;color:var(--muted);}
+  .pay-row .x-sm{grid-column:2;grid-row:1 / span 2;background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);cursor:pointer;padding:4px 9px;}
+  .pay-row .x-sm:hover{color:var(--danger);border-color:rgba(255,107,107,.5);}
+  .pay-form{margin-top:10px;padding:14px;border:1px dashed var(--line);border-radius:12px;}
+  .pay-form .grid2{margin-bottom:0;}
+  .pay-form .btn{width:100%;margin-top:4px;}
+
+  @media (max-width:1100px){
+    .kpis{grid-template-columns:repeat(2, minmax(0,1fr));}
+    .pn.c4{grid-column:span 6;}
+    .pn{grid-column:span 3;}
+  }
+  @media (max-width:700px){
+    .pn,.pn.c4{grid-column:span 6;}
+    .kpis{gap:10px;}
+    .kpi{padding:14px;}
+  }
+  @media (max-width:400px){
+    .side{gap:4px;}
+    .nav{gap:0;}
+    .nav button{padding:8px 7px;}
+    .me-acts{flex-wrap:nowrap;gap:4px;}
+    .me-acts .btn{padding:6px 8px;}
+  }
+  @media (max-width:560px){
+    .page-head .seg{width:100%;}
+    .seg button{flex:1;padding:7px 4px;font-size:12.5px;}
+  }
+  @media (max-width:420px){
+    .kpis{grid-template-columns:minmax(0,1fr);}
+  }
+
+  /* ---------- смена, статусы, команда ---------- */
+  .ss-work{color:var(--ok);} .ss-shoot{color:#c084fc;} .ss-break{color:var(--warn);} .ss-lunch{color:#fb923c;}
+  .ss-off{color:var(--muted);} .ss-vacation{color:var(--blue-light);} .ss-sick{color:var(--danger);}
+  .shiftbar{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;}
+  .shiftbar label{font-size:13px;color:var(--muted);font-weight:600;}
+  .shiftbar .shift-info{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .st-select{
+    appearance:none;-webkit-appearance:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+    background-color:var(--surface-3);border:1px solid transparent;border-radius:100px;padding:5px 26px 5px 24px;color:currentColor;max-width:100%;
+    background-image:radial-gradient(circle at 11px 50%, currentColor 0 3.5px, transparent 4px), linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:0 0, calc(100% - 13px) 50%, calc(100% - 9px) 50%;background-size:100% 100%, 4px 4px, 4px 4px;background-repeat:no-repeat;
+  }
+  .st-select:hover{border-color:var(--line);}
+  .st-select:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+  .st-select option{color:var(--text);background:var(--surface);}
+  .spill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:100px;padding:3px 10px;background:var(--surface-3);white-space:nowrap;}
+  .spill::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
+  .grp{margin-top:20px;}
+  .grp-h{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-bottom:10px;}
+  .grp-h .role{margin:0;}
+  .grp-h b{font-family:'Manrope',sans-serif;font-size:15px;}
+  .grp-h .muted{font-size:13px;font-variant-numeric:tabular-nums;}
+  .staff-t .nm{display:flex;align-items:center;gap:11px;min-width:180px;}
+  .staff-t .nm .avatar{width:34px;height:34px;font-size:13px;box-shadow:none;}
+  .staff-t .nm b{font-weight:600;}
+  .staff-t .nm small{display:block;color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace;}
+  .staff-t .since{display:block;color:var(--muted);font-size:12px;margin-top:3px;}
+  .staff-t td{font-variant-numeric:tabular-nums;}
+  .staff-t tr.dim td{opacity:.5;}
+  .hm{display:flex;flex-direction:column;gap:4px;min-width:120px;}
+  .hm .track{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden;display:block;}
+  .hm .fill{display:block;height:100%;border-radius:3px;background:var(--blue);}
+  .hm small{color:var(--muted);font-size:12px;}
+  .team-row{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .team-row .tn{min-width:0;display:flex;flex-direction:column;}
+  .team-row .tn b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .team-row .tn span{font-size:12.5px;color:var(--muted);}
+  .hint-t{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45;}
+  .shift-sum{display:flex;gap:18px;flex-wrap:wrap;margin:2px 0 16px;font-size:13px;color:var(--muted);}
+  .shift-sum b{display:block;font-family:'Manrope',sans-serif;font-size:17px;color:var(--text);font-variant-numeric:tabular-nums;}
+
   /* ---------- адаптивность ---------- */
   @media (max-width:1100px){
     .hide-md{display:none;}
@@ -403,6 +547,10 @@
       <span class="logo-t">DOWNSHOT</span> <small>CRM</small>
     </div>
     <nav class="nav" id="nav">
+      <button type="button" data-view="dashboard" data-need="dashboard.view">
+        <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="9.5" width="3.4" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="7.3" y="3.5" width="3.4" height="12" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="12.6" y="6.5" width="3.4" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span class="lbl">Дашборд</span>
+      </button>
       <button type="button" data-view="clients" data-need="clients.view">
         <svg viewBox="0 0 18 18" fill="none"><circle cx="7" cy="6" r="2.8" stroke="currentColor" stroke-width="1.4"/><path d="M1.8 15c.5-2.6 2.6-4.1 5.2-4.1s4.7 1.5 5.2 4.1M12 3.4a2.6 2.6 0 0 1 0 5.2M13.6 10.9c1.5.5 2.4 1.8 2.7 4.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         <span class="lbl">Клиенты</span>
@@ -438,6 +586,27 @@
       <span>Тестовый режим: SMS не отправляются, данные и файлы хранятся только в этом браузере. Ответы клиента приходят из его <a href="account.html" style="text-decoration:underline">личного кабинета</a>.</span>
     </div>
 
+    <div class="shiftbar" id="shiftBar" hidden>
+      <label for="myStatus">Мой статус</label>
+      <select class="st-select" id="myStatus"></select>
+      <span class="shift-info" id="shiftInfo"></span>
+    </div>
+
+    <!-- Дашборд -->
+    <section id="vDashboard" hidden>
+      <div class="page-head">
+        <h2>Дашборд</h2>
+        <div class="seg" id="periodSeg" role="group" aria-label="Период">
+          <button type="button" data-p="7">7 дней</button>
+          <button type="button" data-p="30">30 дней</button>
+          <button type="button" data-p="90">90 дней</button>
+          <button type="button" data-p="all">Всё время</button>
+        </div>
+      </div>
+      <div class="demo-bar" id="demoBar" hidden></div>
+      <div id="dashBody"></div>
+    </section>
+
     <!-- Клиенты -->
     <section id="vClients" hidden>
       <div class="page-head">
@@ -471,8 +640,10 @@
         <h2>Сотрудники</h2>
         <button class="btn" type="button" id="bNewStaff">+ Сотрудник</button>
       </div>
-      <p class="muted" style="margin:10px 0 16px;line-height:1.55">Что может каждая роль, настраивается в таблице прав ниже. Права администратора не меняются.</p>
-      <div id="staffTable"></div>
+      <div class="demo-bar" id="staffDemoBar" hidden></div>
+      <div class="dash"><div class="kpis" id="staffKpis"></div></div>
+      <p class="muted" style="margin:14px 0 0;line-height:1.55;font-size:13.5px">Группы совпадают с ролями. Статус можно сменить прямо в таблице. Часы идут в статусах «В работе», «На съёмке» и «Перерыв», обед и «не на смене» не считаются; норма 160 ч в месяц.</p>
+      <div id="staffGroups"></div>
       <div class="perm-head">
         <h3>Права ролей</h3>
         <button class="btn ghost sm" type="button" id="bResetPerms">Вернуть по умолчанию</button>
@@ -577,6 +748,7 @@
   function show(view){
     state.view = view;
     document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.view === view); });
+    $('vDashboard').hidden = view !== 'dashboard';
     $('vClients').hidden = view !== 'clients';
     $('vDialogs').hidden = view !== 'dialogs';
     $('vStaff').hidden = view !== 'staff';
@@ -643,6 +815,8 @@
   })();
   function render(){
     if (!C.me()) return startApp();
+    renderShift();
+    if (state.view === 'dashboard') renderDashboard();
     if (state.view === 'clients') renderClients();
     if (state.view === 'dialogs') renderDialogs();
     if (state.view === 'staff') renderStaff();
@@ -657,6 +831,154 @@
     $('unreadBadge').hidden = !n;
     $('unreadBadge').textContent = n;
   }
+
+  /* ================= ДАШБОРД ================= */
+  var PERIOD_KEY = 'downshot_crm_period';
+  var period = '30';
+  try { var pv = localStorage.getItem(PERIOD_KEY); if (['7', '30', '90', 'all'].indexOf(pv) !== -1) period = pv; } catch(e) {}
+
+  var nf = new Intl.NumberFormat('ru-RU');
+  function rub(n){ return nf.format(Math.round(n)) + ' ₽'; }
+  function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
+  function tariffTitle(id){ var t = C.TARIFFS.filter(function(x){ return x.id === id; })[0]; return t ? t.title : 'Другое'; }
+  function methodTitle(id){ var m = C.METHODS.filter(function(x){ return x.id === id; })[0]; return m ? m.title : id; }
+  function periodText(p){ return {'7': 'за 7 дней', '30': 'за 30 дней', '90': 'за 90 дней', 'all': 'за всё время'}[p]; }
+  function agoText(t){
+    var d = Math.floor((Date.now() - t) / 86400000);
+    return d <= 0 ? 'сегодня' : d === 1 ? 'вчера' : d + ' дн. назад';
+  }
+  function delta(cur, prev){
+    if (period === 'all') return '';
+    var diff = cur - prev, cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+    var txt = prev === 0 ? (cur === 0 ? 'как и в прошлом периоде' : 'в прошлом периоде не было')
+      : (diff > 0 ? '+' : '') + Math.round(diff / prev * 100) + '% к прошлому периоду';
+    return '<span class="delta ' + cls + '">' + (diff > 0 ? '▲ ' : diff < 0 ? '▼ ' : '') + txt + '</span>';
+  }
+  function kpi(label, value, sub, hl){
+    return '<div class="kpi' + (hl ? ' hl' : '') + '"><span class="k">' + label + '</span><b class="v">' + value + '</b><div class="s">' + sub + '</div></div>';
+  }
+  function niceStep(x){
+    var p = Math.pow(10, Math.floor(Math.log10(x))), m = x / p;
+    return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+  }
+  function revenueChart(b){
+    var max = b.reduce(function(m, x){ return Math.max(m, x.sum); }, 0);
+    if (!max) return '<div class="chart-empty">Оплат за выбранный период нет.<br>Оплаты вносятся в карточке клиента, блок «Оплаты».</div>';
+    var W = 760, H = 236, pl = 58, pr = 10, pt = 12, pb = 30, iw = W - pl - pr, ih = H - pt - pb;
+    var step = niceStep(max / 4), top = Math.ceil(max / step) * step, svg = '', i;
+    for (i = 0; i <= top / step; i++){
+      var y = pt + ih - (i * step / top) * ih;
+      svg += '<line class="grid" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>' +
+        '<text x="' + (pl - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end">' + nf.format(i * step) + '</text>';
+    }
+    var slot = iw / b.length, bw = Math.max(3, Math.min(34, slot * 0.64)), every = Math.ceil(b.length / 8);
+    b.forEach(function(x, k){
+      var h = x.sum ? Math.max(2, x.sum / top * ih) : 0, cx = pl + slot * k + slot / 2;
+      if (h) svg += '<rect class="bar" x="' + (cx - bw / 2).toFixed(1) + '" y="' + (pt + ih - h).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3"><title>' + esc(x.label) + ': ' + rub(x.sum) + ', оплат: ' + x.count + '</title></rect>';
+      if (k % every === 0 || k === b.length - 1 && every === 1) svg += '<text x="' + cx.toFixed(1) + '" y="' + (H - 9) + '" text-anchor="middle">' + esc(x.label) + '</text>';
+    });
+    return '<div class="chart-wrap"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Выручка по периодам, ₽">' + svg + '</svg></div>';
+  }
+  function barRow(label, val, valExtra, share, cls){
+    return '<div class="row-bar"><span class="lbl" title="' + esc(label) + '">' + esc(label) + '</span><span class="val">' + val + (valExtra ? '<em>' + valExtra + '</em>' : '') +
+      '</span><span class="track"><span class="fill ' + (cls || '') + '" style="width:' + Math.max(share, val === '0' ? 0 : 2) + '%"></span></span></div>';
+  }
+  function attGroup(title, list, kind, emptyText){
+    var items = list.slice(0, 4).map(function(x){
+      var sub = kind === 'dialog' ? x.text : kind === 'noas' ? 'ждёт назначения' : statusTitle(x.status);
+      return '<button type="button" class="att-item" data-' + (kind === 'dialog' ? 'dialog' : 'card') + '="' + esc(x.id) + '"><span class="a"><b>' + esc(x.name) + '</b><span>' + esc(sub) + '</span></span><time>' + agoText(x.at) + '</time></button>';
+    }).join('');
+    return '<div class="att-group"><div class="att-h"><span>' + title + '</span><b>' + list.length + '</b></div>' +
+      (list.length ? items + (list.length > 4 ? '<span class="note">и ещё ' + (list.length - 4) + '</span>' : '') : '<span class="att-ok">✓ ' + emptyText + '</span>') + '</div>';
+  }
+
+  function renderDashboard(){
+    if (!C.can('dashboard.view')) return;
+    var s = C.stats(period);
+    document.querySelectorAll('#periodSeg button').forEach(function(b){ b.classList.toggle('on', b.dataset.p === period); });
+
+    // демо-данные: только в тестовом режиме
+    var bar = $('demoBar');
+    bar.hidden = !(C.MODE === 'test' && C.can('clients.edit'));
+    if (!bar.hidden){
+      bar.innerHTML = s.hasDemo
+        ? '<span>Показаны демо-данные: 9 вымышленных клиентов с заявками и оплатами.</span>' + (C.can('clients.delete') ? '<button class="btn ghost sm" type="button" id="bDemoClear">Удалить демо-данные</button>' : '')
+        : '<span>Тестовый режим. Чтобы увидеть дашборд заполненным, добавьте демо-данные: 9 вымышленных клиентов с заявками и оплатами. Их можно удалить в один клик.</span><button class="btn sm" type="button" id="bDemoSeed">Добавить демо-данные</button>';
+      if ($('bDemoSeed')) $('bDemoSeed').addEventListener('click', guard(function(){ var n = C.seedDemo(); toast('Добавлено клиентов: ' + n, 'ok'); render(); }));
+      if ($('bDemoClear')) $('bDemoClear').addEventListener('click', guard(function(){
+        if (!confirm('Удалить демо-клиентов вместе с их заявками, оплатами и перепиской? Ваши настоящие данные не затрагиваются.')) return;
+        C.clearDemo(); toast('Демо-данные удалены', 'ok'); render();
+      }));
+    }
+
+    var pt = periodText(period), r = s.revenue;
+    var kpis =
+      kpi('Клиентов', nf.format(s.clients.total), '<span>+' + s.clients.added + ' ' + pt + '</span>' + delta(s.clients.added, s.clients.addedPrev)) +
+      kpi('Заявок с сайта', nf.format(s.requests.total), '<span>' + s.requests.added + ' ' + pt + '</span>' + delta(s.requests.added, s.requests.addedPrev)) +
+      kpi('Выручка ' + pt, rub(r.period), '<span>всего за всё время: ' + rub(r.total) + '</span>' + delta(r.period, r.prev), true) +
+      kpi('Средний чек', r.count ? rub(r.avg) : '—', '<span>оплат ' + pt + ': ' + r.count + '</span><span>оплатили ' + s.paidClients + ' из ' + s.clients.total + ' клиентов (' + pct(s.paidClients, s.clients.total) + '%)</span>');
+
+    // воронка по статусам
+    var order = ['new', 'work', 'shoot', 'done'], total = s.clients.total, cls = {new: '', work: 'warn', shoot: 'vio', done: 'ok'};
+    var funnel = '<div class="rows">' + order.map(function(id){
+      return barRow(statusTitle(id), String(s.statuses[id] || 0), pct(s.statuses[id] || 0, total) + '%', pct(s.statuses[id] || 0, total), cls[id]);
+    }).join('') + barRow('Отказ', String(s.statuses.lost || 0), pct(s.statuses.lost || 0, total) + '%', pct(s.statuses.lost || 0, total), 'muted') + '</div>' +
+      '<p class="note">В оплату дошли <b>' + pct(s.paidClients, total) + '%</b> клиентов (' + s.paidClients + ' из ' + total + ').</p>';
+
+    // выручка по тарифам и способам оплаты
+    var tmax = C.TARIFFS.reduce(function(m, t){ return Math.max(m, s.tariffs[t.id].sum); }, 0);
+    var tariffs = r.count ? '<div class="rows">' + C.TARIFFS.filter(function(t){ return s.tariffs[t.id].count; }).map(function(t){
+      var x = s.tariffs[t.id];
+      return barRow(t.title, rub(x.sum), x.count + ' шт.', tmax ? x.sum / tmax * 100 : 0, '');
+    }).join('') + '</div><div class="chips">' + C.METHODS.filter(function(m){ return s.methods[m.id].count; }).map(function(m){
+      return '<span class="chip">' + m.title + ' <b>' + pct(s.methods[m.id].sum, r.period) + '%</b></span>';
+    }).join('') + '</div>' : '<div class="pn-empty">Оплат ' + pt + ' нет.</div>';
+
+    // требуют внимания
+    var a = s.attention;
+    var attention = attGroup('Ждут ответа', a.unanswered, C.can('dialogs') ? 'dialog' : 'card', 'Все клиенты получили ответ') +
+      attGroup('Новые без ответственного', a.noAssignee, 'noas', 'У всех новых есть ответственный') +
+      attGroup('Съёмка без оплаты', a.unpaid, 'unpaid', 'Оплаты внесены везде');
+
+    // нагрузка
+    var wmax = s.workload.reduce(function(m, w){ return Math.max(m, w.count); }, 0);
+    var workload = (s.workload.length ? '<div class="rows">' + s.workload.map(function(w){ return barRow(w.name, String(w.count), '', w.count / wmax * 100, ''); }).join('') + '</div>' : '<div class="pn-empty">Ответственные пока не назначены.</div>') +
+      '<p class="note">Без ответственного: <b>' + s.unassigned + '</b></p>';
+
+    // лента
+    var kindTxt = {client: 'Новый клиент', request: 'Заявка с сайта', payment: 'Оплата'}, kindIco = {client: '+', request: '✉', payment: '₽'};
+    var feed = s.feed.length ? '<div class="feed">' + s.feed.map(function(e){
+      var sub = e.kind === 'payment' ? rub(e.amount) + ' · ' + tariffTitle(e.tariff) : e.kind === 'request' ? e.text : 'Зарегистрировался в кабинете';
+      return '<button type="button" class="feed-item" data-card="' + esc(e.clientId) + '"><span class="feed-dot ' + e.kind + '">' + kindIco[e.kind] + '</span><span class="t"><b>' + esc(kindTxt[e.kind] + ': ' + e.name) + '</b><span>' + esc(sub) + '</span></span><time>' + fmt(e.at, true) + '</time></button>';
+    }).join('') + '</div>' : '<div class="pn-empty">Событий пока нет.</div>';
+
+    var team = C.team(), tcnt = {};
+    team.forEach(function(m){ tcnt[m.status] = (tcnt[m.status] || 0) + 1; });
+    var tchips = C.STAFF_STATUSES.filter(function(x){ return tcnt[x.id]; }).map(function(x){ return '<span class="chip ss-' + x.id + '"><b>' + tcnt[x.id] + '</b> ' + esc(x.title.toLowerCase()) + '</span>'; }).join('');
+    var teamHtml = (team.length ? '<div class="chips">' + tchips + '</div><div class="rows">' + team.slice(0, 8).map(function(m){
+      return '<div class="team-row"><span class="tn"><b>' + esc(m.name) + '</b><span>' + esc(C.ROLES[m.role].title) + '</span></span><span class="spill ss-' + m.status + '">' + esc(ssTitle(m.status)) + '</span></div>';
+    }).join('') + '</div>' + (team.length > 8 ? '<span class="note">и ещё ' + (team.length - 8) + '</span>' : '') : '<div class="pn-empty">Сотрудников нет.</div>');
+
+    var chartTitle = {'7': 'по дням', '30': 'по дням', '90': 'по неделям', 'all': 'по месяцам'}[period];
+    $('dashBody').innerHTML = '<div class="dash"><div class="kpis">' + kpis + '</div><div class="panels">' +
+      '<section class="pn c4"><div class="pn-h"><h3>Выручка ' + chartTitle + '</h3><span>' + pt + ': ' + rub(r.period) + '</span></div>' + revenueChart(s.chart) + '</section>' +
+      '<section class="pn"><div class="pn-h"><h3>Клиенты по статусам</h3><span>' + total + '</span></div>' + funnel + '</section>' +
+      '<section class="pn"><div class="pn-h"><h3>Выручка по тарифам</h3><span>' + pt + '</span></div>' + tariffs + '</section>' +
+      '<section class="pn"><div class="pn-h"><h3>Требуют внимания</h3></div>' + attention + '</section>' +
+      '<section class="pn"><div class="pn-h"><h3>Нагрузка на сотрудников</h3><span>клиентов</span></div>' + workload + '</section>' +
+      '<section class="pn c4"><div class="pn-h"><h3>Последние события</h3></div>' + feed + '</section>' +
+      '<section class="pn"><div class="pn-h"><h3>Команда сейчас</h3><span>' + team.length + ' чел.</span></div>' + teamHtml + '</section></div></div>';
+
+    $('dashBody').querySelectorAll('[data-card]').forEach(function(b){ b.addEventListener('click', function(){ if (C.can('clients.view')) openClient(b.dataset.card); else toast('Нет права видеть клиентов', 'err'); }); });
+    $('dashBody').querySelectorAll('[data-dialog]').forEach(function(b){ b.addEventListener('click', function(){ state.clientId = b.dataset.dialog; state.tab = 'msgs'; show('dialogs'); }); });
+  }
+  document.querySelectorAll('#periodSeg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      period = b.dataset.p;
+      try { localStorage.setItem(PERIOD_KEY, period); } catch(e) {}
+      renderDashboard();
+    });
+  });
 
   /* ================= КЛИЕНТЫ (админ) ================= */
   C.STATUSES.forEach(function(s){ $('fStatus').insertAdjacentHTML('beforeend', '<option value="' + s.id + '">' + esc(s.title) + '</option>'); });
@@ -676,7 +998,7 @@
       $('clientsTable').innerHTML = '<div class="empty">' + (q || st ? 'Ничего не найдено' : 'Клиентов пока нет. Они появятся после регистрации в личном кабинете на сайте, или добавьте клиента вручную.') + '</div>';
       return;
     }
-    $('clientsTable').innerHTML = '<table class="table"><thead><tr><th>ID</th><th>Имя</th><th>Телефон</th><th>Статус</th><th class="hide-md">Ответственный</th><th class="hide-md">Заявок</th><th>Активность</th></tr></thead><tbody>' +
+    $('clientsTable').innerHTML = '<table class="table"><thead><tr><th>ID</th><th>Имя</th><th>Телефон</th><th>Статус</th><th class="hide-md">Ответственный</th><th class="hide-md">Заявок</th>' + (C.can('payments.view') ? '<th class="hide-md">Оплачено</th>' : '') + '<th>Активность</th></tr></thead><tbody>' +
       list.map(function(c){
         return '<tr data-id="' + esc(c.id) + '"><td class="id">' + esc(c.id) + (lastIn(c) ? ' <span class="dot-in" title="Новое сообщение"></span>' : '') + '</td>' +
           '<td><b>' + esc(c.name || 'Без имени') + '</b></td>' +
@@ -684,11 +1006,59 @@
           '<td>' + statusPill(c.status) + '</td>' +
           '<td class="hide-md">' + esc(c.assignee ? C.staffName(c.assignee) : '—') + '</td>' +
           '<td class="hide-md">' + c.requests.length + '</td>' +
+          (C.can('payments.view') ? '<td class="hide-md nowrap">' + (c.paid ? rub(c.paid) : '—') + '</td>' : '') +
           '<td class="nowrap muted" data-l="Активность">' + fmt(c.activity, true) + '</td></tr>';
       }).join('') + '</tbody></table>';
     $('clientsTable').querySelectorAll('tbody tr').forEach(function(tr){ tr.addEventListener('click', function(){ openClient(tr.dataset.id); }); });
   }
   $('bNewClient').addEventListener('click', function(){ openClient(null); });
+
+  /* блок «Оплаты» в карточке клиента: список и форма внесения */
+  function payBlock(c){
+    if (!c.id || !C.can('payments.view')) return '';
+    var list = C.payments(c.id), total = list.reduce(function(s, p){ return s + p.amount; }, 0);
+    var rows = list.length ? list.map(function(p){
+      return '<div class="pay-row"><div class="pr-main"><b>' + rub(p.amount) + '</b><span>' + esc(tariffTitle(p.tariff) + ' · ' + methodTitle(p.method)) + '</span></div>' +
+        (C.can('clients.delete') ? '<button class="x-sm" type="button" data-pay-del="' + esc(p.id) + '" aria-label="Удалить оплату" title="Удалить оплату">✕</button>' : '') +
+        '<time>' + fmt(p.at) + (p.note ? ' · ' + esc(p.note) : '') + '</time></div>';
+    }).join('') : '<p class="muted" style="margin-bottom:8px">Оплат пока нет.</p>';
+    var form = !C.can('payments.edit') ? '' :
+      '<form class="pay-form" id="fPay" novalidate><div class="grid2">' +
+        '<div class="field"><label for="pTariff">Тариф</label><select class="select" id="pTariff">' + C.TARIFFS.map(function(t){ return '<option value="' + t.id + '"' + (t.id === 'ride' ? ' selected' : '') + '>' + esc(t.title) + (t.price ? ' — ' + rub(t.price) : '') + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="pAmount">Сумма, ₽</label><input class="input" id="pAmount" type="number" inputmode="numeric" min="1" step="1" value="1500"></div>' +
+        '<div class="field"><label for="pMethod">Способ оплаты</label><select class="select" id="pMethod">' + C.METHODS.map(function(m){ return '<option value="' + m.id + '">' + esc(m.title) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="pNote">Комментарий</label><input class="input" id="pNote" maxlength="200" placeholder="Необязательно"></div>' +
+      '</div><div class="error" id="ePay"></div><button class="btn" type="submit">Внести оплату</button></form>';
+    return '<div class="sec-t">Оплаты · ' + rub(total) + '</div>' + rows + form;
+  }
+  function bindPayments(c){
+    if ($('fPay')){
+      $('pTariff').addEventListener('change', function(){
+        var t = C.TARIFFS.filter(function(x){ return x.id === $('pTariff').value; })[0];
+        if (t && t.price) $('pAmount').value = t.price;
+      });
+      $('fPay').addEventListener('submit', function(e){
+        e.preventDefault();
+        try {
+          C.addPayment({ clientId: c.id, amount: $('pAmount').value, tariff: $('pTariff').value, method: $('pMethod').value, note: $('pNote').value });
+          toast('Оплата внесена', 'ok');
+          reopenClient(c.id); render();
+        } catch(err){ $('ePay').textContent = err.message; }
+      });
+    }
+    $('modal').querySelectorAll('[data-pay-del]').forEach(function(b){
+      b.addEventListener('click', guard(function(){
+        if (!confirm('Удалить эту оплату? Выручка пересчитается.')) return;
+        C.removePayment(b.dataset.payDel); toast('Оплата удалена', 'ok'); reopenClient(c.id); render();
+      }));
+    });
+  }
+  function reopenClient(id){
+    var body = $('modal').querySelector('.drawer-body'), top = body ? body.scrollTop : 0;
+    openClient(id);
+    var nb = $('modal').querySelector('.drawer-body');
+    if (nb) nb.scrollTop = top;
+  }
 
   function openClient(id){
     var c = id ? C.client(id) : {id:null, name:'', phone:'', status:'new', note:'', assignee:'', requests:[], createdAt:null};
@@ -704,7 +1074,7 @@
 
     openModal(
       '<div class="drawer-head"><h3>' + (id ? esc(c.name || 'Клиент') : 'Новый клиент') + '</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
-      '<form class="drawer-body" id="fClient" novalidate>' +
+      '<div class="drawer-body"><form id="fClient" novalidate>' +
         (id ? '<div class="kv"><div><span>ID клиента</span><b class="mono" style="color:var(--blue-light)">' + esc(c.id) + '</b></div><div><span>Регистрация</span>' + fmt(c.createdAt) + '</div></div>' : '') +
         (ro ? '<p class="muted" style="margin:-6px 0 14px;font-size:13px">Только просмотр: у вашей роли нет права редактировать клиентов.</p>' : '') +
         '<div class="grid2">' +
@@ -716,7 +1086,7 @@
         '<div class="field"><label for="cNote">Заметка (видна только персоналу)</label><textarea class="textarea" id="cNote" maxlength="2000"' + dis + '>' + esc(c.note) + '</textarea></div>' +
         '<div class="error" id="eClient"></div>' +
         (id ? '<div class="sec-t">Заявки с сайта (' + c.requests.length + ')</div>' + reqs : '') +
-      '</form>' +
+      '</form>' + payBlock(c) + '</div>' +
       '<div class="drawer-foot">' +
         (id && C.can('clients.delete') ? '<button class="btn danger" type="button" id="bDelClient">Удалить</button>' : '') +
         '<div class="right">' + (id && C.can('dialogs') ? '<button class="btn ghost" type="button" id="bToChat">Диалог</button>' : '') +
@@ -724,6 +1094,7 @@
       '</div>'
     );
     $('cPhone').addEventListener('input', function(e){ e.target.value = A.formatPhone(e.target.value); });
+    bindPayments(c);
     $('fClient').addEventListener('submit', function(e){
       e.preventDefault();
       try {
@@ -908,18 +1279,103 @@
   }
 
   /* ================= СОТРУДНИКИ (админ) ================= */
+  /* ================= СОТРУДНИКИ: группы, статусы смены, часы, оклады ================= */
+  var GROUP_TITLES = { admin: 'Администрация', manager: 'Менеджеры', operator: 'Операторы', editor: 'Монтажёры', cashier: 'Кассиры' };
+  var SALARY_HINT = { admin: 120000, manager: 75000, operator: 55000, editor: 65000, cashier: 50000 };
+  var ON_SHIFT = ['work', 'shoot', 'break', 'lunch'];
+  function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+  function hoursTxt(ms){ return (Math.round(ms / 360000) / 10).toString().replace('.', ',') + ' ч'; }
+  function durTxt(ms){ var m = Math.floor(ms / 60000); return m < 60 ? m + ' мин' : Math.floor(m / 60) + ' ч ' + pad2(m % 60) + ' мин'; }
+  function sinceTxt(t){
+    var d = new Date(t), hm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    return d.toDateString() === new Date().toDateString() ? 'с ' + hm : 'с ' + d.toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'});
+  }
+  function ssTitle(id){ var s = C.STAFF_STATUSES.filter(function(x){ return x.id === id; })[0]; return s ? s.title : id; }
+  function statusSelect(id, cur, extra){
+    return '<select class="st-select ss-' + cur + '" data-st="' + esc(id) + '" aria-label="Статус смены"' + (extra || '') + '>' +
+      C.STAFF_STATUSES.map(function(s){ return '<option value="' + s.id + '"' + (s.id === cur ? ' selected' : '') + '>' + esc(s.title) + '</option>'; }).join('') + '</select>';
+  }
+
+  // «Мой статус» над содержимым: свой статус меняет любой сотрудник, часы считаются автоматически
+  function renderShift(){
+    var bar = $('shiftBar'), me = C.me();
+    if (!me){ bar.hidden = true; return; }
+    var sh = C.myShift();
+    bar.hidden = false;
+    var sel = $('myStatus');
+    if (!sel.options.length) sel.innerHTML = C.STAFF_STATUSES.map(function(s){ return '<option value="' + s.id + '">' + esc(s.title) + '</option>'; }).join('');
+    sel.value = sh.status;
+    sel.className = 'st-select ss-' + sh.status;
+    $('shiftInfo').textContent = sinceTxt(sh.since) + ' · сегодня ' + durTxt(sh.todayMs) + ' · в этом месяце ' + hoursTxt(sh.monthMs);
+  }
+  $('myStatus').addEventListener('change', guard(function(){
+    C.setStatus(C.me().id, $('myStatus').value);
+    toast('Статус: ' + ssTitle($('myStatus').value), 'ok');
+    render();
+  }));
+  setInterval(function(){ if (!$('appView').hidden && C.me()){ renderShift(); if (state.view === 'staff' && !$('modal').innerHTML) renderStaff(); } }, 60000);
+
   function renderStaff(){
     if (!C.can('staff.edit')) return;
-    var me = C.me();
-    $('staffTable').innerHTML = '<table class="table"><thead><tr><th>Имя</th><th>Телефон</th><th>Роль</th><th>Доступ</th><th class="hide-md">Добавлен</th></tr></thead><tbody>' +
-      C.staffList().map(function(s){
-        return '<tr data-id="' + esc(s.id) + '"><td><b>' + esc(s.name) + '</b>' + (s.id === me.id ? ' <span class="muted">(вы)</span>' : '') + '</td>' +
-          '<td class="nowrap" data-l="Телефон">' + esc(A.formatPhone(s.phone)) + '</td>' +
-          '<td><span class="role ' + s.role + '" style="margin:0">' + esc(C.ROLES[s.role].title) + '</span></td>' +
-          '<td data-l="Доступ">' + (s.active ? '<span style="color:var(--ok)">активен</span>' : '<span class="muted">отключён</span>') + '</td>' +
-          '<td class="hide-md muted">' + fmt(s.createdAt, true) + '</td></tr>';
-      }).join('') + '</tbody></table>';
-    $('staffTable').querySelectorAll('tbody tr').forEach(function(tr){ tr.addEventListener('click', function(){ openStaff(tr.dataset.id); }); });
+    var me = C.me(), all = C.staffOverview(), norm = C.NORM_HOURS * 3600000;
+
+    var bar = $('staffDemoBar');
+    bar.hidden = C.MODE !== 'test';
+    if (!bar.hidden){
+      var has = C.hasDemoStaff();
+      bar.innerHTML = has
+        ? '<span>Показаны демо-сотрудники: 8 вымышленных людей с окладами, статусами и часами за месяц.</span><button class="btn ghost sm" type="button" id="bStaffDemoClear">Удалить демо-сотрудников</button>'
+        : '<span>Тестовый режим. Добавьте 8 демо-сотрудников с окладами, статусами и часами за месяц, чтобы увидеть раздел заполненным. Их можно удалить в один клик.</span><button class="btn sm" type="button" id="bStaffDemoSeed">Добавить демо-сотрудников</button>';
+      if ($('bStaffDemoSeed')) $('bStaffDemoSeed').addEventListener('click', guard(function(){ var n = C.seedDemoStaff(); toast('Добавлено сотрудников: ' + n, 'ok'); render(); }));
+      if ($('bStaffDemoClear')) $('bStaffDemoClear').addEventListener('click', guard(function(){
+        if (!confirm('Удалить демо-сотрудников? Ваши настоящие сотрудники не затрагиваются.')) return;
+        C.clearDemoStaff(); toast('Демо-сотрудники удалены', 'ok'); render();
+      }));
+    }
+
+    var active = all.filter(function(s){ return s.active; });
+    var onShift = active.filter(function(s){ return ON_SHIFT.indexOf(s.status) !== -1; });
+    var counts = {}; active.forEach(function(s){ counts[s.status] = (counts[s.status] || 0) + 1; });
+    var chips = C.STAFF_STATUSES.filter(function(s){ return counts[s.id]; }).map(function(s){ return '<span class="chip ss-' + s.id + '"><b>' + counts[s.id] + '</b> ' + esc(s.title.toLowerCase()) + '</span>'; }).join('');
+    var fund = active.reduce(function(a, s){ return a + s.salary; }, 0);
+    var todayMs = active.reduce(function(a, s){ return a + s.todayMs; }, 0), monthMs = active.reduce(function(a, s){ return a + s.monthMs; }, 0);
+    var avgMs = active.length ? monthMs / active.length : 0;
+    $('staffKpis').innerHTML =
+      kpi('На смене сейчас', onShift.length + ' из ' + active.length, '<div class="chips">' + (chips || '<span>Нет активных сотрудников</span>') + '</div>', true) +
+      kpi('Отработано сегодня', hoursTxt(todayMs), '<span>всей командой</span>') +
+      kpi('Отработано за месяц', hoursTxt(monthMs), '<span>в среднем ' + hoursTxt(avgMs) + ' на человека</span><span>' + pct(avgMs, norm) + '% месячной нормы (' + C.NORM_HOURS + ' ч)</span>') +
+      kpi('Оклады за месяц', rub(fund), '<span>активные сотрудники</span><span>в среднем ' + rub(active.length ? fund / active.length : 0) + ' на человека</span>');
+
+    var groups = C.ROLE_ORDER.map(function(role){
+      var members = all.filter(function(s){ return s.role === role; });
+      if (!members.length) return '';
+      var act = members.filter(function(s){ return s.active; });
+      var on = act.filter(function(s){ return ON_SHIFT.indexOf(s.status) !== -1; }).length;
+      var gMonth = act.reduce(function(a, s){ return a + s.monthMs; }, 0), gSalary = act.reduce(function(a, s){ return a + s.salary; }, 0);
+      var rows = members.map(function(s){
+        var p = pct(s.monthMs, norm);
+        return '<tr data-id="' + esc(s.id) + '"' + (s.active ? '' : ' class="dim"') + '>' +
+          '<td><div class="nm">' + avatar(s) + '<div><b>' + esc(s.name) + '</b>' + (s.id === me.id ? ' <span class="muted">(вы)</span>' : '') + '<small>' + esc(A.formatPhone(s.phone)) + '</small></div></div></td>' +
+          '<td data-l="Статус">' + statusSelect(s.id, s.status) + '<span class="since">' + esc(sinceTxt(s.since)) + '</span></td>' +
+          '<td class="nowrap" data-l="Сегодня">' + hoursTxt(s.todayMs) + '</td>' +
+          '<td data-l="За месяц"><div class="hm"><b>' + hoursTxt(s.monthMs) + '</b><span class="track"><span class="fill" style="width:' + Math.min(100, p) + '%"></span></span><small>' + p + '% нормы</small></div></td>' +
+          '<td class="nowrap" data-l="Оклад">' + (s.salary ? rub(s.salary) : '—') + '</td>' +
+          '<td class="hide-md" data-l="Доступ">' + (s.active ? '<span style="color:var(--ok)">активен</span>' : '<span class="muted">отключён</span>') + '</td></tr>';
+      }).join('');
+      return '<section class="grp"><div class="grp-h"><span class="role ' + role + '">' + esc(GROUP_TITLES[role]) + '</span><b>' + members.length + ' чел.</b>' +
+        '<span class="muted">на смене ' + on + ' из ' + act.length + ' · часов за месяц ' + hoursTxt(gMonth) + ' · оклады ' + rub(gSalary) + '</span></div>' +
+        '<div class="tbl-wrap"><table class="table staff-t"><thead><tr><th>Сотрудник</th><th>Статус</th><th>Сегодня</th><th>За месяц</th><th>Оклад</th><th class="hide-md">Доступ</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
+    }).join('');
+    $('staffGroups').innerHTML = groups;
+
+    $('staffGroups').querySelectorAll('tbody tr').forEach(function(tr){ tr.addEventListener('click', function(e){ if (!e.target.closest('select')) openStaff(tr.dataset.id); }); });
+    $('staffGroups').querySelectorAll('select[data-st]').forEach(function(sel){
+      sel.addEventListener('change', guard(function(){
+        C.setStatus(sel.dataset.st, sel.value);
+        toast('Статус изменён: ' + ssTitle(sel.value), 'ok');
+        render();
+      }));
+    });
     renderPerms();
   }
 
@@ -952,28 +1408,46 @@
 
   $('bNewStaff').addEventListener('click', function(){ openStaff(null); });
   function openStaff(id){
-    var s = id ? C.staffList().filter(function(x){ return x.id === id; })[0] : {id:null, name:'', phone:'', role:'operator', active:true};
+    var s = id ? C.staffOverview().filter(function(x){ return x.id === id; })[0]
+      : {id: null, name: '', phone: '', role: 'operator', active: true, salary: SALARY_HINT.operator, status: 'off', todayMs: 0, monthMs: 0};
+    if (!s) return toast('Сотрудник не найден', 'err');
     var self = id && id === C.me().id;
     openModal(
       '<div class="drawer-head"><h3>' + (id ? esc(s.name) : 'Новый сотрудник') + '</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
       '<form class="drawer-body" id="fStaff" novalidate>' +
-        '<div class="field"><label for="tName">Имя</label><input class="input" id="tName" maxlength="60" value="' + esc(s.name) + '"></div>' +
+        (id ? '<div class="shift-sum"><div><b>' + hoursTxt(s.todayMs) + '</b>сегодня</div><div><b>' + hoursTxt(s.monthMs) + '</b>за месяц</div><div><b>' + pct(s.monthMs, C.NORM_HOURS * 3600000) + '%</b>месячной нормы</div></div>' : '') +
+        '<div class="field"><label for="tName">Фамилия и имя</label><input class="input" id="tName" maxlength="60" value="' + esc(s.name) + '"></div>' +
         '<div class="field"><label for="tPhone">Телефон (для входа)</label><input class="input" id="tPhone" type="tel" inputmode="tel" value="' + esc(A.formatPhone(s.phone)) + '" placeholder="+7 (900) 000-00-00"></div>' +
-        '<div class="field"><label for="tRole">Роль</label><select class="select" id="tRole"' + (self ? ' disabled' : '') + '>' +
-          C.ROLE_ORDER.map(function(r){ return '<option value="' + r + '"' + (r === s.role ? ' selected' : '') + '>' + esc(C.ROLES[r].title) + '</option>'; }).join('') +
-        '</select></div>' +
-        '<label class="check"><input type="checkbox" id="tActive"' + (s.active ? ' checked' : '') + (self ? ' disabled' : '') + '> Доступ в CRM разрешён</label>' +
+        '<div class="grid2">' +
+          '<div class="field"><label for="tRole">Группа (роль)</label><select class="select" id="tRole"' + (self ? ' disabled' : '') + '>' +
+            C.ROLE_ORDER.map(function(r){ return '<option value="' + r + '"' + (r === s.role ? ' selected' : '') + '>' + esc(GROUP_TITLES[r]) + ' — ' + esc(C.ROLES[r].title.toLowerCase()) + '</option>'; }).join('') +
+          '</select></div>' +
+          '<div class="field"><label for="tSalary">Оклад, ₽ в месяц</label><input class="input" id="tSalary" type="number" inputmode="numeric" min="0" step="1000" value="' + s.salary + '"></div>' +
+        '</div>' +
+        '<div class="hint-t" id="tRate"></div>' +
+        (id ? '<div class="field" style="margin-top:14px"><label for="tStatus">Статус сейчас</label>' + statusSelect('', s.status, ' id="tStatus"') + '<div class="hint-t">Часы идут в статусах «В работе», «На съёмке» и «Перерыв». Обед, «не на смене», отпуск и больничный в отработанное время не входят. Вход в CRM начинает смену, выход заканчивает.</div></div>' : '') +
+        '<label class="check" style="margin-top:14px"><input type="checkbox" id="tActive"' + (s.active ? ' checked' : '') + (self ? ' disabled' : '') + '> Доступ в CRM разрешён</label>' +
         (self ? '<p class="muted" style="margin-top:10px;font-size:13px">Свою роль и доступ изменить нельзя, чтобы не остаться без администратора.</p>' : '') +
         '<div class="error" id="eStaff"></div>' +
       '</form>' +
       '<div class="drawer-foot">' + (id && !self ? '<button class="btn danger" type="button" id="bDelStaff">Удалить</button>' : '') +
       '<div class="right"><button class="btn" type="submit" form="fStaff">Сохранить</button></div></div>'
     );
+    var dirtySalary = !!id;
+    function rate(){
+      var sal = Number($('tSalary').value) || 0;
+      $('tRate').textContent = sal ? 'Ставка ≈ ' + rub(sal / C.NORM_HOURS) + ' в час при норме ' + C.NORM_HOURS + ' ч в месяц' : '';
+    }
+    rate();
+    $('tSalary').addEventListener('input', function(){ dirtySalary = true; rate(); });
+    $('tRole').addEventListener('change', function(){ if (!dirtySalary){ $('tSalary').value = SALARY_HINT[$('tRole').value] || 0; rate(); } });
+    if ($('tStatus')) $('tStatus').addEventListener('change', function(){ $('tStatus').className = 'st-select ss-' + $('tStatus').value; });
     $('tPhone').addEventListener('input', function(e){ e.target.value = A.formatPhone(e.target.value); });
     $('fStaff').addEventListener('submit', function(e){
       e.preventDefault();
       try {
-        C.staffSave({ id: s.id, name: $('tName').value, phone: $('tPhone').value, role: $('tRole').value, active: $('tActive').checked });
+        C.staffSave({ id: s.id, name: $('tName').value, phone: $('tPhone').value, role: $('tRole').value, active: $('tActive').checked,
+          salary: $('tSalary').value, status: $('tStatus') ? $('tStatus').value : undefined });
         toast(id ? 'Сохранено' : 'Сотрудник добавлен', 'ok');
         closeModal(); startApp();
       } catch(err){ $('eStaff').textContent = err.message; }
