@@ -901,6 +901,8 @@
     document.getElementById('navAccountText').textContent = 'Кабинет';
     var nameInput = document.getElementById('name');
     if (!nameInput.value && user.name) nameInput.value = user.name;
+    var emailInput = document.getElementById('email');
+    if (!emailInput.value && user.email) emailInput.value = user.email;
   })();
 
   (function(){

@@ -142,8 +142,13 @@
       var data = load();
       var user = data.session && data.users[data.session.id];
       if (!user) return null;
-      if (typeof patch.name === 'string') user.name = patch.name.trim();
-      save(data);
+      if (typeof patch.name === 'string') user.name = patch.name.trim().slice(0, 60);
+      if (typeof patch.email === 'string') {
+        var email = patch.email.trim().slice(0, 120);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) throw new Error('Проверьте адрес e-mail');
+        user.email = email;
+      }
+      if (!save(data)) throw new Error('Браузер не даёт сохранить данные (приватный режим?)');
       return user;
     },
 

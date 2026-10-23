@@ -79,7 +79,7 @@
     box-shadow:0 0 0 1px rgba(47,127,255,0.08), 0 30px 80px -30px rgba(47,127,255,0.35);
   }
   .auth{max-width:460px;width:100%;}
-  .cabinet{max-width:820px;width:100%;}
+  .cabinet{max-width:1120px;width:100%;}
 
   .eyebrow{color:var(--blue-light);font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:block;}
   h1{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-0.02em;line-height:1.1;font-size:clamp(26px, 1.4vw + 18px, 40px);}
@@ -118,34 +118,75 @@
   [hidden]{display:none !important;}
 
   /* ---------- кабинет ---------- */
-  .cab-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
-  .id-card{
-    display:grid;grid-template-columns:repeat(3, 1fr);gap:1px;background:var(--line);
-    border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:22px;
+  .cab-head{margin-bottom:24px;}
+
+  /* две колонки: слева профиль клиента, справа переписка, файлы и заявки */
+  .cab-layout{display:grid;grid-template-columns:clamp(260px, 26vw, 320px) minmax(0, 1fr);gap:20px;align-items:start;}
+  .cab-main{min-width:0;}
+  .profile{
+    position:sticky;top:20px;min-width:0;
+    max-height:calc(100vh - 40px);overflow-y:auto;scrollbar-width:none;
+    padding:clamp(20px, 2vw, 28px);display:flex;flex-direction:column;gap:22px;
   }
-  .id-cell{background:var(--surface-2);padding:18px 20px;min-width:0;}
-  .id-cell .k{font-size:12px;color:var(--muted);margin-bottom:8px;display:block;}
-  .id-cell .v{font-family:'Manrope',sans-serif;font-weight:700;font-size:clamp(16px, .4vw + 13px, 20px);overflow-wrap:anywhere;}
-  .id-cell .v.mono{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--blue-light);letter-spacing:.04em;}
+  .who{display:flex;align-items:center;gap:14px;min-width:0;}
+  .who-t{min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .who-t b{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(17px, .4vw + 13px, 20px);line-height:1.2;overflow-wrap:anywhere;}
+  .who-t b.none{color:var(--muted);font-weight:700;}
+  .who-t span{font-size:13px;color:var(--muted);}
+  .avatar{
+    flex:none;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:'Manrope',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:.02em;
+    background:var(--blue);box-shadow:0 10px 30px -10px rgba(47,127,255,.6);
+  }
+  .facts{margin:0;display:flex;flex-direction:column;gap:18px;}
+  .fact{display:flex;flex-direction:column;gap:6px;min-width:0;padding-bottom:18px;border-bottom:1px solid var(--line);}
+  .fact:last-child{border-bottom:none;padding-bottom:0;}
+  .fact dt{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;}
+  .fact dd{margin:0;min-width:0;font-family:'Manrope',sans-serif;font-weight:700;font-size:17px;overflow-wrap:anywhere;}
+  .fact .idv{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:16px;color:var(--blue-light);letter-spacing:.04em;}
+  .fact .phone{font-variant-numeric:tabular-nums;white-space:nowrap;}
   .copy{
     margin-left:8px;background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);
-    font-size:12px;padding:3px 8px;cursor:pointer;vertical-align:middle;transition:.2s;
+    font-family:'Inter',sans-serif;font-size:12px;font-weight:500;padding:3px 8px;cursor:pointer;vertical-align:middle;transition:.2s;
   }
   .copy:hover{color:var(--text);border-color:var(--blue);}
 
   .section-title{font-family:'Manrope',sans-serif;font-weight:700;font-size:18px;margin:6px 0 12px;}
-  .name-form{display:flex;gap:10px;margin-bottom:26px;}
-  .name-form .input{flex:1;min-width:0;}
-  .name-form .btn{width:auto;margin:0;padding:0 22px;flex:none;}
-  .saved{color:var(--ok);font-size:13px;min-height:18px;margin:-18px 0 18px;}
+  /* меню разделов под кнопками «Оставить заявку» и «Выйти» */
+  .cab-menu{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:18px;}
+  .cab-menu button{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    background:transparent;border:1px solid transparent;border-radius:12px;color:var(--muted);
+    font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;padding:11px 14px;cursor:pointer;transition:.2s;
+  }
+  .cab-menu button svg{flex:none;}
+  .cab-menu button span{flex:1;min-width:0;}
+  .cab-menu button:hover{color:var(--text);background:var(--surface-2);}
+  .cab-menu button.on{color:var(--text);background:rgba(47,127,255,.12);border-color:rgba(47,127,255,.35);}
+  .cab-menu button.on svg{color:var(--blue-light);}
+  .cnt{
+    flex:none;font-style:normal;min-width:22px;height:22px;border-radius:11px;padding:0 7px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--surface-3, #20252f);color:var(--text);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;
+  }
+  .cab-menu button.on .cnt{background:var(--blue);color:#fff;}
+  .panel[hidden]{display:none;}
+  .set-panel{display:flex;flex-direction:column;gap:2px;max-width:460px;}
+  .set-panel .field{margin-bottom:12px;}
+  .set-panel .input{padding:11px 13px;font-size:16px;font-weight:500;font-family:'Inter',sans-serif;}
+  .set-panel .btn{width:100%;margin:2px 0 0;padding:11px;font-size:14.5px;}
+  .ro-field{border:1px dashed var(--line);border-radius:10px;padding:10px 13px;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .hint{display:block;margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45;}
+  .saved{color:var(--ok);font-size:13px;font-weight:500;font-family:'Inter',sans-serif;margin:8px 0 0;}
+  .saved:empty,.error:empty{display:none;}
 
   .req-list{list-style:none;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:26px;}
   .req-list li{padding:14px 18px;border-top:1px solid var(--line);font-size:14px;line-height:1.5;}
   .req-list li:first-child{border-top:none;}
   .req-list time{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;font-family:'JetBrains Mono',monospace;}
   .empty{color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:16px;padding:18px;margin-bottom:26px;line-height:1.55;}
-  .cab-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .cab-actions .btn{margin:0;}
+  .cab-actions{display:flex;flex-direction:column;gap:10px;}
+  .cab-actions .btn{margin:0;padding:12px;font-size:14.5px;}
 
   /* ---------- переписка со студией (в стиле мессенджера, как в CRM) ---------- */
   .chatbox{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:26px;}
@@ -210,14 +251,26 @@
   .cfile .nm span{font-size:12px;color:var(--muted);}
   .cfile .btn{width:auto;margin:0;padding:8px 14px;font-size:13.5px;flex:none;}
 
-  @media (max-width:640px){
-    .id-card{grid-template-columns:1fr;}
-    .cab-actions{grid-template-columns:1fr;}
+  /* планшет и телефон: профиль становится верхней карточкой, данные в две колонки */
+  @media (max-width:860px){
+    .cab-layout{grid-template-columns:minmax(0, 1fr);}
+    .profile{position:static;gap:18px;max-height:none;overflow:visible;}
+    .facts{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:18px 24px;}
+    .fact{border-bottom:none;padding-bottom:0;}
+    .cab-actions{flex-direction:row;}
+    .cab-actions .btn{flex:1;}
+    .cab-menu{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;}
+    .cab-menu button{border-color:var(--line);padding:10px 12px;font-size:14px;gap:8px;}
+  }
+  @media (max-width:480px){
+    .facts{grid-template-columns:minmax(0, 1fr);}
+    .cab-actions{flex-direction:column;}
+  }
+  @media (max-width:400px){
+    .cab-menu{grid-template-columns:minmax(0, 1fr);}
   }
   @media (max-width:380px){
     .back{font-size:13px;padding:.55em .9em;}
-    .name-form{flex-direction:column;}
-    .name-form .btn{padding:14px;}
   }
 </style>
 </head>
@@ -296,56 +349,99 @@
       <span class="pill">ТЕСТ</span>
       <span>Тестовый режим: данные кабинета хранятся только в этом браузере.</span>
     </div>
-    <div class="card">
+    <div class="cab-layout">
+
+      <!-- левая колонка: профиль клиента -->
+      <aside class="card profile" aria-label="Профиль клиента">
+        <div class="who">
+          <div class="avatar" id="uAvatar" aria-hidden="true">#</div>
+          <div class="who-t">
+            <b id="uNameShow">Без имени</b>
+            <span>Клиент студии</span>
+          </div>
+        </div>
+
+        <dl class="facts">
+          <div class="fact">
+            <dt>ID клиента</dt>
+            <dd><span class="mono idv" id="uId"></span><button class="copy" type="button" id="copyId">Копировать</button></dd>
+          </div>
+          <div class="fact">
+            <dt>Номер телефона</dt>
+            <dd class="phone" id="uPhone"></dd>
+          </div>
+        </dl>
+
+        <div class="cab-actions">
+          <a class="btn" href="index.html#contact">Оставить заявку</a>
+          <button class="btn ghost" type="button" id="logout">Выйти</button>
+        </div>
+
+        <!-- разделы кабинета: переключают правую часть -->
+        <div class="cab-menu" id="cabMenu" role="navigation" aria-label="Разделы кабинета">
+          <button type="button" data-view="messages" class="on" aria-current="page"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Сообщения</span></button>
+          <button type="button" data-view="files"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M11.5 2.5H6A1.5 1.5 0 0 0 4.5 4v12A1.5 1.5 0 0 0 6 17.5h8a1.5 1.5 0 0 0 1.5-1.5V6.5l-4-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.5 2.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Файлы от студии</span><em class="cnt" id="cntFiles" hidden></em></button>
+          <button type="button" data-view="requests"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3.5" y="3" width="13" height="14.5" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7.5h6M7 10.5h6M7 13.5h3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Мои заявки</span><em class="cnt" id="cntReqs" hidden></em></button>
+          <button type="button" data-view="settings"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.5"/><path d="M10 1.8v2.3M10 15.9v2.3M1.8 10h2.3M15.9 10h2.3M4.2 4.2l1.6 1.6M14.2 14.2l1.6 1.6M4.2 15.8l1.6-1.6M14.2 5.8l1.6-1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Настройки</span></button>
+        </div>
+      </aside>
+
+      <!-- правая часть: переписка, файлы, заявки -->
+      <div class="card cab-main">
       <div class="cab-head">
-        <div>
-          <span class="eyebrow">Личный кабинет</span>
-          <h1 id="hello">Здравствуйте!</h1>
-        </div>
+        <span class="eyebrow">Личный кабинет</span>
+        <h1 id="hello">Здравствуйте!</h1>
       </div>
 
-      <div class="id-card">
-        <div class="id-cell">
-          <span class="k">ID клиента</span>
-          <span class="v mono" id="uId"></span><button class="copy" type="button" id="copyId">Копировать</button>
+      <section class="panel" id="panel-messages" data-panel="messages">
+        <div class="section-title">Сообщения от студии</div>
+        <div class="chatbox">
+          <div class="thread" id="thread"></div>
+          <form class="reply" id="replyForm">
+            <div class="field-wrap"><textarea id="replyText" rows="1" maxlength="1000" placeholder="Сообщение" aria-label="Ответ студии"></textarea></div>
+            <button class="send" type="submit" id="replySend" disabled aria-label="Отправить"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.4 11.1 19.2 4.3c.7-.3 1.4.4 1.1 1.1l-6.8 14.8c-.3.7-1.4.7-1.6-.1l-1.6-5.4a1 1 0 0 0-.7-.7L4.5 12.7c-.8-.2-.8-1.3-.1-1.6Z" fill="currentColor"/></svg></button>
+          </form>
         </div>
-        <div class="id-cell">
-          <span class="k">Телефон</span>
-          <span class="v" id="uPhone"></span>
-        </div>
-        <div class="id-cell">
-          <span class="k">Клиент с</span>
-          <span class="v" id="uSince"></span>
-        </div>
-      </div>
+      </section>
 
-      <div class="section-title">Имя</div>
-      <form class="name-form" id="nameForm">
-        <input class="input" id="uName" type="text" maxlength="60" autocomplete="given-name" aria-label="Имя">
-        <button class="btn ghost" type="submit">Сохранить</button>
-      </form>
-      <div class="saved" id="nameSaved" role="status"></div>
+      <section class="panel" id="panel-files" data-panel="files" hidden>
+        <div class="section-title">Файлы от студии</div>
+        <div class="cfiles" id="cfiles"></div>
+      </section>
 
-      <div class="section-title">Сообщения от студии</div>
-      <div class="chatbox">
-        <div class="thread" id="thread"></div>
-        <form class="reply" id="replyForm">
-          <div class="field-wrap"><textarea id="replyText" rows="1" maxlength="1000" placeholder="Сообщение" aria-label="Ответ студии"></textarea></div>
-          <button class="send" type="submit" id="replySend" disabled aria-label="Отправить"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.4 11.1 19.2 4.3c.7-.3 1.4.4 1.1 1.1l-6.8 14.8c-.3.7-1.4.7-1.6-.1l-1.6-5.4a1 1 0 0 0-.7-.7L4.5 12.7c-.8-.2-.8-1.3-.1-1.6Z" fill="currentColor"/></svg></button>
+      <section class="panel" id="panel-requests" data-panel="requests" hidden>
+        <div class="section-title">Мои заявки</div>
+        <ul class="req-list" id="reqList" hidden></ul>
+        <div class="empty" id="reqEmpty">Заявок пока нет. Оставьте заявку на главной: мы подставим ваш ID и телефон, чтобы было проще вас найти.</div>
+      </section>
+
+      <section class="panel" id="panel-settings" data-panel="settings" hidden>
+        <div class="section-title">Настройки</div>
+        <form class="set-panel" id="setPanel" novalidate>
+          <div class="field">
+            <label for="sName">Имя</label>
+            <input class="input" id="sName" type="text" maxlength="60" autocomplete="given-name" placeholder="Как к вам обращаться">
+          </div>
+          <div class="field">
+            <label for="sEmail">E-mail для связи</label>
+            <input class="input" id="sEmail" type="email" maxlength="120" autocomplete="email" placeholder="you@mail.com">
+          </div>
+          <div class="field">
+            <label>Номер телефона</label>
+            <div class="ro-field" id="sPhone"></div>
+            <small class="hint">Номер — ваш логин. Чтобы его сменить, напишите студии в чат.</small>
+          </div>
+          <div class="field">
+            <label>Дата регистрации</label>
+            <div class="ro-field" id="uSince"></div>
+          </div>
+          <div class="error" id="setError" role="alert"></div>
+          <button class="btn" type="submit">Сохранить</button>
+          <div class="saved" id="setSaved" role="status"></div>
         </form>
+      </section>
       </div>
 
-      <div class="section-title">Файлы от студии</div>
-      <div class="cfiles" id="cfiles"></div>
-
-      <div class="section-title">Мои заявки</div>
-      <ul class="req-list" id="reqList" hidden></ul>
-      <div class="empty" id="reqEmpty">Заявок пока нет. Оставьте заявку на главной: мы подставим ваш ID и телефон, чтобы было проще вас найти.</div>
-
-      <div class="cab-actions">
-        <a class="btn" href="index.html#contact">Оставить заявку</a>
-        <button class="btn ghost" type="button" id="logout">Выйти</button>
-      </div>
     </div>
   </div>
 
@@ -476,8 +572,22 @@
     $('hello').textContent = user.name ? 'Здравствуйте, ' + user.name + '!' : 'Здравствуйте!';
     $('uId').textContent = user.id;
     $('uPhone').textContent = A.formatPhone(user.phone);
+    $('sPhone').textContent = A.formatPhone(user.phone);
     $('uSince').textContent = fmtDate(user.createdAt);
-    $('uName').value = user.name || '';
+    var shown = $('uNameShow');
+    shown.textContent = user.name || 'Без имени';
+    shown.classList.toggle('none', !user.name);
+    // поля настроек не затираем, пока клиент в них печатает
+    if (!$('setPanel').contains(document.activeElement)){
+      $('sName').value = user.name || '';
+      $('sEmail').value = user.email || '';
+    }
+    // аватар: инициалы и цвет по ID, тот же набор цветов, что в CRM
+    var parts = (user.name || '').trim().split(/\s+/), av = $('uAvatar');
+    av.textContent = user.name ? (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase() : '#';
+    var colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#6366f1'], h = 0;
+    for (var i = 0; i < user.id.length; i++) h = (h * 31 + user.id.charCodeAt(i)) >>> 0;
+    av.style.background = colors[h % colors.length];
     var list = $('reqList'), reqs = user.requests || [];
     list.innerHTML = '';
     reqs.forEach(function(r){
@@ -490,6 +600,7 @@
     });
     list.hidden = !reqs.length;
     $('reqEmpty').hidden = !!reqs.length;
+    setCount('cntReqs', reqs.length);
     renderInbox(user);
   }
 
@@ -531,6 +642,7 @@
     th.scrollTop = th.scrollHeight;
 
     var box = $('cfiles'), files = C.files(user.id);
+    setCount('cntFiles', files.length);
     box.innerHTML = '';
     if (!files.length){
       box.innerHTML = '<div class="empty" style="margin:0">Фото и видео со съёмок появятся здесь.</div>';
@@ -579,13 +691,45 @@
     var u = A.currentUser();
     if (e.key === 'downshot_crm_v1' && u && !$('cabinetView').hidden) renderInbox(u);
   });
-  $('nameForm').addEventListener('submit', function(e){
+  /* ---------- настройки профиля ---------- */
+  /* ---------- разделы кабинета: меню слева переключает правую часть ---------- */
+  var VIEWS = ['messages', 'files', 'requests', 'settings'];
+  function showView(name, focus){
+    if (VIEWS.indexOf(name) === -1) name = 'messages';
+    document.querySelectorAll('#cabMenu button').forEach(function(b){
+      var on = b.dataset.view === name;
+      b.classList.toggle('on', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('.panel').forEach(function(p){ p.hidden = p.dataset.panel !== name; });
+    if (name === 'messages'){ var th = $('thread'); th.scrollTop = th.scrollHeight; }
+    if (name === 'settings'){
+      $('setSaved').textContent = ''; $('setError').textContent = '';
+      if (focus) setTimeout(function(){ $('sName').focus(); }, 30);
+    }
+    try { history.replaceState(null, '', name === 'messages' ? location.pathname + location.search : '#' + name); } catch (e) {}
+  }
+  document.querySelectorAll('#cabMenu button').forEach(function(b){
+    b.addEventListener('click', function(){ showView(b.dataset.view, true); });
+  });
+  function setCount(id, n){ var el = $(id); el.textContent = n; el.hidden = !n; }
+  ['sName', 'sEmail'].forEach(function(id){
+    $(id).addEventListener('input', function(){ $('setError').textContent = ''; $('setSaved').textContent = ''; this.removeAttribute('aria-invalid'); });
+  });
+  $('setPanel').addEventListener('submit', function(e){
     e.preventDefault();
-    var u = A.updateUser({name: $('uName').value});
-    if (u){
+    $('setError').textContent = '';
+    try {
+      var u = A.updateUser({name: $('sName').value, email: $('sEmail').value});
+      if (!u) return;
+      $('sPhone').blur();
       renderCabinet(u);
-      $('nameSaved').textContent = 'Сохранено';
-      setTimeout(function(){ $('nameSaved').textContent = ''; }, 2000);
+      $('sName').value = u.name || ''; $('sEmail').value = u.email || '';
+      $('setSaved').textContent = 'Сохранено';
+      setTimeout(function(){ $('setSaved').textContent = ''; }, 2500);
+    } catch (err){
+      $('setError').textContent = err.message;
+      $('sEmail').setAttribute('aria-invalid', 'true');
     }
   });
   $('copyId').addEventListener('click', function(){
@@ -595,6 +739,7 @@
   });
   $('logout').addEventListener('click', function(){
     A.logout();
+    showView('messages');
     $('cabinetView').hidden = true;
     $('authView').hidden = false;
     $('phone').value = '';
@@ -603,7 +748,7 @@
 
   /* ---------- старт ---------- */
   var current = A.currentUser();
-  if (current) renderCabinet(current);
+  if (current){ renderCabinet(current); showView(location.hash.slice(1)); }
   else { $('authView').hidden = false; show('stepPhone'); }
 })();
 </script>
