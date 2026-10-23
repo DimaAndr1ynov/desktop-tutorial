@@ -694,6 +694,7 @@
         <button class="btn" type="button" id="bNewProject">+ Проект</button>
       </div>
       <p class="muted" id="projLead" style="margin:10px 0 0;line-height:1.55"></p>
+      <div class="demo-bar" id="projDemoBar" hidden></div>
       <div class="proj-bar">
         <div class="seg" id="projSeg" role="group" aria-label="Фильтр по статусу"></div>
         <select class="select" id="projStaff" aria-label="Исполнитель" hidden></select>
@@ -1445,6 +1446,22 @@
     if (!C.can('projects.any')) return;
     var manage = C.can('projects.manage'), me = C.me(), all = C.projects(), now = Date.now();
     $('bNewProject').hidden = !manage;
+    // демо-режим: только в тестовом режиме и только тем, кто управляет проектами
+    var dbar = $('projDemoBar');
+    dbar.hidden = !(C.MODE === 'test' && manage);
+    if (!dbar.hidden){
+      var demoN = all.filter(function(p){ return p.demo; }).length;
+      dbar.innerHTML = demoN
+        ? '<span>Демо-режим: показано проектов — ' + demoN + ' (с дедлайнами, паузами и результатами). Кнопки «Начать», «Пауза», «Завершить» и «Передать» работают по-настоящему.</span><button class="btn ghost sm" type="button" id="bProjDemoClear">Выключить демо-режим</button>'
+        : '<span>Тестовый режим. Включите демо-режим, чтобы получить 10 проектов в разных состояниях и попробовать все кнопки. Выключить его можно в один клик, настоящие проекты не затрагиваются.</span><button class="btn sm" type="button" id="bProjDemoSeed">Включить демо-режим</button>';
+      if ($('bProjDemoSeed')) $('bProjDemoSeed').addEventListener('click', guard(function(){
+        var n = C.seedDemoProjectsOnly(); toast('Демо-режим включён, проектов: ' + n, 'ok'); render();
+      }));
+      if ($('bProjDemoClear')) $('bProjDemoClear').addEventListener('click', guard(function(){
+        if (!confirm('Выключить демо-режим и удалить демо-проекты? Настоящие проекты останутся.')) return;
+        C.clearDemoProjects(); projFilter = 'all'; projStaff = ''; toast('Демо-режим выключен', 'ok'); render();
+      }));
+    }
     $('projLead').textContent = manage ? 'Все проекты студии: назначайте исполнителей, следите за сроками и временем.' : 'Ваши проекты: начинайте работу, ставьте на паузу, завершайте и передавайте коллегам.';
     var isLate = function(p){ return p.status !== 'done' && p.deadline && p.deadline < now; };
     var inScope = all.filter(function(p){ return !projStaff || p.assigneeId === projStaff; });
@@ -1465,7 +1482,7 @@
     });
     $('projList').innerHTML = list.length
       ? '<div class="proj-grid">' + list.map(function(p){ return projectCard(p, {away: !manage && p.assigneeId !== me.id}); }).join('') + '</div>'
-      : '<div class="empty">' + (all.length ? 'В этом списке пока ничего нет.' : (manage ? 'Проектов пока нет. Создайте первый кнопкой «+ Проект» или добавьте демо-сотрудников в разделе «Сотрудники»: вместе с ними появятся демо-проекты.' : 'Проектов пока нет. Их назначает менеджер.')) + '</div>';
+      : '<div class="empty">' + (all.length ? 'В этом списке пока ничего нет.' : (manage ? 'Проектов пока нет. Создайте первый кнопкой «+ Проект» или включите демо-режим выше.' : 'Проектов пока нет. Их назначает менеджер.')) + '</div>';
     bindProjectCards($('projList'), function(){ renderProjects(); render(); });
   }
   $('projStaff').addEventListener('change', function(){ projStaff = $('projStaff').value; renderProjects(); });
