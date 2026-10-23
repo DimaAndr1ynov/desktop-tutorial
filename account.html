@@ -252,20 +252,100 @@
   .cfile .nm span{font-size:12px;color:var(--muted);}
   .cfile .btn{width:auto;margin:0;padding:8px 14px;font-size:13.5px;flex:none;}
 
-  /* планшет и телефон: профиль становится верхней карточкой, данные в две колонки */
-  @media (max-width:860px){
-    .cab-layout{grid-template-columns:minmax(0, 1fr);}
-    .profile{position:static;gap:18px;max-height:none;overflow:visible;}
-    .facts{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:18px 24px;}
-    .fact{border-bottom:none;padding-bottom:0;}
-    .cab-menu{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;}
-    .cab-menu button{border-color:var(--line);padding:10px 12px;font-size:14px;gap:8px;}
+  /* ---------- режим приложения: телефон и планшет ----------
+     Левая колонка превращается в панель, которая выезжает слева по кнопке-меню. Основа экрана: «Сообщения» и «Файлы»,
+     они же во вкладках внизу. Условие то же, что в APP_MQ в скрипте: узкий экран или сенсорное устройство до 1366px. */
+  .appbar, .tabbar, .scrim, .drawer-x, .drawer-site, .drawer-note{display:none;}
+  html.no-scroll, html.no-scroll body{overflow:hidden;}
+  @media (max-width:860px), (pointer:coarse) and (max-width:1366px){
+    :root{--ab-h:56px;--tb-h:62px;}
+    body.in-cabinet > header{display:none;}
+    body.in-cabinet main{padding:0;display:block;}
+    .cabinet{max-width:none;}
+    #testBanner2{display:none;}
+    .cab-layout{display:block;}
+
+    .appbar{
+      display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:40;
+      min-height:calc(var(--ab-h) + env(safe-area-inset-top, 0px));
+      padding:env(safe-area-inset-top, 0px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
+      background:rgba(10,12,16,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+    }
+    .ab-btn{
+      flex:none;width:42px;height:42px;border-radius:12px;border:none;background:transparent;color:var(--text);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s;
+    }
+    .ab-btn:hover, .ab-btn:focus-visible{background:var(--surface-2);}
+    .ab-title{flex:1;min-width:0;font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ab-test{
+      flex:none;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#fde68a;
+      background:rgba(250,204,21,.16);border-radius:6px;padding:3px 7px;
+    }
+    .ab-avatar{
+      flex:none;width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;color:#fff;
+      font-family:'Manrope',sans-serif;font-weight:800;font-size:14px;background:var(--blue);
+    }
+
+    /* основная часть без рамки: как экран приложения */
+    .cab-main{background:none;border:none;box-shadow:none;border-radius:0;padding:0;}
+    .cab-head, .panel > .section-title{display:none;}
+    .panel{padding:16px max(16px, env(safe-area-inset-right, 0px)) calc(var(--tb-h) + env(safe-area-inset-bottom, 0px) + 20px) max(16px, env(safe-area-inset-left, 0px));}
+    #panel-messages{padding:0;}
+    .chatbox{
+      display:flex;flex-direction:column;border:none;border-radius:0;margin:0;
+      height:calc(100vh - var(--ab-h) - var(--tb-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      height:calc(100dvh - var(--ab-h) - var(--tb-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+    .thread{height:auto;flex:1;min-height:0;padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));}
+    body.kb .chatbox{
+      height:calc(100vh - var(--ab-h) - env(safe-area-inset-top, 0px));
+      height:calc(100dvh - var(--ab-h) - env(safe-area-inset-top, 0px));
+    }
+
+    /* вкладки внизу */
+    .tabbar{
+      display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;
+      height:calc(var(--tb-h) + env(safe-area-inset-bottom, 0px));padding-bottom:env(safe-area-inset-bottom, 0px);
+      background:rgba(14,17,23,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+    }
+    body.kb .tabbar{display:none;}
+    .tabbar button{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;
+      background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;transition:color .2s;
+    }
+    .tabbar button.on{color:var(--blue-light);}
+    .tabbar button.on::before{content:'';position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--blue);}
+    .tb-cnt{
+      font-style:normal;position:absolute;top:7px;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:9px;padding:0 5px;
+      display:flex;align-items:center;justify-content:center;background:var(--blue);color:#fff;font-size:11px;font-weight:600;
+    }
+
+    /* левая панель выезжает слева */
+    .profile{
+      position:fixed;top:0;left:0;bottom:0;z-index:80;width:min(330px, 88vw);max-height:none;overflow-y:auto;
+      border-radius:0 22px 22px 0;gap:18px;
+      padding:calc(22px + env(safe-area-inset-top, 0px)) 20px calc(22px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+      transform:translateX(-105%);visibility:hidden;
+      transition:transform .28s cubic-bezier(.22,.61,.2,1), visibility 0s linear .28s;
+      box-shadow:0 0 0 1px rgba(47,127,255,.12);
+    }
+    .profile.open{transform:none;visibility:visible;transition-delay:0s;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+    .scrim{
+      display:block;position:fixed;inset:0;z-index:70;background:rgba(5,6,9,.62);backdrop-filter:blur(2px);
+      opacity:0;pointer-events:none;transition:opacity .25s;
+    }
+    .scrim.show{opacity:1;pointer-events:auto;}
+    .drawer-x{
+      display:flex;align-items:center;justify-content:center;position:absolute;top:calc(12px + env(safe-area-inset-top, 0px));right:12px;
+      width:38px;height:38px;border-radius:50%;border:none;background:var(--surface-2);color:var(--muted);font-size:22px;line-height:1;cursor:pointer;
+    }
+    .drawer-x:hover{color:var(--text);}
+    .profile .who{padding-right:44px;}
+    .drawer-site{display:inline-flex;margin:0;padding:11px;font-size:14.5px;}
+    .drawer-note{display:block;margin:0;font-size:12.5px;line-height:1.5;color:#fde68a;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.3);border-radius:12px;padding:10px 12px;}
   }
-  @media (max-width:480px){
-    .facts{grid-template-columns:minmax(0, 1fr);}
-  }
-  @media (max-width:400px){
-    .cab-menu{grid-template-columns:minmax(0, 1fr);}
+  @media (max-width:860px) and (prefers-reduced-motion: reduce), (pointer:coarse) and (max-width:1366px) and (prefers-reduced-motion: reduce){
+    .profile, .scrim{transition:none;}
   }
   @media (max-width:380px){
     .back{font-size:13px;padding:.55em .9em;}
@@ -343,6 +423,14 @@
 
   <!-- КАБИНЕТ -->
   <div class="cabinet" id="cabinetView" hidden>
+    <div class="appbar" id="appbar">
+      <button class="ab-btn" type="button" id="drawerOpen" aria-label="Открыть меню" aria-expanded="false" aria-controls="profileDrawer">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M3.5 6h15M3.5 11h15M3.5 16h15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ab-title" id="abTitle">Сообщения</div>
+      <span class="ab-test" title="Тестовый режим: данные хранятся только в этом браузере">ТЕСТ</span>
+      <button class="ab-avatar" type="button" id="abAvatar" aria-label="Профиль и меню" aria-expanded="false" aria-controls="profileDrawer">#</button>
+    </div>
     <div class="test-banner" id="testBanner2" hidden>
       <span class="pill">ТЕСТ</span>
       <span>Тестовый режим: данные кабинета хранятся только в этом браузере.</span>
@@ -350,7 +438,8 @@
     <div class="cab-layout">
 
       <!-- левая колонка: профиль клиента -->
-      <aside class="card profile" aria-label="Профиль клиента">
+      <aside class="card profile" id="profileDrawer" aria-label="Профиль клиента">
+        <button class="drawer-x" type="button" id="drawerClose" aria-label="Закрыть меню">×</button>
         <div class="who">
           <div class="avatar" id="uAvatar" aria-hidden="true">#</div>
           <div class="who-t">
@@ -386,6 +475,8 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10.5 11l3-3-3-3M13.5 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Выйти
         </button>
+        <a class="btn ghost drawer-site" href="index.html">← На сайт</a>
+        <p class="drawer-note">Тестовый режим: данные кабинета хранятся только в этом браузере.</p>
       </aside>
 
       <!-- правая часть: переписка, файлы, заявки -->
@@ -447,6 +538,17 @@
     </div>
   </div>
 
+  <div class="tabbar" id="tabbar" role="navigation" aria-label="Основные разделы">
+    <button type="button" data-view="messages" class="on" aria-current="page">
+      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span>Сообщения</span>
+    </button>
+    <button type="button" data-view="files">
+      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M11.5 2.5H6A1.5 1.5 0 0 0 4.5 4v12A1.5 1.5 0 0 0 6 17.5h8a1.5 1.5 0 0 0 1.5-1.5V6.5l-4-4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.5 2.5v4h4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span>Файлы</span><em class="tb-cnt" id="tbFiles" hidden></em>
+    </button>
+  </div>
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
 </main>
 
 <script src="assets/auth.js"></script>
@@ -571,6 +673,7 @@
   function renderCabinet(user){
     $('authView').hidden = true;
     $('cabinetView').hidden = false;
+    document.body.classList.add('in-cabinet');
     $('hello').textContent = user.name ? 'Здравствуйте, ' + user.name + '!' : 'Здравствуйте!';
     $('uId').textContent = user.id;
     $('uPhone').textContent = A.formatPhone(user.phone);
@@ -590,6 +693,8 @@
     var colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#6366f1'], h = 0;
     for (var i = 0; i < user.id.length; i++) h = (h * 31 + user.id.charCodeAt(i)) >>> 0;
     av.style.background = colors[h % colors.length];
+    $('abAvatar').textContent = av.textContent;
+    $('abAvatar').style.background = av.style.background;
     var list = $('reqList'), reqs = user.requests || [];
     list.innerHTML = '';
     reqs.forEach(function(r){
@@ -704,17 +809,74 @@
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     document.querySelectorAll('.panel').forEach(function(p){ p.hidden = p.dataset.panel !== name; });
+    $('abTitle').textContent = TITLES[name];
+    document.querySelectorAll('#tabbar button').forEach(function(b){
+      var on = b.dataset.view === name;
+      b.classList.toggle('on', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    drawerClose(false);
+    if (APP_MQ.matches) window.scrollTo(0, 0);
     if (name === 'messages'){ var th = $('thread'); th.scrollTop = th.scrollHeight; }
     if (name === 'settings'){
       $('setSaved').textContent = ''; $('setError').textContent = '';
-      if (focus) setTimeout(function(){ $('sName').focus(); }, 30);
+      if (focus && !APP_MQ.matches) setTimeout(function(){ $('sName').focus(); }, 30); // на телефоне не вызываем клавиатуру сами
     }
     try { history.replaceState(null, '', name === 'messages' ? location.pathname + location.search : '#' + name); } catch (e) {}
   }
   document.querySelectorAll('#cabMenu button').forEach(function(b){
     b.addEventListener('click', function(){ showView(b.dataset.view, true); });
   });
-  function setCount(id, n){ var el = $(id); el.textContent = n; el.hidden = !n; }
+  function setCount(id, n){
+    var el = $(id); el.textContent = n; el.hidden = !n;
+    if (id === 'cntFiles'){ var tb = $('tbFiles'); tb.textContent = n; tb.hidden = !n; }
+  }
+  /* ---------- режим приложения: левая панель выезжает слева по кнопке-меню ---------- */
+  var APP_MQ = window.matchMedia('(max-width:860px), (pointer:coarse) and (max-width:1366px)');
+  var TITLES = {messages: 'Сообщения', files: 'Файлы от студии', requests: 'Мои заявки', settings: 'Настройки'};
+  function drawerIsOpen(){ return $('profileDrawer').classList.contains('open'); }
+  function drawerOpen(){
+    $('profileDrawer').classList.add('open');
+    $('scrim').classList.add('show');
+    $('drawerOpen').setAttribute('aria-expanded', 'true');
+    $('abAvatar').setAttribute('aria-expanded', 'true');
+    document.documentElement.classList.add('no-scroll');
+    setTimeout(function(){ $('drawerClose').focus(); }, 60);
+  }
+  function drawerClose(returnFocus){
+    if (!drawerIsOpen()) return;
+    $('profileDrawer').classList.remove('open');
+    $('scrim').classList.remove('show');
+    $('drawerOpen').setAttribute('aria-expanded', 'false');
+    $('abAvatar').setAttribute('aria-expanded', 'false');
+    document.documentElement.classList.remove('no-scroll');
+    if (returnFocus) $('drawerOpen').focus();
+  }
+  $('drawerOpen').addEventListener('click', drawerOpen);
+  $('abAvatar').addEventListener('click', drawerOpen);
+  $('drawerClose').addEventListener('click', function(){ drawerClose(true); });
+  $('scrim').addEventListener('click', function(){ drawerClose(true); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') drawerClose(true); });
+  // экран стал широким (поворот планшета): панель снова обычная колонка слева
+  var onMq = function(){ if (!APP_MQ.matches) drawerClose(false); };
+  if (APP_MQ.addEventListener) APP_MQ.addEventListener('change', onMq); else if (APP_MQ.addListener) APP_MQ.addListener(onMq);
+  // свайпы: от левого края вправо открывает панель, влево закрывает
+  var swX = null, swY = null;
+  document.addEventListener('touchstart', function(e){ var t = e.touches[0]; swX = t.clientX; swY = t.clientY; }, {passive: true});
+  document.addEventListener('touchend', function(e){
+    if (swX === null || !APP_MQ.matches || $('cabinetView').hidden) return;
+    var t = e.changedTouches[0], dx = t.clientX - swX, dy = Math.abs(t.clientY - swY);
+    if (!drawerIsOpen() && swX < 28 && dx > 70 && dy < 50) drawerOpen();
+    else if (drawerIsOpen() && dx < -70 && dy < 50) drawerClose(true);
+    swX = null;
+  }, {passive: true});
+  // вкладки внизу: «Сообщения» и «Файлы»
+  document.querySelectorAll('#tabbar button').forEach(function(b){ b.addEventListener('click', function(){ showView(b.dataset.view); }); });
+  // клавиатура телефона: убираем нижние вкладки, чтобы поле ответа не уезжало
+  $('replyText').addEventListener('focus', function(){ document.body.classList.add('kb'); });
+  $('replyText').addEventListener('blur', function(){ setTimeout(function(){ document.body.classList.remove('kb'); }, 120); });
+
+
   ['sName', 'sEmail'].forEach(function(id){
     $(id).addEventListener('input', function(){ $('setError').textContent = ''; $('setSaved').textContent = ''; this.removeAttribute('aria-invalid'); });
   });
@@ -742,6 +904,7 @@
   $('logout').addEventListener('click', function(){
     A.logout();
     showView('messages');
+    document.body.classList.remove('in-cabinet');
     $('cabinetView').hidden = true;
     $('authView').hidden = false;
     $('phone').value = '';
