@@ -20,6 +20,8 @@
     { id: 'clients.delete', title: 'Удалять клиентов' },
     { id: 'payments.view', title: 'Видеть оплаты' },
     { id: 'payments.edit', title: 'Вносить оплаты' },
+    { id: 'projects.work', title: 'Проекты: работать над своими (начать, пауза, завершить, передать)' },
+    { id: 'projects.manage', title: 'Проекты: создавать, назначать, видеть все' },
     { id: 'staff.edit', title: 'Сотрудники и права ролей' },
     { id: 'dialogs', title: 'Читать переписку' },
     { id: 'messages.send', title: 'Писать клиенту (SMS)' },
@@ -30,9 +32,9 @@
   // Права по умолчанию; администратор может поменять их в разделе «Сотрудники» (хранятся в data.rolePerms).
   var ROLES = {
     admin: { title: 'Администратор', locked: true, can: PERMS.map(function (p) { return p.id; }) },
-    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
-    operator: { title: 'Оператор', can: ['dialogs', 'messages.send', 'files.upload', 'files.download'] },
-    editor: { title: 'Монтажёр', can: ['dialogs', 'files.upload', 'files.download'] },
+    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    operator: { title: 'Оператор', can: ['projects.work', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    editor: { title: 'Монтажёр', can: ['projects.work', 'dialogs', 'files.upload', 'files.download'] },
     cashier: { title: 'Кассир', can: ['clients.view', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.download'] }
   };
   var ROLE_ORDER = ['admin', 'manager', 'operator', 'editor', 'cashier'];
@@ -60,6 +62,17 @@
     { id: 'off', title: 'Не на смене', counted: false },
     { id: 'vacation', title: 'В отпуске', counted: false },
     { id: 'sick', title: 'На больничном', counted: false }
+  ];
+  var PROJECT_STATUSES = [
+    { id: 'todo', title: 'Не начат' },
+    { id: 'work', title: 'В работе' },
+    { id: 'pause', title: 'Пауза' },
+    { id: 'done', title: 'Завершён' }
+  ];
+  var PROJECT_TYPES = [
+    { id: 'shoot', title: 'Съёмка' },
+    { id: 'edit', title: 'Монтаж' },
+    { id: 'other', title: 'Другое' }
   ];
   var NORM_HOURS = 160; // месячная норма часов для расчёта выполнения и ставки в час
   var SALARY_DEFAULT = { admin: 120000, manager: 75000, operator: 55000, editor: 65000, cashier: 50000 };
@@ -125,6 +138,19 @@
       data.v = 4;
       changed = true;
     }
+    if (!(data.v >= 5)) {
+      // v5: проекты. Новые права по умолчанию дописываем в уже изменённые администратором списки.
+      ['projects.work', 'projects.manage'].forEach(function (p) {
+        for (var role in (data.rolePerms || {})) {
+          if (!ROLES[role] || ROLES[role].locked) continue;
+          if (ROLES[role].can.indexOf(p) !== -1 && data.rolePerms[role].indexOf(p) === -1) data.rolePerms[role].push(p);
+        }
+      });
+      data.projects = data.projects || [];
+      data.v = 5;
+      changed = true;
+    }
+    if (!data.projects) { data.projects = []; changed = true; }
     if (!data.payments) { data.payments = []; changed = true; }
     return changed;
   }
@@ -169,6 +195,97 @@
     return res;
   }
   function since(s) { var l = s.log || []; return l.length ? l[l.length - 1].t : s.createdAt; }
+  /* ---------- проекты: время, расчёт зарплаты ---------- */
+  // Время (мс), потраченное на проект: по всем исполнителям или по одному (staffId), можно с даты from.
+  function projSpent(p, now, staffId, from) {
+    return (p.sessions || []).reduce(function (s, x) {
+      if (staffId && x.staffId !== staffId) return s;
+      var a = Math.max(x.from, from || 0), b = Math.min(x.to || now, now);
+      return s + Math.max(0, b - a);
+    }, 0);
+  }
+  // Отработанные часы по дням текущего месяца (мс на каждый день, индекс 0 = 1 число).
+  function hoursByDay(s, now) {
+    var m0 = startOfMonth(now), nd = new Date(now), total = new Date(nd.getFullYear(), nd.getMonth() + 1, 0).getDate(), out = [], i;
+    for (i = 0; i < total; i++) out.push(0);
+    var log = s.log || [];
+    for (i = 0; i < log.length; i++) {
+      var def = statusDef(log[i].s);
+      if (!def || !def.counted) continue;
+      var a = Math.max(log[i].t, m0), b = Math.min(log[i + 1] ? log[i + 1].t : now, now);
+      while (a < b) {
+        // граница суток; max(a + минута) страхует от зацикливания в день перевода часов
+        var seg = Math.min(b, Math.max(a + 60000, startOfDay(a) + DAY));
+        out[new Date(a).getDate() - 1] += seg - a;
+        a = seg;
+      }
+    }
+    return out;
+  }
+  // Расчёт зарплаты: ставка в час = оклад / норма; начислено = ставка × отработанные часы месяца.
+  function payroll(salary, monthMs) {
+    var rate = salary / NORM_HOURS, hours = monthMs / 3600000;
+    return { salary: salary, norm: NORM_HOURS, rate: Math.round(rate), hours: hours, accrued: Math.round(rate * hours),
+      left: Math.max(0, NORM_HOURS - hours), over: Math.max(0, hours - NORM_HOURS) };
+  }
+  // Исполнители проектов: роли с правом projects.work. Администратор проекты не ведёт, только управляет ими.
+  function workerRole(d, role) { return !!ROLES[role] && !ROLES[role].locked && rolePerms(d, role).indexOf('projects.work') !== -1; }
+  function enrichProject(p, d, db, now) {
+    var cl = p.clientId && db.users[p.clientId], run = (p.sessions || []).filter(function (x) { return !x.to; })[0], as = d.staff[p.assigneeId];
+    var nm = function (id) { return d.staff[id] ? d.staff[id].name : 'Удалённый сотрудник'; };
+    return {
+      id: p.id, title: p.title, type: p.type, status: p.status, note: p.note || '', deadline: p.deadline || 0, createdAt: p.createdAt,
+      doneAt: p.doneAt || 0, result: p.result || '', clientId: p.clientId || '', clientName: cl ? (cl.name || cl.phone) : '',
+      assigneeId: p.assigneeId, assigneeName: as ? as.name : 'Удалённый сотрудник',
+      spentMs: projSpent(p, now), running: !!run, runningSince: run ? run.from : 0, demo: !!p.demo,
+      transfers: (p.history || []).filter(function (h) { return h.type === 'transfer'; })
+        .map(function (h) { return { at: h.t, from: h.from, to: h.to, fromName: nm(h.from), toName: nm(h.to) }; })
+    };
+  }
+  function transferOf(p, to, by, now) {
+    (p.sessions || []).forEach(function (x) { if (!x.to) x.to = now; });
+    p.history = p.history || [];
+    p.history.push({ t: now, type: 'transfer', from: p.assigneeId, to: to, by: by });
+    p.assigneeId = to;
+    p.status = (p.sessions || []).length ? 'pause' : 'todo'; // новый исполнитель начинает сам
+  }
+  function projCounts(d, staffId) {
+    var c = { work: 0, pause: 0, todo: 0 };
+    d.projects.forEach(function (p) { if (p.assigneeId === staffId && c[p.status] !== undefined) c[p.status]++; });
+    return c;
+  }
+  function seedDemoProjects(d, now) {
+    var HOUR = 3600000, M = 60000, db = clientsDb();
+    var byName = function (name) { for (var k in d.staff) if (d.staff[k].name === name) return k; return ''; };
+    var clients = Object.keys(db.users).filter(function (k) { return db.users[k].demo; });
+    var S = { irina: byName('Ирина Соколова'), sergey: byName('Сергей Белов'), anast: byName('Анастасия Лебедева'), viktor: byName('Виктор Ильин'),
+      maxim: byName('Максим Орлов'), pavel: byName('Павел Громов'), olesya: byName('Олеся Кузнецова') };
+    var dayEnd = function (k) { return startOfDay(now) + (k + 1) * DAY - M; };
+    var ses = function (staff, daysAgo, startH, hours) { var from = startOfDay(now) - daysAgo * DAY + startH * HOUR; return { staffId: staff, from: from, to: from + hours * HOUR }; };
+    var open = function (staff, minAgo) { return { staffId: staff, from: now - minAgo * M }; };
+    var n = 0;
+    var mk = function (o) {
+      if (!o.as) return;
+      var age = o.age || 3, hist = [{ t: now - age * DAY, type: 'created', by: 'ST-ADMN' }];
+      if (o.sessions && o.sessions.length) hist.push({ t: o.sessions[0].from, type: 'start', by: o.sessions[0].staffId });
+      (o.hist || []).forEach(function (h) { hist.push(h); });
+      var p = { id: uid('PR', 6), title: o.title, clientId: o.cl >= 0 && clients[o.cl] ? clients[o.cl] : '', type: o.type, assigneeId: o.as, deadline: o.dl,
+        note: o.note || '', status: o.status, createdAt: now - age * DAY, createdBy: 'ST-ADMN', sessions: o.sessions || [], history: hist, demo: true };
+      if (o.status === 'done') { p.doneAt = o.doneAt; p.result = o.result; hist.push({ t: o.doneAt, type: 'done', by: o.as }); }
+      d.projects.push(p); n++;
+    };
+    mk({ title: 'Заезд · Роза Хутор', type: 'shoot', as: S.sergey, cl: 0, status: 'work', dl: dayEnd(1), sessions: [ses(S.sergey, 1, 10, 2.5), open(S.sergey, 40)], note: 'Две локации, вертикальный ролик и фото' });
+    mk({ title: 'Школа катания · 3 часа', type: 'shoot', as: S.anast, cl: 1, status: 'pause', dl: dayEnd(2), sessions: [ses(S.anast, 1, 11, 1.8)] });
+    mk({ title: 'Фрирайд-сопровождение', type: 'shoot', as: S.irina, cl: 3, status: 'todo', dl: dayEnd(3), sessions: [] });
+    mk({ title: 'Соревнования клуба · репортаж', type: 'shoot', as: S.sergey, cl: 4, status: 'done', dl: dayEnd(-3), age: 9, sessions: [ses(S.sergey, 5, 9, 3.2), ses(S.sergey, 4, 10, 2)], doneAt: now - 3 * DAY, result: 'Отснято три заезда, 412 кадров. Материал передан монтажёру, отчёт готов.' });
+    mk({ title: 'Съёмочный день · бренд экипировки', type: 'shoot', as: S.sergey, cl: 5, status: 'pause', dl: dayEnd(2), age: 6, sessions: [ses(S.viktor, 3, 10, 2)], hist: [{ t: now - 2 * DAY, type: 'transfer', from: S.viktor, to: S.sergey, by: 'ST-ADMN' }] });
+    mk({ title: 'Спуск · 30 минут', type: 'shoot', as: S.irina, cl: 2, status: 'done', dl: dayEnd(-6), age: 8, sessions: [ses(S.irina, 6, 12, 1.1)], doneAt: now - 6 * DAY, result: 'Съёмка на одной трассе, отдано 15 обработанных фото.' });
+    mk({ title: 'Монтаж ролика · Заезд', type: 'edit', as: S.pavel, cl: 0, status: 'work', dl: dayEnd(0), sessions: [ses(S.pavel, 1, 12, 3), open(S.pavel, 70)] });
+    mk({ title: 'Рилс 30 сек · сторис', type: 'edit', as: S.maxim, cl: 6, status: 'pause', dl: dayEnd(-1), age: 7, sessions: [ses(S.maxim, 2, 13, 1.2)] });
+    mk({ title: 'Обработка 25 фото', type: 'edit', as: S.pavel, cl: 3, status: 'done', dl: dayEnd(-1), age: 6, sessions: [ses(S.pavel, 3, 14, 1.5), ses(S.pavel, 2, 10, 1)], doneAt: now - 2 * DAY, result: 'Цветокоррекция и ретушь 25 кадров, выгрузка архива клиенту.' });
+    mk({ title: 'Монтаж · соревнования клуба', type: 'edit', as: S.maxim, cl: 4, status: 'pause', dl: dayEnd(3), age: 5, sessions: [ses(S.olesya, 4, 10, 4)], hist: [{ t: now - 3 * DAY, type: 'transfer', from: S.olesya, to: S.maxim, by: 'ST-ADMN' }] });
+    return n;
+  }
   function rolePerms(data, role) {
     if (!ROLES[role]) return [];
     if (ROLES[role].locked) return ROLES[role].can;
@@ -193,7 +310,11 @@
   }
   function can(action) {
     var d = load(), s = d.session && d.staff[d.session.id];
-    return !!(s && s.active && rolePerms(d, s.role).indexOf(action) !== -1);
+    if (!s || !s.active) return false;
+    var perms = rolePerms(d, s.role);
+    // «projects.any» — не настоящее право, а «видит раздел Проекты»: либо работает над проектами, либо управляет ими
+    if (action === 'projects.any') return perms.indexOf('projects.work') !== -1 || perms.indexOf('projects.manage') !== -1;
+    return perms.indexOf(action) !== -1;
   }
   function need(action) { if (!can(action)) fail('Недостаточно прав'); }
 
@@ -686,7 +807,8 @@
       return Object.keys(d.staff).map(function (k) {
         var s = d.staff[k], h = hoursOf(s, now);
         return { id: s.id, name: s.name, phone: s.phone, role: s.role, active: s.active, demo: !!s.demo, createdAt: s.createdAt,
-          salary: s.salary || 0, status: s.status || 'off', since: since(s), todayMs: h.today, monthMs: h.month };
+          salary: s.salary || 0, status: s.status || 'off', since: since(s), todayMs: h.today, monthMs: h.month,
+          worker: workerRole(d, s.role), proj: projCounts(d, s.id) };
       }).sort(function (a, b) { return a.createdAt - b.createdAt; });
     },
 
@@ -733,6 +855,7 @@
         d.staff[id] = { id: id, phone: phone, name: x[0], role: x[1], active: true, createdAt: now - (30 + i) * DAY, salary: x[2], status: stat, log: log, demo: true };
         n++;
       });
+      seedDemoProjects(d, now);
       save(d);
       return n;
     },
@@ -740,11 +863,139 @@
       need('staff.edit');
       var d = load(), cur = me();
       Object.keys(d.staff).forEach(function (k) { if (d.staff[k].demo && k !== cur.id) delete d.staff[k]; });
+      d.projects = (d.projects || []).filter(function (p) { return !p.demo; });
       // клиенты не должны ссылаться на удалённых сотрудников
       var db = clientsDb(), touched = false;
       Object.keys(db.users).forEach(function (k) { var u = db.users[k]; if (u.assignee && !d.staff[u.assignee]) { u.assignee = ''; touched = true; } });
       if (touched) A._store.save(db);
       save(d);
+    },
+
+    PROJECT_STATUSES: PROJECT_STATUSES,
+    PROJECT_TYPES: PROJECT_TYPES,
+
+    /* ---------- проекты ---------- */
+    // Исполнители: активные сотрудники, которым можно назначать проекты (у роли есть право projects.work).
+    assignable: function () {
+      need('projects.any');
+      var d = load();
+      return Object.keys(d.staff).map(function (k) { return d.staff[k]; })
+        .filter(function (s) { return s.active && workerRole(d, s.role); })
+        .sort(function (a, b) { return ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) || a.createdAt - b.createdAt; })
+        .map(function (s) { return { id: s.id, name: s.name, role: s.role }; });
+    },
+    // Руководитель видит все проекты, исполнитель только свои и те, что передал другим.
+    projects: function () {
+      need('projects.any');
+      var d = load(), db = clientsDb(), cur = me(), now = Date.now(), all = can('projects.manage') || can('staff.edit');
+      return d.projects.filter(function (p) {
+        return all || p.assigneeId === cur.id || (p.history || []).some(function (h) { return h.type === 'transfer' && h.from === cur.id; });
+      }).map(function (p) { var e = enrichProject(p, d, db, now); e.mineMs = projSpent(p, now, cur.id); return e; });
+    },
+    addProject: function (x) {
+      need('projects.manage');
+      var d = load(), now = Date.now(), title = String(x.title || '').trim();
+      if (!title) fail('Назовите проект');
+      var type = PROJECT_TYPES.some(function (t) { return t.id === x.type; }) ? x.type : 'other';
+      if (!d.staff[x.assigneeId] || !d.staff[x.assigneeId].active || !workerRole(d, d.staff[x.assigneeId].role)) fail('Выберите исполнителя: оператора или монтажёра');
+      if (x.clientId && !clientsDb().users[x.clientId]) fail('Клиент не найден');
+      var p = { id: uid('PR', 6), title: title.slice(0, 80), clientId: x.clientId || '', type: type, assigneeId: x.assigneeId, deadline: Number(x.deadline) || 0,
+        note: String(x.note || '').trim().slice(0, 300), status: 'todo', createdAt: now, createdBy: me().id, sessions: [], history: [{ t: now, type: 'created', by: me().id }] };
+      d.projects.push(p); save(d);
+      return p.id;
+    },
+    updateProject: function (id, x) {
+      need('projects.manage');
+      var d = load(), p = d.projects.filter(function (q) { return q.id === id; })[0], now = Date.now();
+      if (!p) fail('Проект не найден');
+      if (!String(x.title || '').trim()) fail('Назовите проект');
+      p.title = String(x.title).trim().slice(0, 80);
+      if (PROJECT_TYPES.some(function (t) { return t.id === x.type; })) p.type = x.type;
+      if (x.clientId && !clientsDb().users[x.clientId]) fail('Клиент не найден');
+      p.clientId = x.clientId || '';
+      p.deadline = Number(x.deadline) || 0;
+      p.note = String(x.note || '').trim().slice(0, 300);
+      if (x.assigneeId && x.assigneeId !== p.assigneeId && p.status !== 'done') {
+        if (!d.staff[x.assigneeId] || !d.staff[x.assigneeId].active || !workerRole(d, d.staff[x.assigneeId].role)) fail('Выберите исполнителя: оператора или монтажёра');
+        transferOf(p, x.assigneeId, me().id, now);
+      }
+      save(d);
+    },
+    removeProject: function (id) {
+      need('projects.manage');
+      var d = load();
+      d.projects = d.projects.filter(function (p) { return p.id !== id; });
+      save(d);
+    },
+    // Действия над проектом: start (начать или продолжить), pause, done ({text}), transfer ({to}).
+    // Выполняет исполнитель проекта или тот, у кого projects.manage / staff.edit.
+    projectAction: function (id, action, payload) {
+      var d = load(), cur = me(), now = Date.now();
+      if (!cur) fail('Нужно войти');
+      var p = d.projects.filter(function (q) { return q.id === id; })[0];
+      if (!p) fail('Проект не найден');
+      var manager = can('projects.manage') || can('staff.edit'), own = p.assigneeId === cur.id && can('projects.work');
+      if (!manager && !own) fail('Недостаточно прав');
+      if (p.status === 'done') fail('Проект уже завершён');
+      p.sessions = p.sessions || []; p.history = p.history || [];
+      var res = { autoPaused: '' };
+      var stop = function () { p.sessions.forEach(function (x) { if (!x.to) x.to = now; }); };
+      if (action === 'start') {
+        if (p.status === 'work') return res;
+        // у исполнителя одновременно идёт один проект: остальные ставим на паузу
+        d.projects.forEach(function (o) {
+          if (o.id !== p.id && o.assigneeId === p.assigneeId && o.status === 'work') {
+            (o.sessions || []).forEach(function (x) { if (!x.to) x.to = now; });
+            o.status = 'pause'; o.history.push({ t: now, type: 'pause', by: cur.id, auto: true }); res.autoPaused = o.title;
+          }
+        });
+        p.history.push({ t: now, type: p.status === 'pause' ? 'resume' : 'start', by: cur.id });
+        p.sessions.push({ staffId: p.assigneeId, from: now });
+        p.status = 'work';
+      } else if (action === 'pause') {
+        if (p.status !== 'work') fail('Проект не в работе');
+        stop(); p.status = 'pause'; p.history.push({ t: now, type: 'pause', by: cur.id });
+      } else if (action === 'done') {
+        stop(); p.status = 'done'; p.doneAt = now;
+        p.result = String((payload && payload.text) || '').trim().slice(0, 500);
+        p.history.push({ t: now, type: 'done', by: cur.id });
+      } else if (action === 'transfer') {
+        var to = payload && payload.to;
+        if (!to || to === p.assigneeId) fail('Выберите другого сотрудника');
+        if (!d.staff[to] || !d.staff[to].active || !workerRole(d, d.staff[to].role)) fail('Проект можно передать оператору или монтажёру');
+        transferOf(p, to, cur.id, now);
+      } else fail('Неизвестное действие');
+      save(d);
+      return res;
+    },
+
+    /* ---------- карточка сотрудника: часы, расчёт зарплаты, проекты, проделанная работа ---------- */
+    staffDetail: function (id) {
+      need('staff.edit');
+      var d = load(), s = d.staff[id], now = Date.now(), db = clientsDb();
+      if (!s) fail('Сотрудник не найден');
+      var h = hoursOf(s, now), m0 = startOfMonth(now);
+      var out = { id: s.id, name: s.name, phone: s.phone, role: s.role, active: s.active, demo: !!s.demo, salary: s.salary || 0, status: s.status || 'off',
+        since: since(s), todayMs: h.today, monthMs: h.month, days: hoursByDay(s, now), today: new Date(now).getDate() - 1,
+        payroll: payroll(s.salary || 0, h.month), worker: workerRole(d, s.role), projects: [], doneMonth: [], transferred: [], report: [], projMs: 0 };
+      if (!out.worker) return out;
+      var mine = d.projects.filter(function (p) { return p.assigneeId === id; });
+      var en = function (p) { var e = enrichProject(p, d, db, now); e.mineMs = projSpent(p, now, id); e.mineMonthMs = projSpent(p, now, id, m0); return e; };
+      out.projects = mine.filter(function (p) { return p.status !== 'done'; }).map(en);
+      out.doneMonth = mine.filter(function (p) { return p.status === 'done' && p.doneAt >= m0; }).map(en);
+      out.transferred = d.projects.filter(function (p) {
+        return p.assigneeId !== id && (p.history || []).some(function (x) { return x.type === 'transfer' && x.from === id; });
+      }).map(en);
+      // отчёт: все проекты, над которыми сотрудник работал в этом месяце, и что сделано
+      var touched = {};
+      d.projects.forEach(function (p) {
+        var ms = projSpent(p, now, id, m0);
+        if (ms > 0 || (p.assigneeId === id && p.status === 'done' && p.doneAt >= m0)) touched[p.id] = p;
+      });
+      out.report = Object.keys(touched).map(function (k) { var e = en(touched[k]); return e; })
+        .sort(function (a, b) { return (b.doneAt || b.runningSince || 0) - (a.doneAt || a.runningSince || 0); });
+      out.projMs = out.report.reduce(function (a, e) { return a + e.mineMonthMs; }, 0);
+      return out;
     },
 
     fmtSize: function (b) {
