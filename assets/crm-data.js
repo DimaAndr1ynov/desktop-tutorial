@@ -607,7 +607,7 @@
       return Object.keys(d.staff).map(function (k) { return d.staff[k]; })
         .filter(function (s) { return s.active && s.id !== cur.id; })
         .sort(function (a, b) { return a.createdAt - b.createdAt; })
-        .map(function (s) { return { id: s.id, name: s.name, role: s.role, phone: s.phone, status: s.status || 'off', hasPin: !!s.pin }; });
+        .map(function (s) { return { id: s.id, name: s.name, role: s.role, phone: s.phone, status: s.status || 'off', hasPin: !!s.pin, createdAt: s.createdAt }; });
     },
 
     /* ---------- персонал (только админ) ---------- */
