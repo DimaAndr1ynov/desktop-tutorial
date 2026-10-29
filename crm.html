@@ -649,6 +649,74 @@
   .tar-tg[data-on="1"] button[data-tg="1"], .tar-tg[data-on="0"] button[data-tg="0"]{color:var(--text);}
   .tar-tg[data-on="1"] button[data-tg="1"]{color:#15803d;}
   @media (max-width:860px){ .tar-grid{grid-template-columns:minmax(0,1fr);} .tar-set .btn{margin-left:0;width:100%;} .tar-set .field{max-width:none;} }
+  /* ---------- настройки филиала ---------- */
+  .br-sec{margin-top:18px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--surface);animation:tarSetIn .45s cubic-bezier(.2,.7,.2,1) backwards;}
+  #brRolesSec{animation-delay:.08s;}
+  .br-sec h3{margin:0 0 4px;font-size:17px;}
+  .br-sec > p.muted{margin:0 0 14px;font-size:14px;line-height:1.5;}
+  .br-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;}
+  .br-grid .wide{grid-column:1 / -1;}
+  .br-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+  .br-role{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface-3);font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;position:relative;transition:border-color .2s,box-shadow .2s,transform .2s;}
+  .br-role:hover{border-color:var(--blue);transform:translateY(-2px);}
+  .br-role[aria-expanded="true"]{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+  .br-role .chev{position:absolute;right:14px;top:16px;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;}
+  .br-role[aria-expanded="true"] .chev{transform:rotate(225deg);top:20px;}
+  .br-open{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);animation:tarSetIn .3s cubic-bezier(.2,.7,.2,1) backwards;}
+  .br-open h4{margin:0 0 10px;font-size:15px;}
+  .br-open details{margin:0 0 10px;font-size:13px;}
+  .br-open .row{margin-bottom:6px;}
+  .br-form{display:grid;grid-template-columns:minmax(0,1fr) 190px 150px 170px;gap:0 12px;margin-top:20px;}
+  .br-form .field{margin-bottom:10px;}
+  .br-form .pin-in{text-align:center;letter-spacing:.3em;}
+  .br-acts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+  .br-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .br-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-3);transition:border-color .2s,background .2s;}
+  .br-row.sel{border-color:var(--blue);background:#eff4ff;}
+  .br-row .nm{display:flex;align-items:center;gap:10px;min-width:0;}
+  .br-row .nm .avatar{width:34px;height:34px;font-size:12px;flex:none;}
+  .br-row .nm b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .br-row .meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap;}
+  .br-row .meta .role{margin:0;}
+  .br-pin{font-size:12px;padding:2px 8px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);letter-spacing:.08em;}
+  .br-row .btns{display:flex;gap:8px;flex:none;}
+  .br-row .btn.del{color:var(--danger);border-color:#f2c4c0;background:#fff5f4;}
+  .br-pol-h{margin:22px 0 8px;font-size:15px;}
+  .br-role .role{margin:0 0 8px;}
+  .br-role b{font-size:22px;display:block;line-height:1.2;}
+  .br-role small{color:var(--muted);}
+  .br-role details{margin-top:8px;font-size:13px;}
+  .br-role summary{cursor:pointer;color:var(--muted);}
+  .br-role ul{margin:8px 0 0;padding-left:18px;line-height:1.5;color:var(--text);}
+  .br-pol{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-bottom:14px;}
+  .br-pol .field{margin:0;width:180px;}
+  .br-pins{width:100%;border-collapse:collapse;}
+  .br-pins td, .br-pins th{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle;}
+  .br-pins th{font-size:12px;color:var(--muted);font-weight:600;text-transform:none;}
+  .br-pins .nm{display:flex;align-items:center;gap:10px;min-width:0;}
+  .br-pins .nm .avatar{width:34px;height:34px;font-size:12px;flex:none;}
+  .br-pins td:last-child{text-align:right;white-space:nowrap;}
+  .pin-dot{display:inline-flex;align-items:center;gap:6px;}
+  .pin-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:#12804a;}
+  .pin-dot.no::before{background:#d92d20;}
+  @media (max-width:1180px){
+    .br-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+    .br-form .wide2{grid-column:1 / -1;}
+    .br-form > .field:first-child{grid-column:1 / -1;}
+  }
+  @media (max-width:860px){
+    .br-grid{grid-template-columns:minmax(0,1fr);}
+    .br-pins thead{display:none;}
+    .br-pins, .br-pins tbody, .br-pins tr, .br-pins td{display:block;width:100%;}
+    .br-pins tr{padding:10px 0;border-bottom:1px solid var(--line);}
+    .br-pins td{border:0;padding:3px 0;text-align:left !important;}
+    .br-pol .field{width:calc(50% - 6px);}
+    .br-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+    .br-form .wide2{grid-column:1 / -1;}
+    .br-row{flex-direction:column;align-items:stretch;}
+    .br-row .btns .btn{flex:1;}
+  }
+  @media (prefers-reduced-motion:reduce){ .br-role, .br-open{transition:none;animation:none;} }
   /* ---------- светлая тема ---------- */
   :root{
     color-scheme:light;
@@ -794,6 +862,10 @@
         <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 4V3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1M2 9h14" stroke="currentColor" stroke-width="1.4"/></svg>
         <span class="lbl">Сотрудники</span>
       </button>
+      <button type="button" data-view="branch" data-need="branch.view">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M9 16s5-4.4 5-8.6A5 5 0 0 0 4 7.4C4 11.6 9 16 9 16Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="9" cy="7.4" r="1.8" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span class="lbl">Настройки филиала</span>
+      </button>
     </nav>
     <div class="me">
       <div class="me-id">
@@ -912,6 +984,18 @@
       <div class="error" id="eTarSet"></div>
       <div class="tar-grid" id="tarGrid"></div>
       <p class="muted" id="tarNote" style="margin-top:14px"></p>
+    </section>
+
+    <!-- Настройки филиала -->
+    <section id="vBranch" hidden>
+      <div class="page-head">
+        <h2>Настройки филиала</h2>
+        <button class="btn" type="submit" form="fBranch" id="bBranchSave">Сохранить</button>
+      </div>
+      <p class="muted" style="margin:10px 0 0;line-height:1.55">Данные филиала, роли сотрудников и их PIN-коды для смены сотрудника.</p>
+      <form class="br-sec" id="fBranch" novalidate></form>
+      <div class="error" id="eBranch"></div>
+      <div class="br-sec" id="brRolesSec"></div>
     </section>
 
     <!-- Сотрудники -->
@@ -1095,6 +1179,8 @@
     if (OPS[view] && opsUi.shown !== view){ opsUi.shown = view; opsUi.q = ''; $('qOps').value = ''; }
     $('vStaff').hidden = view !== 'staff';
     $('vTariffs').hidden = view !== 'tariffs';
+    $('vBranch').hidden = view !== 'branch';
+    if (view !== 'branch') { brNewPins = {}; brSel = {id:'', role:''}; }
     $('vNone').hidden = !!view;
     render();
     fitDialogs();
@@ -1166,6 +1252,7 @@
     if (state.view === 'staff') renderStaff();
     if (OPS[state.view]) renderOps();
     if (state.view === 'tariffs') renderTariffs();
+    if (state.view === 'branch') renderBranch();
     updateUnread();
   }
   document.querySelectorAll('#nav button').forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.view); }); });
@@ -2289,6 +2376,129 @@
       C.opsDelete(kind, cur.id); toast('Запись удалена', 'ok'); closeModal(); renderOps();
     }));
   }
+
+  /* ================= настройки филиала ================= */
+  var brOpen = '', brSel = {id:'', role:''}; // открытая роль и выбранный в форме сотрудник
+  var brNewPins = {}; // PIN, показанные один раз после сброса (id -> pin), живут только до перерисовки раздела
+  function renderBranch(){
+    var data = C.branchGet(), b = data.branch, canEdit = C.can('branch.edit'), canStaff = C.can('staff.edit');
+    $('bBranchSave').hidden = !canEdit;
+    var dis = canEdit ? '' : ' disabled';
+    var staffOpts = '<option value="">— не назначен —</option>' + C.assignees().map(function(s){ return opt(s.id, s.name + ' · ' + C.ROLES[s.role].title.toLowerCase(), b.managerId); }).join('');
+    $('fBranch').innerHTML =
+      '<h3>Данные филиала</h3><p class="muted">Название и контакты филиала. Адрес и телефон студия вносит сама.</p>' +
+      '<div class="br-grid">' +
+        '<div class="wide">' + fld('Название филиала', 'bName', inp('bName', b.name, 'maxlength="80"' + dis)) + '</div>' +
+        fld('Курорт или склон', 'bResort', inp('bResort', b.resort, 'maxlength="80" placeholder="Например, Роза Хутор"' + dis)) +
+        fld('Город', 'bCity', inp('bCity', b.city, 'maxlength="60"' + dis)) +
+        '<div class="wide">' + fld('Адрес или точка встречи на склоне', 'bAddr', inp('bAddr', b.address, 'maxlength="160"' + dis)) + '</div>' +
+        fld('Телефон филиала', 'bPhone', inp('bPhone', b.phone ? A.formatPhone(b.phone) : '', 'type="tel" inputmode="tel" placeholder="+7 (900) 000-00-00"' + dis)) +
+        fld('E-mail', 'bEmail', inp('bEmail', b.email, 'type="email" maxlength="120"' + dis)) +
+        fld('Открытие', 'bFrom', inp('bFrom', b.hoursFrom, 'type="time"' + dis)) +
+        fld('Закрытие', 'bTo', inp('bTo', b.hoursTo, 'type="time"' + dis)) +
+        fld('Дни работы', 'bDays', '<select class="select" id="bDays"' + dis + '>' + C.BRANCH_DAYS.map(function(x){ return opt(x.id, x.title, b.days); }).join('') + '</select>') +
+        fld('Статус филиала', 'bStatus', '<select class="select" id="bStatus"' + dis + '>' + C.BRANCH_STATUSES.map(function(x){ return opt(x.id, x.title, b.status); }).join('') + '</select>') +
+        '<div class="wide">' + fld('Руководитель филиала', 'bMgr', '<select class="select" id="bMgr"' + dis + '>' + staffOpts + '</select>') + '</div>' +
+        '<div class="wide">' + fld('Заметка', 'bNote', '<textarea class="textarea" id="bNote" maxlength="300"' + dis + '>' + esc(b.note) + '</textarea>') + '</div>' +
+      '</div>';
+    $('eBranch').textContent = '';
+
+    // роли и PIN-коды
+    var sec = $('brRolesSec');
+    var listAll = canStaff ? C.staffList() : [];
+    if (brSel.id && !listAll.some(function(s){ return s.id === brSel.id; })) brSel = {id:'', role:''};
+    var selRec = listAll.filter(function(s){ return s.id === brSel.id; })[0];
+    var roleTitle = function(id){ return C.ROLES[id].title; };
+    var rolesHtml = data.roles.map(function(r){
+      var open = canStaff && brOpen === r.id;
+      return '<' + (canStaff ? 'button type="button" data-role="' + r.id + '" aria-expanded="' + open + '"' : 'div') + ' class="br-role"><span class="role ' + r.id + '">' + esc(r.title) + '</span><b>' + r.count + '</b><small>' + plural(r.count, 'сотрудник', 'сотрудника', 'сотрудников') + ' · ' + r.perms.length + ' ' + plural(r.perms.length, 'право', 'права', 'прав') + (r.custom ? ' · изменено' : '') + '</small>' + (canStaff ? '<i class="chev"></i></button>' : '</div>');
+    }).join('');
+    var openHtml = '';
+    if (canStaff && brOpen) {
+      var rd = data.roles.filter(function(r){ return r.id === brOpen; })[0];
+      var inRole = listAll.filter(function(s){ return s.role === brOpen; });
+      openHtml = '<div class="br-open" id="brOpen"><h4>' + esc(rd.title) + ': сотрудники роли</h4>' +
+        '<details><summary class="muted" style="cursor:pointer">Что может роль</summary><ul style="margin:8px 0 0;padding-left:18px;line-height:1.5">' + rd.perms.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details>' +
+        (inRole.length ? inRole.map(function(s){
+          return '<div class="br-row row' + (s.id === brSel.id ? ' sel' : '') + '"><div class="nm">' + avatar(s) + '<div><b>' + esc(s.name) + '</b><div class="meta"><span class="br-pin">PIN: ' + (s.pin ? '\u2022\u2022\u2022\u2022' : 'не задан') + '</span>' + (s.active ? '' : '<span class="muted" style="font-size:12px">отключён</span>') + '</div></div></div>' +
+            '<div class="btns"><button class="btn ghost sm" type="button" data-pick="' + esc(s.id) + '">' + (s.id === brSel.id ? 'Выбран' : 'Выбрать') + '</button></div></div>';
+        }).join('') : '<p class="muted" style="margin:0 0 10px">В этой роли пока никого нет.</p>') +
+        '<button class="btn ghost sm" type="button" data-add="' + brOpen + '">+ Новый сотрудник в роли</button></div>';
+    }
+    var html = '<h3>Роли и PIN-коды филиала</h3><p class="muted">Откройте роль и выберите сотрудника или заполните форму ниже. PIN из 4 цифр нужен, чтобы переключиться на сотрудника кнопкой «Сменить сотрудника».' +
+      (canStaff ? ' Права ролей меняются в разделе «Сотрудники».' : '') + '</p><div class="br-roles">' + rolesHtml + '</div>' + openHtml;
+    if (canStaff) {
+      var f = selRec || {name:'', phone:'', role: brSel.role || brOpen || 'operator', pin: ''};
+      html += '<form class="br-form" id="fStaffB" novalidate>' +
+        '<div class="field wide2"><label for="sbName">ФИО сотрудника</label><input class="input" id="sbName" maxlength="80" placeholder="Фамилия Имя Отчество" value="' + esc(f.name) + '"></div>' +
+        '<div class="field"><label for="sbPhone">Телефон (логин)</label><input class="input" id="sbPhone" type="tel" inputmode="tel" placeholder="+7 (900) 000-00-00" value="' + (f.phone ? esc(A.formatPhone(f.phone)) : '') + '"></div>' +
+        '<div class="field"><label for="sbPin">PIN-код</label><input class="input pin-in" id="sbPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0 0 0 0"></div>' +
+        '<div class="field"><label for="sbRole">Роль</label><select class="select" id="sbRole">' + Object.keys(C.ROLES).map(function(k){ return opt(k, roleTitle(k), f.role); }).join('') + '</select></div>' +
+        '<div class="wide2" style="grid-column:1 / -1"><div class="br-acts"><button class="btn" type="submit">' + (selRec ? 'Сохранить изменения' : 'Сохранить сотрудника') + '</button><button class="btn ghost" type="button" id="sbReset">Сбросить</button></div>' +
+        '<div class="hint-t">' + (selRec ? 'Пустое поле PIN оставляет прежний PIN. ' : 'Пустое поле PIN — выдаётся случайный, он покажется один раз. ') + '</div><div class="error" id="eSb" role="alert"></div></div></form>' +
+        '<p class="muted" style="margin:14px 0 0;font-size:14px">Сотрудников в филиале: ' + listAll.length + '.</p><div class="br-list">' +
+        listAll.map(function(s){
+          var np = brNewPins[s.id];
+          return '<div class="br-row' + (s.id === brSel.id ? ' sel' : '') + '"><div class="nm">' + avatar(s) + '<div><b>' + esc(s.name) + '</b><div class="meta"><span class="role ' + s.role + '">' + esc(roleTitle(s.role)) + '</span>' +
+            (np ? '<span class="br-pin">Новый PIN: <b class="pin-new" style="font-size:14px">' + esc(np) + '</b></span>' : '<span class="br-pin">PIN: ' + (s.pin ? '\u2022\u2022\u2022\u2022' : 'не задан') + '</span>') +
+            (s.active ? '' : '<span class="muted" style="font-size:12px">отключён</span>') + '</div></div></div>' +
+            '<div class="btns"><button class="btn ghost sm" type="button" data-edit="' + esc(s.id) + '">Изменить</button><button class="btn ghost sm del" type="button" data-del="' + esc(s.id) + '">Удалить</button></div></div>';
+        }).join('') + '</div>' +
+        '<h4 class="br-pol-h">Правила блокировки PIN</h4>' +
+        '<form class="br-pol" id="fPol" novalidate><div class="field"><label for="polTries">Попыток до блокировки</label><input class="input" id="polTries" type="number" min="3" max="10" value="' + b.pin.tries + '"></div>' +
+        '<div class="field"><label for="polLock">Блокировка, секунд</label><input class="input" id="polLock" type="number" min="30" max="3600" step="10" value="' + b.pin.lockSec + '"></div>' +
+        '<button class="btn ghost" type="submit">Сохранить правила</button></form><div class="error" id="ePol"></div>';
+    }
+    sec.innerHTML = html;
+    if (!canStaff) return;
+
+    sec.querySelectorAll('button[data-role]').forEach(function(btn){
+      btn.addEventListener('click', function(){ brOpen = brOpen === btn.dataset.role ? '' : btn.dataset.role; renderBranch(); });
+    });
+    var focusForm = function(){ var el = $('sbName'); if (el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus({preventScroll:true}); } };
+    sec.querySelectorAll('button[data-pick], button[data-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){ brSel = {id: btn.dataset.pick || btn.dataset.edit, role:''}; renderBranch(); focusForm(); });
+    });
+    sec.querySelectorAll('button[data-add]').forEach(function(btn){
+      btn.addEventListener('click', function(){ brSel = {id:'', role: btn.dataset.add}; renderBranch(); focusForm(); });
+    });
+    sec.querySelectorAll('button[data-del]').forEach(function(btn){
+      btn.addEventListener('click', guard(function(){
+        var s = listAll.filter(function(x){ return x.id === btn.dataset.del; })[0];
+        if (!confirm('Удалить сотрудника ' + s.name + '? Это нельзя отменить.')) return;
+        C.staffRemove(s.id); if (brSel.id === s.id) brSel = {id:'', role:''}; delete brNewPins[s.id];
+        toast('Сотрудник удалён', 'ok'); renderBranch();
+      }));
+    });
+    $('sbPhone').addEventListener('input', function(e){ e.target.value = A.formatPhone(e.target.value); });
+    $('sbPin').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); });
+    $('sbReset').addEventListener('click', function(){ brSel = {id:'', role:''}; renderBranch(); });
+    $('fStaffB').addEventListener('submit', function(e){
+      e.preventDefault();
+      try {
+        var saved = C.staffSave({id: brSel.id || undefined, name: $('sbName').value, phone: $('sbPhone').value, role: $('sbRole').value, pin: $('sbPin').value});
+        if (saved.newPin) brNewPins[saved.id] = saved.newPin;
+        toast(brSel.id ? 'Сотрудник сохранён' : 'Сотрудник добавлен', 'ok');
+        if (saved.newPin) toast('Запишите PIN: ' + saved.newPin, 'ok');
+        brSel = {id:'', role:''}; renderBranch();
+      } catch(err){ $('eSb').textContent = err.message; }
+    });
+    $('fPol').addEventListener('submit', function(e){
+      e.preventDefault();
+      try { C.pinPolicySave({tries: $('polTries').value, lockSec: $('polLock').value}); toast('Правила PIN сохранены', 'ok'); $('ePol').textContent = ''; }
+      catch(err){ $('ePol').textContent = err.message; }
+    });
+  }
+  function plural(n, a, b, c){ var m = n % 100, k = n % 10; return (m > 10 && m < 15) ? c : k === 1 ? a : (k >= 2 && k <= 4) ? b : c; }
+  $('fBranch').addEventListener('submit', function(e){
+    e.preventDefault();
+    try {
+      C.branchSave({name: $('bName').value, resort: $('bResort').value, city: $('bCity').value, address: $('bAddr').value, phone: $('bPhone').value, email: $('bEmail').value,
+        hoursFrom: $('bFrom').value, hoursTo: $('bTo').value, days: $('bDays').value, status: $('bStatus').value, managerId: $('bMgr').value, note: $('bNote').value});
+      toast('Данные филиала сохранены', 'ok'); $('eBranch').textContent = ''; brNewPins = {}; renderBranch();
+    } catch(err){ $('eBranch').textContent = err.message; }
+  });
+  $('fBranch').addEventListener('input', function(e){ if (e.target.id === 'bPhone') e.target.value = A.formatPhone(e.target.value); });
 
   /* ================= тарифы ================= */
   function renderTariffs(){

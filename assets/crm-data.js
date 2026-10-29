@@ -27,6 +27,8 @@
     { id: 'ops.edit', title: 'Операции: добавлять и менять записи' },
     { id: 'tariffs.view', title: 'Тарифы: видеть' },
     { id: 'tariffs.edit', title: 'Тарифы: менять цены, предоплату, включать и выключать' },
+    { id: 'branch.view', title: 'Филиал: видеть настройки, роли и данные' },
+    { id: 'branch.edit', title: 'Филиал: менять данные филиала' },
     { id: 'staff.edit', title: 'Сотрудники и права ролей' },
     { id: 'dialogs', title: 'Читать переписку' },
     { id: 'messages.send', title: 'Писать клиенту (SMS)' },
@@ -37,7 +39,7 @@
   // Права по умолчанию; администратор может поменять их в разделе «Сотрудники» (хранятся в data.rolePerms).
   var ROLES = {
     admin: { title: 'Администратор', locked: true, can: PERMS.map(function (p) { return p.id; }) },
-    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'ops.view', 'ops.edit', 'tariffs.view', 'tariffs.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'ops.view', 'ops.edit', 'tariffs.view', 'tariffs.edit', 'branch.view', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
     operator: { title: 'Оператор', can: ['projects.work', 'ops.view', 'ops.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
     editor: { title: 'Монтажёр', can: ['projects.work', 'ops.view', 'dialogs', 'files.upload', 'files.download'] },
     cashier: { title: 'Кассир', can: ['clients.view', 'tariffs.view', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.download'] }
@@ -67,6 +69,25 @@
     TARIFFS.length = 0;
     (data.tariffs || []).forEach(function (x) { TARIFFS.push({ id: x.id, title: x.title, price: x.price, active: x.active !== false }); });
     TARIFFS.push({ id: 'other', title: 'Другое', price: 0, active: true });
+  }
+  // Данные филиала: что заполнено по умолчанию, то можно менять; адрес и телефон студия вносит сама.
+  var BRANCH_DEFAULT = { name: 'DOWNSHOT', resort: '', city: '', address: '', phone: '', email: 'jimmyyobike@onet.pl',
+    hoursFrom: '09:00', hoursTo: '17:00', days: 'daily', status: 'open', managerId: '', note: '', pin: { tries: 5, lockSec: 60 } };
+  var BRANCH_DAYS = [
+    { id: 'daily', title: 'Ежедневно' },
+    { id: 'weekdays', title: 'Пн–Пт' },
+    { id: 'weekend', title: 'Сб–Вс' },
+    { id: 'season', title: 'По расписанию сезона' }
+  ];
+  var BRANCH_STATUSES = [
+    { id: 'open', title: 'Работает' },
+    { id: 'closed', title: 'Закрыт' }
+  ];
+  function branchOf(d) {
+    var b = {}, src = d.branch || {}, k;
+    for (k in BRANCH_DEFAULT) b[k] = src[k] != null ? src[k] : BRANCH_DEFAULT[k];
+    b.pin = { tries: (src.pin && src.pin.tries) || 5, lockSec: (src.pin && src.pin.lockSec) || 60 };
+    return b;
   }
   var METHODS = [
     { id: 'card', title: 'Карта' },
@@ -119,7 +140,6 @@
   /* ---------- PIN-коды сотрудников ---------- */
   // PIN хранится только хэшем SHA-256. Это макет: хэш четырёх цифр подбирается мгновенно, а данные лежат в браузере.
   var PIN_SALT = 'downshot-pin-v1|';
-  var PIN_TRIES = 5, PIN_LOCK_MS = 60000;
   // Тестовые учётки (и демо-сотрудники) получают заранее заданные PIN; сами коды хранятся не здесь, а в отдельном документе у владельца.
   var PIN_DEFAULTS = {
     '+79000000001': '7d70fc92316da9ab5a4082b16efccd681680ccc2b3b2113b90db68fd21f64cb0',
@@ -275,6 +295,18 @@
         if (!sx.pin && PIN_DEFAULTS[sx.phone]) sx.pin = PIN_DEFAULTS[sx.phone];
       }
       data.v = 8;
+      changed = true;
+    }
+    if (!(data.v >= 9)) {
+      // v9: настройки филиала. Новые права по умолчанию дописываем в уже изменённые списки ролей.
+      ['branch.view', 'branch.edit'].forEach(function (p) {
+        for (var role in (data.rolePerms || {})) {
+          if (!ROLES[role] || ROLES[role].locked) continue;
+          if (ROLES[role].can.indexOf(p) !== -1 && data.rolePerms[role].indexOf(p) === -1) data.rolePerms[role].push(p);
+        }
+      });
+      data.branch = branchOf(data);
+      data.v = 9;
       changed = true;
     }
     if (!data.projects) { data.projects = []; changed = true; }
@@ -552,13 +584,13 @@
       if (!target || !target.active) fail('Сотрудник недоступен');
       if (target.id === cur.id) fail('Вы уже в этой учётной записи');
       if (!target.pin) fail('У сотрудника не задан PIN-код. Администратор может задать его в карточке сотрудника');
-      var pf = target.pinFail || { n: 0, until: 0 };
+      var pol = branchOf(d).pin, pf = target.pinFail || { n: 0, until: 0 };
       if (pf.until > now0) fail('Слишком много попыток. Повторите через ' + Math.ceil((pf.until - now0) / 1000) + ' с');
       if (pinHash(String(pin || '').trim()) !== target.pin) {
         pf.n = (pf.n || 0) + 1;
-        if (pf.n >= PIN_TRIES) { pf.n = 0; pf.until = now0 + PIN_LOCK_MS; }
+        if (pf.n >= pol.tries) { pf.n = 0; pf.until = now0 + pol.lockSec * 1000; }
         target.pinFail = pf; save(d);
-        fail(pf.until > now0 ? 'Неверный PIN-код. Вход заблокирован на 1 минуту' : 'Неверный PIN-код. Осталось попыток: ' + (PIN_TRIES - pf.n));
+        fail(pf.until > now0 ? 'Неверный PIN-код. Вход заблокирован на ' + pol.lockSec + ' с' : 'Неверный PIN-код. Осталось попыток: ' + (pol.tries - pf.n));
       }
       target.pinFail = null;
       var prev = d.staff[cur.id];
@@ -593,9 +625,14 @@
       if (phoneTaken(d.staff, phone, st.id)) fail('Сотрудник с таким номером уже есть');
       var cur = me();
       if (st.id && st.id === cur.id && (st.role !== 'admin' || st.active === false)) fail('Нельзя снять права администратора с самого себя');
+      var pinIn = (st.pin === undefined || st.pin === null) ? '' : String(st.pin).trim();
+      if (pinIn && !/^\d{4}$/.test(pinIn)) fail('PIN-код: ровно 4 цифры');
       var rec = st.id && d.staff[st.id];
       var newPin = '';
-      if (!rec) { rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec; newPin = randomPin(); rec.pin = pinHash(newPin); }
+      if (!rec) {
+        rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec;
+        if (pinIn) rec.pin = pinHash(pinIn); else { newPin = randomPin(); rec.pin = pinHash(newPin); }
+      } else if (pinIn) { rec.pin = pinHash(pinIn); rec.pinFail = null; }
       rec.name = st.name.trim(); rec.phone = phone; rec.role = st.role;
       if (typeof st.active === 'boolean') rec.active = st.active;
       if (st.salary !== undefined && st.salary !== '') {
@@ -769,6 +806,52 @@
     },
     TARIFFS: TARIFFS,
     TARIFF_KINDS: TARIFF_KINDS,
+    BRANCH_DAYS: BRANCH_DAYS,
+    BRANCH_STATUSES: BRANCH_STATUSES,
+
+    /* ---------- настройки филиала ---------- */
+    branchGet: function () {
+      need('branch.view');
+      var d = load(), b = branchOf(d);
+      var counts = {}; Object.keys(d.staff).forEach(function (k) { var r = d.staff[k].role; counts[r] = (counts[r] || 0) + (d.staff[k].active ? 1 : 0); });
+      var titles = {}; PERMS.forEach(function (p) { titles[p.id] = p.title; });
+      return JSON.parse(JSON.stringify({
+        branch: b,
+        roles: ROLE_ORDER.map(function (r) {
+          var list = rolePerms(d, r);
+          return { id: r, title: ROLES[r].title, count: counts[r] || 0, locked: !!ROLES[r].locked, custom: !!(d.rolePerms && d.rolePerms[r]), perms: list.map(function (p) { return titles[p] || p; }) };
+        })
+      }));
+    },
+    branchSave: function (x) {
+      need('branch.edit');
+      var d = load(), b = branchOf(d), clip = function (v, n) { return String(v == null ? '' : v).trim().slice(0, n); };
+      var name = clip(x.name, 80); if (!name) fail('Укажите название филиала');
+      var email = clip(x.email, 120);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) fail('Неверный e-mail');
+      var phone = clip(x.phone, 30);
+      if (phone) { phone = A.normalizePhone(phone); if (!phone) fail('Неверный номер телефона: +7 и 10 цифр'); }
+      var hf = clip(x.hoursFrom, 5), ht = clip(x.hoursTo, 5), re = /^([01]\d|2[0-3]):[0-5]\d$/;
+      if (!re.test(hf) || !re.test(ht)) fail('Время работы — в формате 09:00');
+      if (hf >= ht) fail('Открытие должно быть раньше закрытия');
+      if (!BRANCH_DAYS.some(function (q) { return q.id === x.days; })) fail('Выберите дни работы');
+      if (!BRANCH_STATUSES.some(function (q) { return q.id === x.status; })) fail('Выберите статус филиала');
+      var mgr = clip(x.managerId, 20);
+      if (mgr && !(d.staff[mgr] && d.staff[mgr].active)) fail('Руководитель не найден среди активных сотрудников');
+      d.branch = { name: name, resort: clip(x.resort, 80), city: clip(x.city, 60), address: clip(x.address, 160), phone: phone, email: email,
+        hoursFrom: hf, hoursTo: ht, days: x.days, status: x.status, managerId: mgr, note: clip(x.note, 300), pin: b.pin };
+      save(d);
+      return JSON.parse(JSON.stringify(d.branch));
+    },
+    pinPolicySave: function (x) {
+      need('staff.edit');
+      var tries = Math.round(Number(x.tries)), lockSec = Math.round(Number(x.lockSec));
+      if (!(tries >= 3 && tries <= 10)) fail('Попыток до блокировки — от 3 до 10');
+      if (!(lockSec >= 30 && lockSec <= 3600)) fail('Блокировка — от 30 до 3600 секунд');
+      var d = load(), b = branchOf(d); b.pin = { tries: tries, lockSec: lockSec }; d.branch = b;
+      save(d);
+      return b.pin;
+    },
     METHODS: METHODS,
 
     /* ---------- тарифы и предоплата ---------- */
