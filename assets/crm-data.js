@@ -24,6 +24,8 @@
     { id: 'projects.manage', title: 'Проекты: создавать, назначать, видеть все' },
     { id: 'ops.view', title: 'Операции: видеть аренды, флот, ремонты, склад, передачи, услуги' },
     { id: 'ops.edit', title: 'Операции: добавлять и менять записи' },
+    { id: 'tariffs.view', title: 'Тарифы: видеть' },
+    { id: 'tariffs.edit', title: 'Тарифы: менять цены, предоплату, включать и выключать' },
     { id: 'staff.edit', title: 'Сотрудники и права ролей' },
     { id: 'dialogs', title: 'Читать переписку' },
     { id: 'messages.send', title: 'Писать клиенту (SMS)' },
@@ -34,10 +36,10 @@
   // Права по умолчанию; администратор может поменять их в разделе «Сотрудники» (хранятся в data.rolePerms).
   var ROLES = {
     admin: { title: 'Администратор', locked: true, can: PERMS.map(function (p) { return p.id; }) },
-    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'ops.view', 'ops.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'ops.view', 'ops.edit', 'tariffs.view', 'tariffs.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
     operator: { title: 'Оператор', can: ['projects.work', 'ops.view', 'ops.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
     editor: { title: 'Монтажёр', can: ['projects.work', 'ops.view', 'dialogs', 'files.upload', 'files.download'] },
-    cashier: { title: 'Кассир', can: ['clients.view', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.download'] }
+    cashier: { title: 'Кассир', can: ['clients.view', 'tariffs.view', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.download'] }
   };
   var ROLE_ORDER = ['admin', 'manager', 'operator', 'editor', 'cashier'];
 
@@ -48,6 +50,23 @@
     { id: 'day', title: 'Съёмочный день', price: 3000 },
     { id: 'other', title: 'Другое', price: 0 }
   ];
+  var TARIFF_KINDS = [
+    { id: 'shoot', title: 'съёмка' },
+    { id: 'package', title: 'пакет' },
+    { id: 'edit', title: 'монтаж' }
+  ];
+  var TARIFF_DEFAULTS = [
+    { id: 'run', title: 'Спуск', kind: 'shoot', price: 1000, unit: '1 спуск', includes: '30 минут съёмки, 1 трасса, 15 обработанных фото', prepay: null, active: true },
+    { id: 'ride', title: 'Заезд', kind: 'package', price: 1500, unit: '1 заезд', includes: '60 минут, до 2 локаций, 25 фото, вертикальный ролик 30–45 сек', prepay: null, active: true },
+    { id: 'day', title: 'Съёмочный день', kind: 'package', price: 3000, unit: '1 день', includes: '2–3 часа, 40+ фото, ролик до 2 минут, FPV по запросу', prepay: null, active: true }
+  ];
+  var TARIFF_SETTINGS_DEFAULT = { prepay: 10, holdMin: 1440 };
+  // Общий список TARIFFS (его читают оплаты и аналитика) собирается из data.tariffs; «Другое» есть всегда.
+  function syncTariffs(data) {
+    TARIFFS.length = 0;
+    (data.tariffs || []).forEach(function (x) { TARIFFS.push({ id: x.id, title: x.title, price: x.price, active: x.active !== false }); });
+    TARIFFS.push({ id: 'other', title: 'Другое', price: 0, active: true });
+  }
   var METHODS = [
     { id: 'card', title: 'Карта' },
     { id: 'cash', title: 'Наличные' },
@@ -113,6 +132,7 @@
       save(data);
     }
     if (migrate(data)) save(data);
+    syncTariffs(data);
     return data;
   }
   // v2: роль «Сотрудник» стала «Оператором», добавлены тестовые учётки остальных ролей.
@@ -171,6 +191,19 @@
       });
       opsData(data);
       data.v = 6;
+      changed = true;
+    }
+    if (!(data.v >= 7)) {
+      // v7: тарифы и предоплата. Новые права по умолчанию дописываем в уже изменённые списки ролей.
+      ['tariffs.view', 'tariffs.edit'].forEach(function (p) {
+        for (var role in (data.rolePerms || {})) {
+          if (!ROLES[role] || ROLES[role].locked) continue;
+          if (ROLES[role].can.indexOf(p) !== -1 && data.rolePerms[role].indexOf(p) === -1) data.rolePerms[role].push(p);
+        }
+      });
+      data.tariffs = JSON.parse(JSON.stringify(TARIFF_DEFAULTS));
+      data.tariffSettings = JSON.parse(JSON.stringify(TARIFF_SETTINGS_DEFAULT));
+      data.v = 7;
       changed = true;
     }
     if (!data.projects) { data.projects = []; changed = true; }
@@ -618,7 +651,63 @@
       return blobOp('readwrite', function (st) { return st.delete(fileId); });
     },
     TARIFFS: TARIFFS,
+    TARIFF_KINDS: TARIFF_KINDS,
     METHODS: METHODS,
+
+    /* ---------- тарифы и предоплата ---------- */
+    tariffsList: function () {
+      need('tariffs.view');
+      var d = load();
+      return JSON.parse(JSON.stringify({ items: d.tariffs || [], settings: d.tariffSettings || TARIFF_SETTINGS_DEFAULT }));
+    },
+    tariffSave: function (p) {
+      need('tariffs.edit');
+      var title = String(p.title || '').trim().slice(0, 60);
+      if (!title) fail('Укажите название тарифа');
+      var price = Math.round(Number(p.price));
+      if (!(price > 0) || price > 10000000) fail('Цена должна быть от 1 до 10 000 000 ₽');
+      var kind = TARIFF_KINDS.some(function (k) { return k.id === p.kind; }) ? p.kind : 'shoot';
+      var prepay = null;
+      if (p.prepay !== '' && p.prepay != null) {
+        prepay = Number(p.prepay);
+        if (!(prepay >= 0 && prepay <= 100)) fail('Предоплата — от 0 до 100 %');
+      }
+      var d = load(); d.tariffs = d.tariffs || [];
+      if (d.tariffs.some(function (x) { return x.id !== p.id && x.title.toLowerCase() === title.toLowerCase(); })) fail('Тариф с таким названием уже есть');
+      var rec = p.id ? d.tariffs.filter(function (x) { return x.id === p.id; })[0] : null;
+      if (p.id && !rec) fail('Тариф не найден');
+      if (!rec) { rec = { id: uid('F', 6), active: true }; d.tariffs.push(rec); }
+      rec.title = title; rec.kind = kind; rec.price = price;
+      rec.unit = String(p.unit || '').trim().slice(0, 30);
+      rec.includes = String(p.includes || '').trim().slice(0, 240);
+      rec.prepay = prepay;
+      save(d); syncTariffs(d);
+      return JSON.parse(JSON.stringify(rec));
+    },
+    tariffToggle: function (id, on) {
+      need('tariffs.edit');
+      var d = load(), rec = (d.tariffs || []).filter(function (x) { return x.id === id; })[0];
+      if (!rec) fail('Тариф не найден');
+      rec.active = !!on;
+      save(d); syncTariffs(d);
+    },
+    tariffDelete: function (id) {
+      need('tariffs.edit');
+      var d = load();
+      if ((d.payments || []).some(function (p) { return p.tariff === id; })) fail('По этому тарифу уже есть оплаты. Выключите тариф, а не удаляйте: история оплат сохранится');
+      d.tariffs = (d.tariffs || []).filter(function (x) { return x.id !== id; });
+      save(d); syncTariffs(d);
+    },
+    tariffSettingsSave: function (s) {
+      need('tariffs.edit');
+      var prepay = Number(s.prepay), hold = Math.round(Number(s.holdMin));
+      if (!(prepay >= 0 && prepay <= 100)) fail('Предоплата — от 0 до 100 %');
+      if (!(hold >= 5 && hold <= 43200)) fail('Время бронирования — от 5 минут до 30 суток (43 200 мин)');
+      var d = load();
+      d.tariffSettings = { prepay: Math.round(prepay * 10) / 10, holdMin: hold };
+      save(d);
+      return JSON.parse(JSON.stringify(d.tariffSettings));
+    },
 
     /* ---------- оплаты ---------- */
     payments: function (clientId) {
@@ -764,7 +853,7 @@
       if (api.hasDemo()) return 0;
       var db = clientsDb(), d = load(), now = Date.now();
       var ago = function (days, hour) { var t = new Date(now - days * DAY); t.setHours(hour || 12, (days * 7) % 60, 0, 0); return t.getTime(); };
-      var price = function (id) { return TARIFFS.filter(function (t) { return t.id === id; })[0].price; };
+      var price = function (id) { var t = TARIFFS.filter(function (x) { return x.id === id; })[0] || TARIFF_DEFAULTS.filter(function (x) { return x.id === id; })[0]; return t.price; };
       var staffIds = Object.keys(d.staff).filter(function (k) { return d.staff[k].active; });
       var operator = d.staff['ST-EMPL'] ? 'ST-EMPL' : staffIds[0], manager = d.staff['ST-MNGR'] ? 'ST-MNGR' : staffIds[0];
       var demo = [
