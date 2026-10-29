@@ -100,6 +100,8 @@ h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06
 .stat{padding:12px 14px}
 .stat small{color:var(--muted);display:block;font-size:13px}
 .stat b{font-size:24px}
+.segw{margin:0 0 10px}.segw button{flex:1}
+td.ed{cursor:pointer}
 .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .mnav b{text-transform:capitalize;font-size:17px}
 .sheet{overflow:auto;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
@@ -204,6 +206,7 @@ input[type=time]{width:auto}
     <section class="screen" id="s-stats">
       <div class="cards" id="statCards"></div>
       <h2>Таблица месяца</h2>
+      <div class="seg segw" id="segPer"></div>
       <div class="mnav"><button class="ib" id="mPrev" style="color:var(--text)" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b id="mName"></b><button class="ib" id="mNext" style="color:var(--text)" aria-label="Вперёд"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
       <div class="sheet"><table id="tbl"></table></div>
       <h2>Цели месяца</h2>
@@ -287,14 +290,14 @@ input[type=time]{width:auto}
 (function(){
   var KEY='habit_journal_v1';
   var MONTHS=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+  var MG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   var WD=['вс','пн','вт','ср','чт','пт','сб'];
   var EMOS=['💪','💧','📖','🚶','😴','🧘','🥗','🏃','🎧','✍️','🦷','🚭','🧠','💊','🎨','🐶'];
   var TITLES={today:'Сегодня',habits:'Мои привычки',stats:'Статистика',notes:'Уведомления',settings:'Настройки'};
   var $=function(id){return document.getElementById(id)};
 
   var state=load();
-  var view='today',selDay=startOfDay(new Date()),mCur=new Date(),editId=null,pickEmo=EMOS[0];
-  mCur=new Date(mCur.getFullYear(),mCur.getMonth(),1);
+  var view='today',selDay=startOfDay(new Date()),editId=null,pickEmo=EMOS[0];
 
   /* ---------- данные ---------- */
   function defaults(){
@@ -362,14 +365,14 @@ input[type=time]{width:auto}
     var diff=(selDay.getDay()-ws+7)%7,mon=new Date(selDay.getFullYear(),selDay.getMonth(),selDay.getDate()-diff),h='';
     for(var i=0;i<7;i++){
       var d=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i),k=dk(d);
-      h+='<button data-day="'+k+'" class="'+(k===dk(selDay)?'sel ':'')+(d>today?'fut':'')+'"><small>'+WD[d.getDay()]+'</small><b>'+d.getDate()+'</b>'+(doneOn(k)?'<i></i>':'')+'</button>';
+      h+='<button data-day="'+k+'" class="'+(k===dk(selDay)?'sel ':'')+'"><small>'+WD[d.getDay()]+'</small><b>'+d.getDate()+'</b>'+(doneOn(k)?'<i></i>':'')+'</button>';
     }
     $('week').innerHTML=h;
 
     var k0=dk(selDay),H=state.habits,n=H.length,dn=doneOn(k0),pct=n?dn/n:0,C=2*Math.PI*30;
     var isToday=k0===dk(today);
     $('sum').innerHTML='<svg class="ring" viewBox="0 0 72 72"><circle class="bg" cx="36" cy="36" r="30"/><circle class="fg" cx="36" cy="36" r="30" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct))+'"/></svg>'+
-      '<div class="t"><b>'+Math.round(pct*100)+'%</b><span>'+(isToday?'Сегодня':selDay.getDate()+' '+MONTHS[selDay.getMonth()])+': '+dn+' из '+n+(n&&dn===n?' 🎉':'')+'</span></div>';
+      '<div class="t"><b>'+Math.round(pct*100)+'%</b><span>'+(isToday?'Сегодня':selDay.getDate()+' '+MG[selDay.getMonth()])+': '+dn+' из '+n+(n&&dn===n?' 🎉':'')+'</span></div>';
 
     if(!n){$('todayList').innerHTML='<div class="empty">Привычек пока нет.<br>Добавьте их на вкладке «Привычки».</div>';return}
     $('todayList').innerHTML=H.map(function(x){
@@ -383,40 +386,84 @@ input[type=time]{width:auto}
       return '<div class="card row" data-id="'+x.id+'"><div class="emo">'+esc(x.emoji)+'</div><div class="n"><b>'+esc(x.name)+'</b><small>Цель: '+x.goal+' дн./мес.'+(x.remind?' · ⏰ '+x.remind:'')+'</small></div><button class="ib" data-a="edit" aria-label="Изменить"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ib" data-a="del" aria-label="Удалить"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
     }).join(''):'<div class="empty">Привычек пока нет.<br>Нажмите «+», чтобы добавить первую.</div>';
   }
+  var sPer='month',sCur=startOfDay(new Date());
+  var PERS=[['day','День'],['week','Неделя'],['month','Месяц'],['year','Год']];
+  function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n)}
+  function statsRange(){
+    var a=sCur,ws=state.settings.weekStart,cols=[],label,dayKey=dk(startOfDay(new Date())),today=startOfDay(new Date());
+    function dayCol(d){var w=d.getDay();return {k:dk(d),keys:[dk(d)],lab:d.getDate(),sub:WD[w],we:w==0||w==6,tdy:dk(d)===dayKey,date:d,edit:true}}
+    if(sPer==='day'){cols=[dayCol(a)];label=a.getDate()+' '+MG[a.getMonth()]+' '+a.getFullYear()}
+    else if(sPer==='week'){
+      var s=addDays(a,-((a.getDay()-ws+7)%7));
+      for(var i=0;i<7;i++)cols.push(dayCol(addDays(s,i)));
+      var e=addDays(s,6);label=s.getDate()+' '+MONTHS[s.getMonth()].slice(0,3)+' – '+e.getDate()+' '+MONTHS[e.getMonth()].slice(0,3)+' '+e.getFullYear();
+    }else if(sPer==='month'){
+      var n=new Date(a.getFullYear(),a.getMonth()+1,0).getDate();
+      for(var j=1;j<=n;j++)cols.push(dayCol(new Date(a.getFullYear(),a.getMonth(),j)));
+      label=MONTHS[a.getMonth()]+' '+a.getFullYear();
+    }else{
+      for(var m=0;m<12;m++){
+        var dn=new Date(a.getFullYear(),m+1,0).getDate(),keys=[];
+        for(var q=1;q<=dn;q++)keys.push(dk(new Date(a.getFullYear(),m,q)));
+        cols.push({keys:keys,lab:MONTHS[m].slice(0,3),sub:'',tdy:today.getFullYear()===a.getFullYear()&&today.getMonth()===m,days:dn,date:new Date(a.getFullYear(),m,1)});
+      }
+      label=a.getFullYear()+' год';
+    }
+    return {cols:cols,label:label};
+  }
+  function planned(h){return sPer==='day'?1:sPer==='week'?Math.max(1,Math.round(h.goal/30*7)):sPer==='year'?h.goal*12:h.goal}
+  function cnt(h,keys){var c=0;keys.forEach(function(k){if(on(h.id,k))c++});return c}
   function renderStats(){
-    var y=mCur.getFullYear(),m=mCur.getMonth(),n=new Date(y,m+1,0).getDate(),H=state.habits;
-    var now=new Date(),isThis=now.getFullYear()===y&&now.getMonth()===m,tod=isThis?now.getDate():-1;
-    $('mName').textContent=MONTHS[m]+' '+y;
-    var passed=isThis?now.getDate():(mCur<now?n:0),tot=0,goalSum=0,sum=0;
-    var hd='<tr><th>Привычка</th>';
-    for(var d=1;d<=n;d++){var w=new Date(y,m,d).getDay();hd+='<th class="'+(w==0||w==6?'we ':'')+(d===tod?'tdy':'')+'">'+d+'<small>'+WD[w]+'</small></th>'}
-    hd+='<th>Итого</th></tr>';
+    var H=state.habits,R=statsRange(),cols=R.cols,todayK=dk(startOfDay(new Date()));
+    $('mName').textContent=R.label;
+    $('segPer').innerHTML=PERS.map(function(p){return '<button data-v="'+p[0]+'" class="'+(p[0]===sPer?'on':'')+'">'+p[1]+'</button>'}).join('');
+    var allKeys=[];cols.forEach(function(c){allKeys=allKeys.concat(c.keys)});
+    var elapsed=allKeys.filter(function(k){return k<=todayK}).length;
+
+    var hd='<tr><th>Привычка</th>'+cols.map(function(c){return '<th class="'+(c.we?'we ':'')+(c.tdy?'tdy':'')+'">'+c.lab+(c.sub?'<small>'+c.sub+'</small>':'')+'</th>'}).join('')+'<th>Итого</th></tr>';
+    var tot=0,pastTot=0,planSum=0,doneSum=0;
     var bd=H.map(function(x){
-      var c=0,r='<tr><td>'+esc(x.emoji)+' '+esc(x.name)+'</td>';
-      for(var d=1;d<=n;d++){var o=on(x.id,y+'-'+p2(m+1)+'-'+p2(d));if(o)c++;var w=new Date(y,m,d).getDay();r+='<td class="'+(o?'on':(w==0||w==6?'we':''))+(d===tod&&!o?' tdy':'')+'">'+(o?'✓':'')+'</td>'}
-      tot+=c;goalSum+=x.goal;sum+=Math.min(c,x.goal);
+      var c=cnt(x,allKeys),r='<tr><td>'+esc(x.emoji)+' '+esc(x.name)+'</td>';
+      tot+=c;pastTot+=cnt(x,allKeys.filter(function(k){return k<=todayK}));
+      var pl=planned(x);planSum+=pl;doneSum+=Math.min(c,pl);
+      cols.forEach(function(col){
+        if(col.edit){
+          var o=on(x.id,col.k);
+          r+='<td data-id="'+x.id+'" data-k="'+col.k+'" class="ed '+(o?'on':(col.we?'we':''))+(col.tdy&&!o?' tdy':'')+'">'+(o?'✓':'')+'</td>';
+        }else{
+          var n=cnt(x,col.keys),a=Math.round(n/col.days*100);
+          r+='<td'+(n?' style="background:color-mix(in srgb,var(--accent) '+Math.max(18,a)+'%,transparent);font-weight:600"':'')+'>'+(n||'')+'</td>';
+        }
+      });
       return r+'<td class="pc">'+c+'</td></tr>';
     }).join('');
     $('tbl').innerHTML=hd+bd;
-    var rate=H.length&&passed?Math.round(tot/(H.length*passed)*100):0;
+    var rate=H.length&&elapsed?Math.round(pastTot/(H.length*elapsed)*100):0;
     var best=Math.max.apply(null,[0].concat(H.map(streak)));
     $('statCards').innerHTML=
-      '<div class="card stat"><small>Выполнено за месяц</small><b>'+tot+'</b></div>'+
+      '<div class="card stat"><small>Выполнено за период</small><b>'+tot+'</b></div>'+
       '<div class="card stat"><small>За прошедшие дни</small><b>'+rate+'%</b></div>'+
-      '<div class="card stat"><small>Цели месяца</small><b>'+(goalSum?Math.round(sum/goalSum*100):0)+'%</b></div>'+
+      '<div class="card stat"><small>Цели периода</small><b>'+(planSum?Math.round(doneSum/planSum*100):0)+'%</b></div>'+
       '<div class="card stat"><small>Лучшая серия сейчас</small><b>🔥 '+best+'</b></div>';
     $('goals').innerHTML=H.length?H.map(function(x){
-      var c=0;for(var d=1;d<=n;d++)if(on(x.id,y+'-'+p2(m+1)+'-'+p2(d)))c++;
-      var p=Math.min(100,Math.round(c/x.goal*100));
-      return '<div class="card prog"><div class="l"><span>'+esc(x.emoji)+' '+esc(x.name)+'</span><b>'+c+' / '+x.goal+'</b></div><i><b style="width:'+p+'%"></b></i></div>';
+      var c=cnt(x,allKeys),pl=planned(x),p=Math.min(100,Math.round(c/pl*100));
+      return '<div class="card prog"><div class="l"><span>'+esc(x.emoji)+' '+esc(x.name)+'</span><b>'+c+' / '+pl+'</b></div><i><b style="width:'+p+'%"></b></i></div>';
     }).join(''):'';
+  }
+  function shiftStats(n){
+    var a=sCur;
+    if(sPer==='day')sCur=addDays(a,n);
+    else if(sPer==='week')sCur=addDays(a,7*n);
+    else if(sPer==='month')sCur=new Date(a.getFullYear(),a.getMonth()+n,1);
+    else sCur=new Date(a.getFullYear()+n,0,1);
+    renderStats();
   }
   function renderInbox(){
     var L=state.inbox;
     $('inbox').innerHTML=(L.length?'<button class="si" style="justify-content:center;color:var(--accent)" id="clearInbox">Очистить список</button>':'')+
       (L.length?L.map(function(x){
         var t=new Date(x.t);
-        return '<div class="card nt'+(x.read?'':' new')+'"><b>'+esc(x.title)+'</b><span>'+esc(x.body)+'</span><small>'+t.getDate()+' '+MONTHS[t.getMonth()]+', '+p2(t.getHours())+':'+p2(t.getMinutes())+'</small></div>';
+        return '<div class="card nt'+(x.read?'':' new')+'"><b>'+esc(x.title)+'</b><span>'+esc(x.body)+'</span><small>'+t.getDate()+' '+MG[t.getMonth()]+', '+p2(t.getHours())+':'+p2(t.getMinutes())+'</small></div>';
       }).join(''):'<div class="empty">🔔<br>Уведомлений пока нет.<br>Включите напоминания в настройках.</div>');
   }
   function permState(){return 'Notification' in window?Notification.permission:'unsupported'}
@@ -532,7 +579,6 @@ input[type=time]{width:auto}
   $('week').onclick=function(e){
     var b=e.target.closest('button[data-day]');if(!b)return;
     var p=b.dataset.day.split('-'),d=new Date(+p[0],p[1]-1,+p[2]);
-    if(d>startOfDay(new Date())){toast('Будущие дни отметить нельзя');return}
     selDay=d;renderToday();
   };
   $('todayList').onclick=function(e){
@@ -551,8 +597,10 @@ input[type=time]{width:auto}
       save();render();toast('Удалено');
     }
   };
-  $('mPrev').onclick=function(){mCur=new Date(mCur.getFullYear(),mCur.getMonth()-1,1);renderStats()};
-  $('mNext').onclick=function(){mCur=new Date(mCur.getFullYear(),mCur.getMonth()+1,1);renderStats()};
+  $('mPrev').onclick=function(){shiftStats(-1)};
+  $('mNext').onclick=function(){shiftStats(1)};
+  $('segPer').onclick=function(e){var b=e.target.closest('button');if(b){sPer=b.dataset.v;renderStats()}};
+  $('tbl').onclick=function(e){var c=e.target.closest('td.ed');if(!c)return;var k=c.dataset.id+'|'+c.dataset.k;if(state.checks[k])delete state.checks[k];else state.checks[k]=1;save();renderStats()};
   $('inbox').onclick=function(e){if(e.target.closest('#clearInbox')){state.inbox=[];save();render()}};
 
   $('s-settings').addEventListener('click',function(e){
