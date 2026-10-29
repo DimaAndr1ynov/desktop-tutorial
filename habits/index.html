@@ -28,7 +28,7 @@ html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
 input,select{font:inherit;color:var(--text);-webkit-user-select:text;user-select:text}
-.app{max-width:560px;margin:0 auto;height:100%;position:relative;background:var(--bg)}
+.app{max-width:560px;margin:0 auto;height:100%;position:relative;overflow:hidden;background:var(--bg)}
 @media (min-width:600px){body{background:#0001}.app{box-shadow:0 0 40px #0002}}
 
 /* верхняя панель */
@@ -102,6 +102,24 @@ h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06
 .stat b{font-size:24px}
 .segw{margin:0 0 10px}.segw button{flex:1}
 td.ed{cursor:pointer}
+/* размеры таблицы под период */
+table.t-day,table.t-week,table.t-year{width:100%;table-layout:fixed}
+table.t-day th:first-child,table.t-day td:first-child{min-width:0;max-width:none;width:42%}
+table.t-day th,table.t-day td{min-width:0;height:64px;font-size:26px}
+table.t-day th{height:auto;padding:8px 4px;font-size:15px}
+table.t-day th small{font-size:12px}
+table.t-day td:first-child{font-size:16px;white-space:normal;line-height:1.25}
+table.t-day th:last-child,table.t-day td:last-child{width:22%}
+table.t-week th:first-child,table.t-week td:first-child{min-width:0;max-width:none;width:86px;font-size:12px}
+table.t-week th,table.t-week td{min-width:0;height:50px;font-size:20px}
+table.t-week th{height:auto;padding:6px 0;font-size:15px}
+table.t-week th small{font-size:10px}
+table.t-week th:last-child,table.t-week td:last-child{width:44px;font-size:14px}
+table.t-year th:first-child,table.t-year td:first-child{min-width:0;max-width:none;width:76px;font-size:11px;padding:0 4px}
+table.t-year th,table.t-year td{min-width:0;height:40px;font-size:11px}
+table.t-year th{height:auto;padding:6px 0;font-size:9px;letter-spacing:-.2px}
+table.t-year th:last-child,table.t-year td:last-child{width:34px}
+table.t-month th,table.t-month td{min-width:28px;height:36px}
 .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .mnav b{text-transform:capitalize;font-size:17px}
 .sheet{overflow:auto;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
@@ -205,11 +223,11 @@ input[type=time]{width:auto}
 
     <section class="screen" id="s-stats">
       <div class="cards" id="statCards"></div>
-      <h2>Таблица месяца</h2>
+      <h2>Таблица</h2>
       <div class="seg segw" id="segPer"></div>
       <div class="mnav"><button class="ib" id="mPrev" style="color:var(--text)" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b id="mName"></b><button class="ib" id="mNext" style="color:var(--text)" aria-label="Вперёд"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
       <div class="sheet"><table id="tbl"></table></div>
-      <h2>Цели месяца</h2>
+      <h2>Цели периода</h2>
       <div id="goals"></div>
     </section>
 
@@ -437,6 +455,7 @@ input[type=time]{width:auto}
       });
       return r+'<td class="pc">'+c+'</td></tr>';
     }).join('');
+    $('tbl').className='t-'+sPer;
     $('tbl').innerHTML=hd+bd;
     var rate=H.length&&elapsed?Math.round(pastTot/(H.length*elapsed)*100):0;
     var best=Math.max.apply(null,[0].concat(H.map(streak)));
