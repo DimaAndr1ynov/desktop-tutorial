@@ -594,7 +594,15 @@
   .tar-set .btn{margin-left:auto;}
   .tar-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px;}
   .tar-card{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0;}
+  .tar-card{transition:transform .25s cubic-bezier(.2,.7,.2,1),box-shadow .25s,border-color .25s,opacity .3s;}
+  .tar-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(20,30,60,.35);border-color:rgba(47,127,255,.35);}
   .tar-card.off{opacity:.62;}
+  .tar-grid.enter .tar-card{animation:tarIn .5s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0) * 70ms);}
+  @keyframes tarIn{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+  .tar-card.fresh{animation:tarFresh 1.4s ease-out;}
+  @keyframes tarFresh{0%{box-shadow:0 0 0 0 rgba(47,127,255,.55);}60%{box-shadow:0 0 0 8px rgba(47,127,255,0);}100%{box-shadow:0 0 0 0 rgba(47,127,255,0);}}
+  .tar-set{animation:tarSetIn .45s cubic-bezier(.2,.7,.2,1) backwards;}
+  @keyframes tarSetIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
   .tar-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .tar-top h3{margin:0;font-size:17px;overflow-wrap:anywhere;}
   .tar-price{font-size:28px;font-weight:700;letter-spacing:-.01em;}
@@ -602,9 +610,12 @@
   .tar-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--muted);}
   .tar-row b{color:var(--text);font-weight:600;text-align:right;}
   .tar-acts{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;flex-wrap:wrap;}
-  .tar-tg{display:inline-flex;border:1px solid var(--line);border-radius:100px;padding:3px;background:var(--surface-3);}
-  .tar-tg button{border:0;background:none;border-radius:100px;padding:6px 14px;font-size:13px;font-weight:600;color:var(--muted);min-height:32px;}
-  .tar-tg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .tar-tg{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:100px;padding:3px;background:var(--surface-3);}
+  .tar-tg::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:100px;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .28s cubic-bezier(.3,.8,.3,1);}
+  .tar-tg[data-on="0"]::before{transform:translateX(100%);}
+  .tar-tg button{position:relative;z-index:1;border:0;background:none;border-radius:100px;padding:6px 14px;min-width:54px;font-size:13px;font-weight:600;color:var(--muted);min-height:32px;transition:color .2s;}
+  .tar-tg[data-on="1"] button[data-tg="1"], .tar-tg[data-on="0"] button[data-tg="0"]{color:var(--text);}
+  .tar-tg[data-on="1"] button[data-tg="1"]{color:#15803d;}
   @media (max-width:860px){ .tar-grid{grid-template-columns:minmax(0,1fr);} .tar-set .btn{margin-left:0;width:100%;} .tar-set .field{max-width:none;} }
   /* ---------- светлая тема ---------- */
   :root{
@@ -981,7 +992,9 @@
     show(state.view && C.can(navNeed(state.view)) ? state.view : first);
   }
   function navNeed(view){ return document.querySelector('#nav button[data-view="' + view + '"]').dataset.need; }
+  var tarUi = {anim: false, fresh: ''};
   function show(view){
+    if (view === 'tariffs' && state.view !== 'tariffs') tarUi.anim = true;
     state.view = view;
     document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.view === view); });
     var onBtn = document.querySelector('#nav button.on');
@@ -2184,20 +2197,42 @@
     $('bTarSave').hidden = !canEdit;
     $('eTarSet').textContent = '';
     var kindTitle = function(k){ var x = C.TARIFF_KINDS.filter(function(q){ return q.id === k; })[0]; return x ? x.title : k; };
-    $('tarGrid').innerHTML = data.items.length ? data.items.map(function(x){
+    var animate = tarUi.anim, fresh = tarUi.fresh; tarUi.anim = false; tarUi.fresh = '';
+    $('tarGrid').classList.toggle('enter', animate);
+    $('tarSet').style.animation = animate ? '' : 'none';
+    $('tarGrid').innerHTML = data.items.length ? data.items.map(function(x, i){
       var pp = x.prepay == null ? s.prepay : x.prepay;
-      return '<article class="tar-card' + (x.active ? '' : ' off') + '" data-id="' + esc(x.id) + '">' +
+      return '<article class="tar-card' + (x.active ? '' : ' off') + (fresh === x.id ? ' fresh' : '') + '" data-id="' + esc(x.id) + '" style="--i:' + i + '">' +
         '<div class="tar-top"><h3>' + esc(x.title) + '</h3><span class="ops-pill ' + (x.kind === 'package' ? 'info' : x.kind === 'edit' ? 'warn' : 'ok') + '">' + esc(kindTitle(x.kind)) + '</span></div>' +
-        '<div class="tar-price">' + rub(x.price) + (x.unit ? '<small>/ ' + esc(x.unit) + '</small>' : '') + '</div>' +
+        '<div class="tar-price" data-p="' + x.price + '"><span>' + rub(x.price) + '</span>' + (x.unit ? '<small>/ ' + esc(x.unit) + '</small>' : '') + '</div>' +
         '<div class="tar-row"><span>Предоплата' + (x.prepay == null ? ' (общая)' : '') + '</span><b>' + pp + '% · ' + rub(x.price * pp / 100) + '</b></div>' +
         (x.includes ? '<div class="tar-row"><span>Что входит</span><b>' + esc(x.includes) + '</b></div>' : '') +
-        '<div class="tar-acts"><div class="tar-tg" role="group" aria-label="Тариф ' + esc(x.title) + '">' +
+        '<div class="tar-acts"><div class="tar-tg" data-on="' + (x.active ? 1 : 0) + '" role="group" aria-label="Тариф ' + esc(x.title) + '">' +
           '<button type="button" data-tg="1" data-id="' + esc(x.id) + '" class="' + (x.active ? 'on' : '') + '" aria-pressed="' + (x.active ? 'true' : 'false') + '"' + (canEdit ? '' : ' disabled') + '>вкл</button>' +
           '<button type="button" data-tg="0" data-id="' + esc(x.id) + '" class="' + (x.active ? '' : 'on') + '" aria-pressed="' + (x.active ? 'false' : 'true') + '"' + (canEdit ? '' : ' disabled') + '>выкл</button></div>' +
           (canEdit ? '<button class="btn ghost sm" type="button" data-edit="' + esc(x.id) + '">Изменить</button>' : '') + '</div></article>';
     }).join('') : '<div class="empty-box" style="grid-column:1/-1">Тарифов пока нет.' + (canEdit ? ' Добавьте первый кнопкой «+ Тариф».' : '') + '</div>';
-    var on = data.items.filter(function(x){ return x.active; }).length;
-    $('tarNote').textContent = 'Включено тарифов: ' + on + ' из ' + data.items.length + '. Выключенные не предлагаются при внесении оплаты, история оплат остаётся.';
+    tarNote(data.items);
+    if (animate) countUp();
+  }
+  function tarNote(items){
+    var on = items.filter(function(x){ return x.active; }).length;
+    $('tarNote').textContent = 'Включено тарифов: ' + on + ' из ' + items.length + '. Выключенные не предлагаются при внесении оплаты, история оплат остаётся.';
+  }
+  // цены «набираются» от нуля при открытии раздела; при reduced-motion остаются как есть
+  function countUp(){
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var els = [].slice.call($('tarGrid').querySelectorAll('.tar-price[data-p] > span')), t0 = performance.now(), dur = 700;
+    els.forEach(function(el, i){ el.dataset.d = i * 70; });
+    (function step(now){
+      var done = true;
+      els.forEach(function(el){
+        var p = Math.min(1, Math.max(0, (now - t0 - el.dataset.d) / dur)), v = Number(el.parentNode.dataset.p);
+        el.textContent = rub(v * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) done = false;
+      });
+      if (!done && $('tarGrid').contains(els[0] || document.body)) requestAnimationFrame(step);
+    })(t0);
   }
   $('tarSet').addEventListener('submit', function(e){
     e.preventDefault();
@@ -2207,7 +2242,17 @@
   $('bTarAdd').addEventListener('click', function(){ openTariff(null); });
   $('tarGrid').addEventListener('click', function(e){
     var tg = e.target.closest('button[data-tg]');
-    if (tg){ guard(function(){ C.tariffToggle(tg.dataset.id, tg.dataset.tg === '1'); renderTariffs(); })(); return; }
+    if (tg){
+      guard(function(){
+        var on = tg.dataset.tg === '1', card = tg.closest('.tar-card');
+        C.tariffToggle(tg.dataset.id, on);
+        card.classList.toggle('off', !on);
+        card.querySelector('.tar-tg').dataset.on = on ? 1 : 0;
+        card.querySelectorAll('button[data-tg]').forEach(function(b){ b.setAttribute('aria-pressed', String((b.dataset.tg === '1') === on)); b.classList.toggle('on', (b.dataset.tg === '1') === on); });
+        tarNote(C.tariffsList().items);
+      })();
+      return;
+    }
     var ed = e.target.closest('button[data-edit]');
     if (ed) openTariff(ed.dataset.edit);
   });
@@ -2231,8 +2276,8 @@
     $('fTar').addEventListener('submit', function(e){
       e.preventDefault();
       try {
-        C.tariffSave({id: cur ? cur.id : '', title: $('tName').value, kind: $('tKind').value, price: $('tPrice').value, unit: $('tUnit').value, prepay: $('tPrepay').value, includes: $('tIncl').value});
-        toast(cur ? 'Тариф сохранён' : 'Тариф добавлен', 'ok'); closeModal(); renderTariffs();
+        var saved = C.tariffSave({id: cur ? cur.id : '', title: $('tName').value, kind: $('tKind').value, price: $('tPrice').value, unit: $('tUnit').value, prepay: $('tPrepay').value, includes: $('tIncl').value});
+        toast(cur ? 'Тариф сохранён' : 'Тариф добавлен', 'ok'); closeModal(); tarUi.fresh = saved.id; renderTariffs();
       } catch(err){ $('eTar').textContent = err.message; }
     });
     if ($('bTarDel')) $('bTarDel').addEventListener('click', guard(function(){
