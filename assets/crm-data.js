@@ -656,6 +656,17 @@
       save(d);
       return pin; // единственный раз, когда PIN виден
     },
+    // Новые случайные PIN всем активным сотрудникам разом; коды возвращаются один раз.
+    staffResetAllPins: function () {
+      need('staff.edit');
+      var d = load(), out = [];
+      Object.keys(d.staff).map(function (k) { return d.staff[k]; })
+        .filter(function (s) { return s.active; })
+        .sort(function (a, b) { return a.createdAt - b.createdAt; })
+        .forEach(function (s) { var pin = randomPin(); s.pin = pinHash(pin); s.pinFail = null; out.push({ id: s.id, name: s.name, role: s.role, pin: pin }); });
+      save(d);
+      return out;
+    },
     staffHasPin: function (id) { var s = load().staff[id]; return !!(s && s.pin); },
     staffRemove: function (id) {
       need('staff.edit');

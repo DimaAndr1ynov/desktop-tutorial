@@ -1029,7 +1029,7 @@
 <div class="toasts" id="toasts"></div>
 
 <script src="assets/auth.js?v=20261030"></script>
-<script src="assets/crm-data.js?v=20261030"></script>
+<script src="assets/crm-data.js?v=20261030b"></script>
 <script>
 (function(){
   var A = window.DSAuth, C = window.DSCRM;
@@ -2429,7 +2429,7 @@
         '<div class="field fl-phone"><label for="sbPhone">Телефон (логин)</label><input class="input" id="sbPhone" type="tel" inputmode="tel" placeholder="+7 (900) 000-00-00" value="' + (f.phone ? esc(A.formatPhone(f.phone)) : '') + '"></div>' +
         '<div class="field fl-pin"><label for="sbPin">PIN-код</label><input class="input pin-in" id="sbPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0 0 0 0"></div>' +
         '<div class="field fl-role"><label for="sbRole">Роль</label><select class="select" id="sbRole">' + Object.keys(C.ROLES).map(function(k){ return opt(k, roleTitle(k), f.role); }).join('') + '</select></div></div>' +
-        '<div class="br-acts"><button class="btn" type="submit">Сохранить роль</button><button class="btn ghost" type="button" id="sbReset">Сбросить</button></div>' +
+        '<div class="br-acts"><button class="btn" type="submit">Сохранить роль</button><button class="btn ghost" type="button" id="sbReset">Сбросить</button><button class="btn ghost" type="button" id="sbAllPins">Задать PIN всем</button></div>' +
         '<div class="error" id="eSb" role="alert"></div></form>' +
         '<p class="br-count">Ролей в филиале: ' + listAll.length + '.</p><div class="br-list">' +
         listAll.map(function(s){
@@ -2462,6 +2462,24 @@
     $('sbPhone').addEventListener('input', function(e){ e.target.value = A.formatPhone(e.target.value); });
     $('sbPin').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); });
     $('sbReset').addEventListener('click', function(){ brSel = {id:'', role:''}; renderBranch(); });
+    $('sbAllPins').addEventListener('click', guard(function(){
+      var n = listAll.filter(function(s){ return s.active; }).length;
+      if (!confirm('Выдать новые случайные PIN всем активным сотрудникам (' + n + ')? Старые PIN перестанут работать.')) return;
+      var res = C.staffResetAllPins();
+      res.forEach(function(r){ brNewPins[r.id] = r.pin; });
+      var txt = res.map(function(r){ return r.name + ' (' + C.ROLES[r.role].title + '): ' + r.pin; }).join('\n');
+      renderBranch();
+      openModal(
+        '<div class="drawer-head"><h3>Новые PIN-коды</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
+        '<div class="drawer-body"><div class="sw-list">' + res.map(function(r){
+          return '<div class="pin-row"><span>' + esc(r.name) + ' <span class="muted">· ' + esc(C.ROLES[r.role].title) + '</span></span><b class="pin-new">' + esc(r.pin) + '</b></div>';
+        }).join('') + '</div><p class="pin-warn">Запишите коды и передайте сотрудникам. Повторно они не показываются; забытый PIN можно задать заново в списке.</p></div>' +
+        '<div class="drawer-foot"><div class="right"><button class="btn ghost" type="button" id="pinCopy">Скопировать список</button><button class="btn" type="button" data-close>Готово</button></div></div>');
+      $('pinCopy').addEventListener('click', function(){
+        if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ toast('Список скопирован', 'ok'); }, function(){ toast('Не удалось скопировать', 'err'); });
+        else toast('Копирование недоступно', 'err');
+      });
+    }));
     $('fStaffB').addEventListener('submit', function(e){
       e.preventDefault();
       try {
