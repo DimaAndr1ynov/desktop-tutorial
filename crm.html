@@ -1040,7 +1040,7 @@
 <div class="toasts" id="toasts"></div>
 
 <script src="assets/auth.js?v=20261030"></script>
-<script src="assets/crm-data.js?v=20261030b"></script>
+<script src="assets/crm-data.js?v=20261030c"></script>
 <script>
 (function(){
   var A = window.DSAuth, C = window.DSCRM;
@@ -2430,7 +2430,7 @@
     var roleTitle = function(id){ return C.ROLES[id].title; };
     var html = '<h3>Роли и PIN-коды филиала</h3>';
     if (!canStaff) {
-      var meRec = C.me(), team = C.staffChoices().concat([{id: meRec.id, name: meRec.name, role: meRec.role, hasPin: true, me: true}]);
+      var meRec = C.me(), team = C.staffChoices().concat([{id: meRec.id, name: meRec.name, role: meRec.role, hasPin: true, me: true, phone: meRec.phone, status: meRec.status || 'off', createdAt: meRec.createdAt}]);
       html += '<p class="muted">Нажмите на роль, чтобы увидеть сотрудников и права. Менять роли и PIN-коды может администратор: войдите под ним через «Сменить сотрудника».</p><div class="br-roles">' + data.roles.map(function(r){
         var open = brOpen === r.id;
         var inRole = team.filter(function(s){ return s.role === r.id; });
@@ -2438,7 +2438,12 @@
           (open ? '<div class="br-open" id="brOpen"><h4>' + esc(r.title) + ': сотрудники роли</h4>' +
             (inRole.length ? inRole.map(function(s){ return '<div class="br-row row"><div class="nm"><div><b>' + esc(s.name) + (s.me ? ' <span class="muted" style="font-weight:400">(это вы)</span>' : '') + '</b><div class="meta"><span class="br-pin">PIN: ' + (s.hasPin ? '••••' : 'не задан') + '</span></div></div></div></div>'; }).join('') : '<p class="muted" style="margin:0 0 10px">Сотрудников в этой роли нет.</p>') +
             '<details><summary class="muted" style="cursor:pointer">Что может роль</summary><ul style="margin:8px 0 0;padding-left:18px;line-height:1.5">' + r.perms.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details></div>' : '');
-      }).join('') + '</div>';
+      }).join('') + '</div>' +
+        '<p class="br-count" style="color:var(--muted)">Сотрудников в филиале: ' + team.length + '.</p><div class="br-list">' +
+        team.map(function(s){
+          return '<div class="br-row"><div class="nm"><div><b>' + esc(s.name) + (s.me ? ' <span class="muted" style="font-weight:400">(это вы)</span>' : '') + '</b><div class="meta"><span class="role ' + s.role + '">' + esc(roleTitle(s.role)) + '</span><span class="br-pin">PIN: ' + (s.hasPin ? '••••' : 'не задан') + '</span></div></div></div>' +
+            '<div class="btns"><button class="btn ghost sm" type="button" data-card="' + esc(s.id) + '">Карточка</button></div></div>';
+        }).join('') + '</div>';
     } else {
       var f = selRec || {name:'', phone:'', role: 'operator', pin: ''};
       html += '<form class="br-flat" id="fStaffB" novalidate>' +
@@ -2463,6 +2468,9 @@
     }
     sec.innerHTML = html;
     if (!canStaff) {
+      sec.querySelectorAll('button[data-card]').forEach(function(btn){
+        btn.addEventListener('click', function(){ openBranchCard(team.filter(function(x){ return x.id === btn.dataset.card; })[0], data); });
+      });
       sec.querySelectorAll('button[data-roleview]').forEach(function(btn){
         btn.addEventListener('click', function(){ brOpen = brOpen === btn.dataset.roleview ? '' : btn.dataset.roleview; renderBranch(); });
       });
@@ -2517,6 +2525,26 @@
       try { C.pinPolicySave({tries: $('polTries').value, lockSec: $('polLock').value}); toast('Правила PIN сохранены', 'ok'); $('ePol').textContent = ''; }
       catch(err){ $('ePol').textContent = err.message; }
     });
+  }
+  // Карточка сотрудника только для просмотра (без права «Сотрудники»): без оклада, PIN и правки
+  function openBranchCard(s, data){
+    if (!s) return;
+    var rd = data.roles.filter(function(r){ return r.id === s.role; })[0];
+    var info = function(k, v){ return '<div class="bs-i"><span>' + k + '</span><b>' + v + '</b></div>'; };
+    openModal(
+      '<div class="drawer-head"><div style="min-width:0"><h3>Карточка сотрудника</h3>' +
+        '<div class="muted" style="margin-top:4px;font-size:13px;line-height:1.4">Филиал «' + esc(data.branch.name) + '» · ' + esc(s.name) + '</div>' +
+        '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="role ' + s.role + '" style="margin:0">' + esc(C.ROLES[s.role].title) + '</span><span class="spill ss-' + (s.status || 'off') + '">' + esc(ssTitle(s.status || 'off')) + '</span></div></div>' +
+        '<button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
+      '<div class="drawer-body"><div class="bs-info">' +
+        info('Телефон', esc(A.formatPhone(s.phone || ''))) +
+        info('Права роли', rd ? rd.perms.length + ' ' + plural(rd.perms.length, 'право', 'права', 'прав') : '—') +
+        info('В филиале с', s.createdAt ? new Date(s.createdAt).toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'}) : '—') +
+        info('PIN-код', s.hasPin ? 'задан' : 'не задан') +
+      '</div>' + (rd ? '<details open><summary class="muted" style="cursor:pointer">Что может роль «' + esc(rd.title) + '»</summary><ul style="margin:8px 0 0;padding-left:18px;line-height:1.5">' + rd.perms.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details>' : '') +
+      '<p class="muted" style="margin:14px 0 0;font-size:13px">Менять данные, роль и PIN может администратор: войдите под ним через «Сменить сотрудника».</p></div>' +
+      '<div class="drawer-foot"><div class="right"><button class="btn" type="button" data-close>Закрыть</button></div></div>');
+    $('ov').classList.add('center');
   }
   // Окно «Редактирование сотрудника» из раздела «Настройки филиала»
   function openBranchStaff(id){
