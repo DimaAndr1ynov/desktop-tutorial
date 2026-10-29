@@ -648,7 +648,7 @@
     <nav class="nav" id="nav">
       <button type="button" data-view="dashboard" data-need="dashboard.view">
         <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="9.5" width="3.4" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="7.3" y="3.5" width="3.4" height="12" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="12.6" y="6.5" width="3.4" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
-        <span class="lbl">Дашборд</span>
+        <span class="lbl">Аналитика</span>
       </button>
       <button type="button" data-view="clients" data-need="clients.view">
         <svg viewBox="0 0 18 18" fill="none"><circle cx="7" cy="6" r="2.8" stroke="currentColor" stroke-width="1.4"/><path d="M1.8 15c.5-2.6 2.6-4.1 5.2-4.1s4.7 1.5 5.2 4.1M12 3.4a2.6 2.6 0 0 1 0 5.2M13.6 10.9c1.5.5 2.4 1.8 2.7 4.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -698,7 +698,7 @@
     <!-- Дашборд -->
     <section id="vDashboard" hidden>
       <div class="page-head">
-        <h2>Дашборд</h2>
+        <h2>Аналитика</h2>
         <div class="seg" id="periodSeg" role="group" aria-label="Период">
           <button type="button" data-p="7">7 дней</button>
           <button type="button" data-p="30">30 дней</button>
@@ -1023,7 +1023,7 @@
     if (!bar.hidden){
       bar.innerHTML = s.hasDemo
         ? '<span>Показаны демо-данные: 9 вымышленных клиентов с заявками и оплатами.</span>' + (C.can('clients.delete') ? '<button class="btn ghost sm" type="button" id="bDemoClear">Удалить демо-данные</button>' : '')
-        : '<span>Тестовый режим. Чтобы увидеть дашборд заполненным, добавьте демо-данные: 9 вымышленных клиентов с заявками и оплатами. Их можно удалить в один клик.</span><button class="btn sm" type="button" id="bDemoSeed">Добавить демо-данные</button>';
+        : '<span>Тестовый режим. Чтобы увидеть аналитику заполненной, добавьте демо-данные: 9 вымышленных клиентов с заявками и оплатами. Их можно удалить в один клик.</span><button class="btn sm" type="button" id="bDemoSeed">Добавить демо-данные</button>';
       if ($('bDemoSeed')) $('bDemoSeed').addEventListener('click', guard(function(){ var n = C.seedDemo(); toast('Добавлено клиентов: ' + n, 'ok'); render(); }));
       if ($('bDemoClear')) $('bDemoClear').addEventListener('click', guard(function(){
         if (!confirm('Удалить демо-клиентов вместе с их заявками, оплатами и перепиской? Ваши настоящие данные не затрагиваются.')) return;
