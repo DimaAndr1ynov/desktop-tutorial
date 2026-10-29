@@ -625,9 +625,14 @@
       if (phoneTaken(d.staff, phone, st.id)) fail('Сотрудник с таким номером уже есть');
       var cur = me();
       if (st.id && st.id === cur.id && (st.role !== 'admin' || st.active === false)) fail('Нельзя снять права администратора с самого себя');
+      var pinIn = (st.pin === undefined || st.pin === null) ? '' : String(st.pin).trim();
+      if (pinIn && !/^\d{4}$/.test(pinIn)) fail('PIN-код: ровно 4 цифры');
       var rec = st.id && d.staff[st.id];
       var newPin = '';
-      if (!rec) { rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec; newPin = randomPin(); rec.pin = pinHash(newPin); }
+      if (!rec) {
+        rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec;
+        if (pinIn) rec.pin = pinHash(pinIn); else { newPin = randomPin(); rec.pin = pinHash(newPin); }
+      } else if (pinIn) { rec.pin = pinHash(pinIn); rec.pinFail = null; }
       rec.name = st.name.trim(); rec.phone = phone; rec.role = st.role;
       if (typeof st.active === 'boolean') rec.active = st.active;
       if (st.salary !== undefined && st.salary !== '') {

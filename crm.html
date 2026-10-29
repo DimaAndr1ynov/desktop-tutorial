@@ -651,13 +651,37 @@
   @media (max-width:860px){ .tar-grid{grid-template-columns:minmax(0,1fr);} .tar-set .btn{margin-left:0;width:100%;} .tar-set .field{max-width:none;} }
   /* ---------- настройки филиала ---------- */
   .br-sec{margin-top:18px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--surface);animation:tarSetIn .45s cubic-bezier(.2,.7,.2,1) backwards;}
-  #brRolesSec{animation-delay:.08s;} #brPinSec{animation-delay:.16s;}
+  #brRolesSec{animation-delay:.08s;}
   .br-sec h3{margin:0 0 4px;font-size:17px;}
   .br-sec > p.muted{margin:0 0 14px;font-size:14px;line-height:1.5;}
   .br-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;}
   .br-grid .wide{grid-column:1 / -1;}
   .br-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
-  .br-role{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface-3);}
+  .br-role{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface-3);font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;position:relative;transition:border-color .2s,box-shadow .2s,transform .2s;}
+  .br-role:hover{border-color:var(--blue);transform:translateY(-2px);}
+  .br-role[aria-expanded="true"]{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+  .br-role .chev{position:absolute;right:14px;top:16px;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;}
+  .br-role[aria-expanded="true"] .chev{transform:rotate(225deg);top:20px;}
+  .br-open{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);animation:tarSetIn .3s cubic-bezier(.2,.7,.2,1) backwards;}
+  .br-open h4{margin:0 0 10px;font-size:15px;}
+  .br-open details{margin:0 0 10px;font-size:13px;}
+  .br-open .row{margin-bottom:6px;}
+  .br-form{display:grid;grid-template-columns:minmax(0,1fr) 190px 150px 170px;gap:0 12px;margin-top:20px;}
+  .br-form .field{margin-bottom:10px;}
+  .br-form .pin-in{text-align:center;letter-spacing:.3em;}
+  .br-acts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+  .br-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .br-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-3);transition:border-color .2s,background .2s;}
+  .br-row.sel{border-color:var(--blue);background:#eff4ff;}
+  .br-row .nm{display:flex;align-items:center;gap:10px;min-width:0;}
+  .br-row .nm .avatar{width:34px;height:34px;font-size:12px;flex:none;}
+  .br-row .nm b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .br-row .meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap;}
+  .br-row .meta .role{margin:0;}
+  .br-pin{font-size:12px;padding:2px 8px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);letter-spacing:.08em;}
+  .br-row .btns{display:flex;gap:8px;flex:none;}
+  .br-row .btn.del{color:var(--danger);border-color:#f2c4c0;background:#fff5f4;}
+  .br-pol-h{margin:22px 0 8px;font-size:15px;}
   .br-role .role{margin:0 0 8px;}
   .br-role b{font-size:22px;display:block;line-height:1.2;}
   .br-role small{color:var(--muted);}
@@ -675,6 +699,11 @@
   .pin-dot{display:inline-flex;align-items:center;gap:6px;}
   .pin-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:#12804a;}
   .pin-dot.no::before{background:#d92d20;}
+  @media (max-width:1180px){
+    .br-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+    .br-form .wide2{grid-column:1 / -1;}
+    .br-form > .field:first-child{grid-column:1 / -1;}
+  }
   @media (max-width:860px){
     .br-grid{grid-template-columns:minmax(0,1fr);}
     .br-pins thead{display:none;}
@@ -682,7 +711,12 @@
     .br-pins tr{padding:10px 0;border-bottom:1px solid var(--line);}
     .br-pins td{border:0;padding:3px 0;text-align:left !important;}
     .br-pol .field{width:calc(50% - 6px);}
+    .br-form{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+    .br-form .wide2{grid-column:1 / -1;}
+    .br-row{flex-direction:column;align-items:stretch;}
+    .br-row .btns .btn{flex:1;}
   }
+  @media (prefers-reduced-motion:reduce){ .br-role, .br-open{transition:none;animation:none;} }
   /* ---------- светлая тема ---------- */
   :root{
     color-scheme:light;
@@ -962,7 +996,6 @@
       <form class="br-sec" id="fBranch" novalidate></form>
       <div class="error" id="eBranch"></div>
       <div class="br-sec" id="brRolesSec"></div>
-      <div class="br-sec" id="brPinSec"></div>
     </section>
 
     <!-- Сотрудники -->
@@ -1147,7 +1180,7 @@
     $('vStaff').hidden = view !== 'staff';
     $('vTariffs').hidden = view !== 'tariffs';
     $('vBranch').hidden = view !== 'branch';
-    if (view !== 'branch') brNewPins = {};
+    if (view !== 'branch') { brNewPins = {}; brSel = {id:'', role:''}; }
     $('vNone').hidden = !!view;
     render();
     fitDialogs();
@@ -2345,6 +2378,7 @@
   }
 
   /* ================= настройки филиала ================= */
+  var brOpen = '', brSel = {id:'', role:''}; // открытая роль и выбранный в форме сотрудник
   var brNewPins = {}; // PIN, показанные один раз после сброса (id -> pin), живут только до перерисовки раздела
   function renderBranch(){
     var data = C.branchGet(), b = data.branch, canEdit = C.can('branch.edit'), canStaff = C.can('staff.edit');
@@ -2369,47 +2403,90 @@
       '</div>';
     $('eBranch').textContent = '';
 
-    // роли
-    $('brRolesSec').innerHTML = '<h3>Роли филиала</h3><p class="muted">Кто сколько человек в каждой роли и что роль может делать.' +
-      (canStaff ? ' Права ролей меняются в разделе «Сотрудники».' : '') + '</p><div class="br-roles">' +
-      data.roles.map(function(r){
-        return '<div class="br-role"><span class="role ' + r.id + '">' + esc(r.title) + '</span><b>' + r.count + '</b><small>' + plural(r.count, 'сотрудник', 'сотрудника', 'сотрудников') + ' · ' + r.perms.length + ' ' + plural(r.perms.length, 'право', 'права', 'прав') + (r.custom ? ' · изменено' : '') + '</small>' +
-          '<details><summary>Что может роль</summary><ul>' + r.perms.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details></div>';
-      }).join('') + '</div>' +
-      (canStaff ? '<div style="margin-top:14px"><button class="btn ghost sm" type="button" id="bToStaff">Открыть «Сотрудники»</button></div>' : '');
-    if ($('bToStaff')) $('bToStaff').addEventListener('click', function(){ show('staff'); });
+    // роли и PIN-коды
+    var sec = $('brRolesSec');
+    var listAll = canStaff ? C.staffList() : [];
+    if (brSel.id && !listAll.some(function(s){ return s.id === brSel.id; })) brSel = {id:'', role:''};
+    var selRec = listAll.filter(function(s){ return s.id === brSel.id; })[0];
+    var roleTitle = function(id){ return C.ROLES[id].title; };
+    var rolesHtml = data.roles.map(function(r){
+      var open = canStaff && brOpen === r.id;
+      return '<' + (canStaff ? 'button type="button" data-role="' + r.id + '" aria-expanded="' + open + '"' : 'div') + ' class="br-role"><span class="role ' + r.id + '">' + esc(r.title) + '</span><b>' + r.count + '</b><small>' + plural(r.count, 'сотрудник', 'сотрудника', 'сотрудников') + ' · ' + r.perms.length + ' ' + plural(r.perms.length, 'право', 'права', 'прав') + (r.custom ? ' · изменено' : '') + '</small>' + (canStaff ? '<i class="chev"></i></button>' : '</div>');
+    }).join('');
+    var openHtml = '';
+    if (canStaff && brOpen) {
+      var rd = data.roles.filter(function(r){ return r.id === brOpen; })[0];
+      var inRole = listAll.filter(function(s){ return s.role === brOpen; });
+      openHtml = '<div class="br-open" id="brOpen"><h4>' + esc(rd.title) + ': сотрудники роли</h4>' +
+        '<details><summary class="muted" style="cursor:pointer">Что может роль</summary><ul style="margin:8px 0 0;padding-left:18px;line-height:1.5">' + rd.perms.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details>' +
+        (inRole.length ? inRole.map(function(s){
+          return '<div class="br-row row' + (s.id === brSel.id ? ' sel' : '') + '"><div class="nm">' + avatar(s) + '<div><b>' + esc(s.name) + '</b><div class="meta"><span class="br-pin">PIN: ' + (s.pin ? '\u2022\u2022\u2022\u2022' : 'не задан') + '</span>' + (s.active ? '' : '<span class="muted" style="font-size:12px">отключён</span>') + '</div></div></div>' +
+            '<div class="btns"><button class="btn ghost sm" type="button" data-pick="' + esc(s.id) + '">' + (s.id === brSel.id ? 'Выбран' : 'Выбрать') + '</button></div></div>';
+        }).join('') : '<p class="muted" style="margin:0 0 10px">В этой роли пока никого нет.</p>') +
+        '<button class="btn ghost sm" type="button" data-add="' + brOpen + '">+ Новый сотрудник в роли</button></div>';
+    }
+    var html = '<h3>Роли и PIN-коды филиала</h3><p class="muted">Откройте роль и выберите сотрудника или заполните форму ниже. PIN из 4 цифр нужен, чтобы переключиться на сотрудника кнопкой «Сменить сотрудника».' +
+      (canStaff ? ' Права ролей меняются в разделе «Сотрудники».' : '') + '</p><div class="br-roles">' + rolesHtml + '</div>' + openHtml;
+    if (canStaff) {
+      var f = selRec || {name:'', phone:'', role: brSel.role || brOpen || 'operator', pin: ''};
+      html += '<form class="br-form" id="fStaffB" novalidate>' +
+        '<div class="field wide2"><label for="sbName">ФИО сотрудника</label><input class="input" id="sbName" maxlength="80" placeholder="Фамилия Имя Отчество" value="' + esc(f.name) + '"></div>' +
+        '<div class="field"><label for="sbPhone">Телефон (логин)</label><input class="input" id="sbPhone" type="tel" inputmode="tel" placeholder="+7 (900) 000-00-00" value="' + (f.phone ? esc(A.formatPhone(f.phone)) : '') + '"></div>' +
+        '<div class="field"><label for="sbPin">PIN-код</label><input class="input pin-in" id="sbPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0 0 0 0"></div>' +
+        '<div class="field"><label for="sbRole">Роль</label><select class="select" id="sbRole">' + Object.keys(C.ROLES).map(function(k){ return opt(k, roleTitle(k), f.role); }).join('') + '</select></div>' +
+        '<div class="wide2" style="grid-column:1 / -1"><div class="br-acts"><button class="btn" type="submit">' + (selRec ? 'Сохранить изменения' : 'Сохранить сотрудника') + '</button><button class="btn ghost" type="button" id="sbReset">Сбросить</button></div>' +
+        '<div class="hint-t">' + (selRec ? 'Пустое поле PIN оставляет прежний PIN. ' : 'Пустое поле PIN — выдаётся случайный, он покажется один раз. ') + '</div><div class="error" id="eSb" role="alert"></div></div></form>' +
+        '<p class="muted" style="margin:14px 0 0;font-size:14px">Сотрудников в филиале: ' + listAll.length + '.</p><div class="br-list">' +
+        listAll.map(function(s){
+          var np = brNewPins[s.id];
+          return '<div class="br-row' + (s.id === brSel.id ? ' sel' : '') + '"><div class="nm">' + avatar(s) + '<div><b>' + esc(s.name) + '</b><div class="meta"><span class="role ' + s.role + '">' + esc(roleTitle(s.role)) + '</span>' +
+            (np ? '<span class="br-pin">Новый PIN: <b class="pin-new" style="font-size:14px">' + esc(np) + '</b></span>' : '<span class="br-pin">PIN: ' + (s.pin ? '\u2022\u2022\u2022\u2022' : 'не задан') + '</span>') +
+            (s.active ? '' : '<span class="muted" style="font-size:12px">отключён</span>') + '</div></div></div>' +
+            '<div class="btns"><button class="btn ghost sm" type="button" data-edit="' + esc(s.id) + '">Изменить</button><button class="btn ghost sm del" type="button" data-del="' + esc(s.id) + '">Удалить</button></div></div>';
+        }).join('') + '</div>' +
+        '<h4 class="br-pol-h">Правила блокировки PIN</h4>' +
+        '<form class="br-pol" id="fPol" novalidate><div class="field"><label for="polTries">Попыток до блокировки</label><input class="input" id="polTries" type="number" min="3" max="10" value="' + b.pin.tries + '"></div>' +
+        '<div class="field"><label for="polLock">Блокировка, секунд</label><input class="input" id="polLock" type="number" min="30" max="3600" step="10" value="' + b.pin.lockSec + '"></div>' +
+        '<button class="btn ghost" type="submit">Сохранить правила</button></form><div class="error" id="ePol"></div>';
+    }
+    sec.innerHTML = html;
+    if (!canStaff) return;
 
-    // PIN-коды
-    var sec = $('brPinSec');
-    sec.hidden = !canStaff;
-    if (!canStaff){ sec.innerHTML = ''; return; }
-    var list = C.staffList().filter(function(s){ return s.active; });
-    sec.innerHTML = '<h3>PIN-коды филиала</h3><p class="muted">PIN из 4 цифр нужен, чтобы переключиться на сотрудника кнопкой «Сменить сотрудника». Новый PIN показывается один раз.</p>' +
-      '<form class="br-pol" id="fPol" novalidate><div class="field"><label for="polTries">Попыток до блокировки</label><input class="input" id="polTries" type="number" min="3" max="10" value="' + data.branch.pin.tries + '"></div>' +
-      '<div class="field"><label for="polLock">Блокировка, секунд</label><input class="input" id="polLock" type="number" min="30" max="3600" step="10" value="' + data.branch.pin.lockSec + '"></div>' +
-      '<button class="btn ghost" type="submit">Сохранить правила</button></form><div class="error" id="ePol"></div>' +
-      '<table class="br-pins"><thead><tr><th>Сотрудник</th><th>Роль</th><th>PIN-код</th><th></th></tr></thead><tbody>' +
-      list.map(function(s){
-        var has = C.staffHasPin(s.id), np = brNewPins[s.id];
-        return '<tr data-id="' + esc(s.id) + '"><td><div class="nm">' + avatar(s) + '<b>' + esc(s.name) + '</b></div></td>' +
-          '<td><span class="role ' + s.role + '" style="margin:0">' + esc(C.ROLES[s.role].title) + '</span></td>' +
-          '<td>' + (np ? 'Новый: <b class="pin-new">' + esc(np) + '</b>' : '<span class="pin-dot' + (has ? '' : ' no') + '">' + (has ? 'Задан' : 'Не задан') + '</span>') + '</td>' +
-          '<td><button class="btn ghost sm" type="button" data-pin="' + esc(s.id) + '">' + (has ? 'Сбросить PIN' : 'Создать PIN') + '</button></td></tr>';
-      }).join('') + '</tbody></table>' +
-      '<p class="pin-warn">Запишите новый PIN сразу и передайте сотруднику: после обновления раздела он больше не показывается.</p>';
+    sec.querySelectorAll('button[data-role]').forEach(function(btn){
+      btn.addEventListener('click', function(){ brOpen = brOpen === btn.dataset.role ? '' : btn.dataset.role; renderBranch(); });
+    });
+    var focusForm = function(){ var el = $('sbName'); if (el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus({preventScroll:true}); } };
+    sec.querySelectorAll('button[data-pick], button[data-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){ brSel = {id: btn.dataset.pick || btn.dataset.edit, role:''}; renderBranch(); focusForm(); });
+    });
+    sec.querySelectorAll('button[data-add]').forEach(function(btn){
+      btn.addEventListener('click', function(){ brSel = {id:'', role: btn.dataset.add}; renderBranch(); focusForm(); });
+    });
+    sec.querySelectorAll('button[data-del]').forEach(function(btn){
+      btn.addEventListener('click', guard(function(){
+        var s = listAll.filter(function(x){ return x.id === btn.dataset.del; })[0];
+        if (!confirm('Удалить сотрудника ' + s.name + '? Это нельзя отменить.')) return;
+        C.staffRemove(s.id); if (brSel.id === s.id) brSel = {id:'', role:''}; delete brNewPins[s.id];
+        toast('Сотрудник удалён', 'ok'); renderBranch();
+      }));
+    });
+    $('sbPhone').addEventListener('input', function(e){ e.target.value = A.formatPhone(e.target.value); });
+    $('sbPin').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); });
+    $('sbReset').addEventListener('click', function(){ brSel = {id:'', role:''}; renderBranch(); });
+    $('fStaffB').addEventListener('submit', function(e){
+      e.preventDefault();
+      try {
+        var saved = C.staffSave({id: brSel.id || undefined, name: $('sbName').value, phone: $('sbPhone').value, role: $('sbRole').value, pin: $('sbPin').value});
+        if (saved.newPin) brNewPins[saved.id] = saved.newPin;
+        toast(brSel.id ? 'Сотрудник сохранён' : 'Сотрудник добавлен', 'ok');
+        if (saved.newPin) toast('Запишите PIN: ' + saved.newPin, 'ok');
+        brSel = {id:'', role:''}; renderBranch();
+      } catch(err){ $('eSb').textContent = err.message; }
+    });
     $('fPol').addEventListener('submit', function(e){
       e.preventDefault();
       try { C.pinPolicySave({tries: $('polTries').value, lockSec: $('polLock').value}); toast('Правила PIN сохранены', 'ok'); $('ePol').textContent = ''; }
       catch(err){ $('ePol').textContent = err.message; }
-    });
-    sec.querySelectorAll('button[data-pin]').forEach(function(btn){
-      btn.addEventListener('click', guard(function(){
-        var s = list.filter(function(x){ return x.id === btn.dataset.pin; })[0];
-        if (C.staffHasPin(s.id) && !confirm('Сбросить PIN-код сотрудника ' + s.name + '? Старый PIN перестанет работать.')) return;
-        brNewPins[s.id] = C.staffResetPin(s.id);
-        toast('PIN создан. Запишите его, повторно он не показывается', 'ok');
-        renderBranch();
-      }));
     });
   }
   function plural(n, a, b, c){ var m = n % 100, k = n % 10; return (m > 10 && m < 15) ? c : k === 1 ? a : (k >= 2 && k <= 4) ? b : c; }
