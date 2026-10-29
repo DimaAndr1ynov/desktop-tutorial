@@ -116,6 +116,67 @@
     { id: 'lost', title: 'Отказ' }
   ];
 
+  /* ---------- PIN-коды сотрудников ---------- */
+  // PIN хранится только хэшем SHA-256. Это макет: хэш четырёх цифр подбирается мгновенно, а данные лежат в браузере.
+  var PIN_SALT = 'downshot-pin-v1|';
+  var PIN_TRIES = 5, PIN_LOCK_MS = 60000;
+  // Тестовые учётки (и демо-сотрудники) получают заранее заданные PIN; сами коды хранятся не здесь, а в отдельном документе у владельца.
+  var PIN_DEFAULTS = {
+    '+79000000001': '7d70fc92316da9ab5a4082b16efccd681680ccc2b3b2113b90db68fd21f64cb0',
+    '+79000000002': '6902f8f6c6815246d13bcd79e1a91df8d7458a60fc1bde4a4d338b64b7f7df28',
+    '+79000000003': '18a60d60137067db5b6c7aa26270d138104f8e14cb66a22271b75b3b6b1d2afe',
+    '+79000000004': '7b18ef2199c8e321eb742d57cad28cbe19f81eba2a4469afd71e96e8c88fc0f9',
+    '+79000000005': '5a0417109a42c0a29af2b48870c07008861c3866afdffe078e114e10784ed070',
+    '+79002000001': '00556fcd91e3f879c0ac7ec91e172c8d39dfb2885d5c51d2735661a01870efa4',
+    '+79002000002': '404ae449bd2b8f352ab1ff69f4562110e7c288fdc685bc8c47478ebac794005c',
+    '+79002000003': '747088e680eb0aaf3c07ff0c96d3e2110130f00d07af87c268fe2f6a22743ca9',
+    '+79002000004': '9ed9536afb65f0720d79c7a63106e18640a9b14a3982321ee72b3259a4673ab4',
+    '+79002000005': '04412f3c5df1257aaaea520d6421df2b0350c5f4c61143bfd838e381ac3a160b',
+    '+79002000006': '7cdd6b9e47b3a6c4f873332712f564df372f2c7f3bd754abd39627b158e3900b',
+    '+79002000007': 'a45744f499f1716d2a5fe41714b55533af0f5830006d3d3a9eadc91585226b33',
+    '+79002000008': 'baa752d40ae7e09c3b3de0ef3533d59d1a601964c6cf5136501a0e1c1ba6bf12'
+  };
+  function sha256(ascii) {
+    var maxWord = Math.pow(2, 32), result = '', words = [], i, j, bitLen = ascii.length * 8;
+    var hash = sha256.h = sha256.h || [], k = sha256.k = sha256.k || [], primeCounter = k.length, isComposite = {};
+    for (var candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+        hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+    ascii += '\x80';
+    while (ascii.length % 64 - 56) ascii += '\x00';
+    for (i = 0; i < ascii.length; i++) { j = ascii.charCodeAt(i); words[i >> 2] |= j << ((3 - i) % 4) * 8; }
+    words[words.length] = (bitLen / maxWord) | 0;
+    words[words.length] = bitLen;
+    for (j = 0; j < words.length;) {
+      var w = words.slice(j, j += 16), old = hash;
+      hash = hash.slice(0, 8);
+      for (i = 0; i < 64; i++) {
+        var w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
+        var t1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ (~e & hash[6])) + k[i] +
+          (w[i] = i < 16 ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+        var t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+        hash = [(t1 + t2) | 0].concat(hash);
+        hash[4] = (hash[4] + t1) | 0;
+      }
+      for (i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
+    }
+    for (i = 0; i < 8; i++) for (j = 3; j + 1; j--) { var b = (hash[i] >> (j * 8)) & 255; result += (b < 16 ? 0 : '') + b.toString(16); }
+    return result;
+    function rr(v, n) { return (v >>> n) | (v << (32 - n)); }
+  }
+  function pinHash(pin) { return sha256(PIN_SALT + String(pin)); }
+  function randomPin() {
+    for (;;) {
+      var p = '', arr = window.crypto && crypto.getRandomValues ? crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
+      p = String(arr % 10000); while (p.length < 4) p = '0' + p;
+      if (!/^(\d)\1+$/.test(p) && ['1234', '4321', '0123', '1212'].indexOf(p) === -1) return p;
+    }
+  }
+
   /* ---------- хранилище ---------- */
   function load() {
     var data = null;
@@ -205,6 +266,15 @@
       data.tariffs = JSON.parse(JSON.stringify(TARIFF_DEFAULTS));
       data.tariffSettings = JSON.parse(JSON.stringify(TARIFF_SETTINGS_DEFAULT));
       data.v = 7;
+      changed = true;
+    }
+    if (!(data.v >= 8)) {
+      // v8: PIN-коды для смены сотрудника. Тестовым учёткам — заранее заданные, остальным админ задаёт PIN в карточке.
+      for (var sid in data.staff) {
+        var sx = data.staff[sid];
+        if (!sx.pin && PIN_DEFAULTS[sx.phone]) sx.pin = PIN_DEFAULTS[sx.phone];
+      }
+      data.v = 8;
       changed = true;
     }
     if (!data.projects) { data.projects = []; changed = true; }
@@ -475,13 +545,22 @@
       d.session = null; save(d);
     },
 
-    // Мгновенная смена сотрудника — только в тестовом режиме (без кода). В боевом входе нужен код/PIN сотрудника.
-    switchTo: function (staffId) {
-      if (MODE !== 'test') fail('Для смены сотрудника нужен его код');
+    // Смена сотрудника по его PIN-коду (4 цифры). После 5 неверных попыток — блокировка на минуту.
+    switchTo: function (staffId, pin) {
       var cur = me(); if (!cur) fail('Войдите в систему');
-      var d = load(), target = d.staff[staffId];
+      var d = load(), target = d.staff[staffId], now0 = Date.now();
       if (!target || !target.active) fail('Сотрудник недоступен');
       if (target.id === cur.id) fail('Вы уже в этой учётной записи');
+      if (!target.pin) fail('У сотрудника не задан PIN-код. Администратор может задать его в карточке сотрудника');
+      var pf = target.pinFail || { n: 0, until: 0 };
+      if (pf.until > now0) fail('Слишком много попыток. Повторите через ' + Math.ceil((pf.until - now0) / 1000) + ' с');
+      if (pinHash(String(pin || '').trim()) !== target.pin) {
+        pf.n = (pf.n || 0) + 1;
+        if (pf.n >= PIN_TRIES) { pf.n = 0; pf.until = now0 + PIN_LOCK_MS; }
+        target.pinFail = pf; save(d);
+        fail(pf.until > now0 ? 'Неверный PIN-код. Вход заблокирован на 1 минуту' : 'Неверный PIN-код. Осталось попыток: ' + (PIN_TRIES - pf.n));
+      }
+      target.pinFail = null;
       var prev = d.staff[cur.id];
       if (prev && ['work', 'shoot', 'break', 'lunch'].indexOf(prev.status) !== -1) pushStatus(prev, 'off'); // смена прежнего закрыта
       d.session = { id: target.id, at: Date.now() };
@@ -496,7 +575,7 @@
       return Object.keys(d.staff).map(function (k) { return d.staff[k]; })
         .filter(function (s) { return s.active && s.id !== cur.id; })
         .sort(function (a, b) { return a.createdAt - b.createdAt; })
-        .map(function (s) { return { id: s.id, name: s.name, role: s.role, phone: s.phone, status: s.status || 'off' }; });
+        .map(function (s) { return { id: s.id, name: s.name, role: s.role, phone: s.phone, status: s.status || 'off', hasPin: !!s.pin }; });
     },
 
     /* ---------- персонал (только админ) ---------- */
@@ -515,7 +594,8 @@
       var cur = me();
       if (st.id && st.id === cur.id && (st.role !== 'admin' || st.active === false)) fail('Нельзя снять права администратора с самого себя');
       var rec = st.id && d.staff[st.id];
-      if (!rec) { rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec; }
+      var newPin = '';
+      if (!rec) { rec = { id: uid('ST-', 4), createdAt: Date.now(), active: true }; d.staff[rec.id] = rec; newPin = randomPin(); rec.pin = pinHash(newPin); }
       rec.name = st.name.trim(); rec.phone = phone; rec.role = st.role;
       if (typeof st.active === 'boolean') rec.active = st.active;
       if (st.salary !== undefined && st.salary !== '') {
@@ -526,8 +606,20 @@
       if (!rec.log) { rec.status = 'off'; rec.log = [{ s: 'off', t: Date.now() }]; }
       if (st.status && st.status !== rec.status) pushStatus(rec, st.status);
       save(d);
-      return rec;
+      var out = JSON.parse(JSON.stringify(rec)); delete out.pin;
+      if (newPin) out.newPin = newPin; // показывается один раз при создании
+      return out;
     },
+    staffResetPin: function (id) {
+      need('staff.edit');
+      var d = load(), s = d.staff[id];
+      if (!s) fail('Сотрудник не найден');
+      var pin = randomPin();
+      s.pin = pinHash(pin); s.pinFail = null;
+      save(d);
+      return pin; // единственный раз, когда PIN виден
+    },
+    staffHasPin: function (id) { var s = load().staff[id]; return !!(s && s.pin); },
     staffRemove: function (id) {
       need('staff.edit');
       if (id === me().id) fail('Нельзя удалить самого себя');
@@ -1068,7 +1160,7 @@
         else if (stat === 'shoot') log.push({ s: 'work', t: start }, { s: 'shoot', t: Math.max(start + 60000, now - HOUR) });
         else if (stat === 'vacation' || stat === 'sick') log.push({ s: stat, t: d0 - (stat === 'vacation' ? 5 : 3) * DAY + 1 });
         else if (!log.length || log[log.length - 1].s !== 'off') log.push({ s: 'off', t: d0 - HOUR });
-        d.staff[id] = { id: id, phone: phone, name: x[0], role: x[1], active: true, createdAt: now - (30 + i) * DAY, salary: x[2], status: stat, log: log, demo: true };
+        d.staff[id] = { id: id, phone: phone, name: x[0], role: x[1], active: true, createdAt: now - (30 + i) * DAY, salary: x[2], status: stat, log: log, demo: true, pin: PIN_DEFAULTS[phone] };
         n++;
       });
       if (!d.projects.some(function (p) { return p.demo; })) seedDemoProjects(d, now);
