@@ -14,7 +14,7 @@
 
   // Все права, которые можно выдать роли (порядок = порядок строк в таблице прав).
   var PERMS = [
-    { id: 'dashboard.view', title: 'Дашборд: клиенты, заявки, выручка' },
+    { id: 'dashboard.view', title: 'Аналитика: клиенты, заявки, выручка' },
     { id: 'clients.view', title: 'Видеть клиентов' },
     { id: 'clients.edit', title: 'Создавать и редактировать клиентов' },
     { id: 'clients.delete', title: 'Удалять клиентов' },
@@ -22,6 +22,8 @@
     { id: 'payments.edit', title: 'Вносить оплаты' },
     { id: 'projects.work', title: 'Проекты: работать над своими (начать, пауза, завершить, передать)' },
     { id: 'projects.manage', title: 'Проекты: создавать, назначать, видеть все' },
+    { id: 'ops.view', title: 'Операции: видеть аренды, флот, ремонты, склад, передачи, услуги' },
+    { id: 'ops.edit', title: 'Операции: добавлять и менять записи' },
     { id: 'staff.edit', title: 'Сотрудники и права ролей' },
     { id: 'dialogs', title: 'Читать переписку' },
     { id: 'messages.send', title: 'Писать клиенту (SMS)' },
@@ -32,9 +34,9 @@
   // Права по умолчанию; администратор может поменять их в разделе «Сотрудники» (хранятся в data.rolePerms).
   var ROLES = {
     admin: { title: 'Администратор', locked: true, can: PERMS.map(function (p) { return p.id; }) },
-    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
-    operator: { title: 'Оператор', can: ['projects.work', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
-    editor: { title: 'Монтажёр', can: ['projects.work', 'dialogs', 'files.upload', 'files.download'] },
+    manager: { title: 'Менеджер', can: ['dashboard.view', 'clients.view', 'clients.edit', 'payments.view', 'payments.edit', 'projects.manage', 'ops.view', 'ops.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    operator: { title: 'Оператор', can: ['projects.work', 'ops.view', 'ops.edit', 'dialogs', 'messages.send', 'files.upload', 'files.download'] },
+    editor: { title: 'Монтажёр', can: ['projects.work', 'ops.view', 'dialogs', 'files.upload', 'files.download'] },
     cashier: { title: 'Кассир', can: ['clients.view', 'payments.view', 'payments.edit', 'dialogs', 'messages.send', 'files.download'] }
   };
   var ROLE_ORDER = ['admin', 'manager', 'operator', 'editor', 'cashier'];
@@ -52,6 +54,15 @@
     { id: 'transfer', title: 'Перевод' }
   ];
   var DAY = 86400000;
+
+  // Операции: разделы меню «Операции» и статусы флота / ремонта.
+  var OPS_KINDS = ['rentals', 'fleet', 'repairs', 'stock', 'transfers', 'services'];
+  var OPS_PREFIX = { rentals: 'R', fleet: 'E', repairs: 'X', stock: 'S', transfers: 'T', services: 'V' };
+  var FLEET_STATUSES = ['free', 'rented', 'staff', 'repair', 'retired'];
+  var REPAIR_FLOW = ['accepted', 'work', 'ready', 'closed'];
+  function opsData(d) { d.ops = d.ops || {}; OPS_KINDS.forEach(function (k) { d.ops[k] = d.ops[k] || []; }); return d.ops; }
+  function fleetItem(ops, id) { return ops.fleet.filter(function (f) { return f.id === id; })[0]; }
+  function setFleet(ops, id, status, holder) { var f = fleetItem(ops, id); if (f) { f.status = status; f.holder = holder || ''; } }
 
   // Статусы смены. Часы считаются только в тех, где counted: true (обед и «не на смене» не идут в отработанное время).
   var STAFF_STATUSES = [
@@ -148,6 +159,18 @@
       });
       data.projects = data.projects || [];
       data.v = 5;
+      changed = true;
+    }
+    if (!(data.v >= 6)) {
+      // v6: операции. Новые права по умолчанию дописываем в уже изменённые администратором списки ролей.
+      ['ops.view', 'ops.edit'].forEach(function (p) {
+        for (var role in (data.rolePerms || {})) {
+          if (!ROLES[role] || ROLES[role].locked) continue;
+          if (ROLES[role].can.indexOf(p) !== -1 && data.rolePerms[role].indexOf(p) === -1) data.rolePerms[role].push(p);
+        }
+      });
+      opsData(data);
+      data.v = 6;
       changed = true;
     }
     if (!data.projects) { data.projects = []; changed = true; }
@@ -1099,6 +1122,184 @@
       need('projects.manage');
       var d = load();
       d.projects = d.projects.filter(function (p) { return !p.demo; });
+      save(d);
+    },
+
+    /* ---------- операции: аренды, флот, ремонты, склад, передачи, услуги мастера ---------- */
+    OPS_KINDS: OPS_KINDS,
+    opsRefs: function () {
+      need('ops.view');
+      var d = load(), ops = opsData(d), db = clientsDb();
+      return {
+        fleet: ops.fleet.map(function (f) { return { id: f.id, name: f.name, status: f.status }; }),
+        staff: Object.keys(d.staff).map(function (k) { return d.staff[k]; }).filter(function (s) { return s.active; }).map(function (s) { return { id: s.id, name: s.name, role: s.role }; }),
+        clients: Object.keys(db.users).map(function (k) { return db.users[k]; }).map(function (u) { return { id: u.id, name: u.name || u.phone }; })
+      };
+    },
+    opsList: function (kind) {
+      need('ops.view');
+      if (OPS_KINDS.indexOf(kind) < 0) fail('Неизвестный раздел');
+      return JSON.parse(JSON.stringify(opsData(load())[kind]));
+    },
+    opsSave: function (kind, x) {
+      need('ops.edit');
+      if (OPS_KINDS.indexOf(kind) < 0) fail('Неизвестный раздел');
+      var d = load(), ops = opsData(d), list = ops[kind], cur = null, now = Date.now();
+      var txt = function (v, n) { return String(v || '').trim().slice(0, n || 120); };
+      var num = function (v) { v = Math.round(Number(v)); return v > 0 ? v : 0; };
+      if (x.id) { cur = list.filter(function (r) { return r.id === x.id; })[0]; if (!cur) fail('Запись не найдена'); }
+      var r = cur || { id: uid(OPS_PREFIX[kind], 6), createdAt: now, by: me().id };
+      var item = !cur && x.fleetId ? fleetItem(ops, x.fleetId) : null;
+      if (kind === 'fleet') {
+        if (!txt(x.name)) fail('Укажите название техники');
+        r.name = txt(x.name); r.category = txt(x.category, 40) || 'Другое'; r.serial = txt(x.serial, 60); r.note = txt(x.note, 300);
+        if (!cur) { r.status = 'free'; r.holder = ''; }
+        else if (x.status && FLEET_STATUSES.indexOf(x.status) >= 0 && (r.status === 'free' || r.status === 'retired')) r.status = x.status;
+      } else if (kind === 'rentals') {
+        if (!cur) {
+          if (!item) fail('Выберите технику');
+          if (item.status !== 'free') fail('Эта техника сейчас занята');
+          r.fleetId = item.id; r.status = 'active';
+        }
+        r.clientId = txt(x.clientId, 20); r.clientName = txt(x.clientName, 80);
+        if (!r.clientId && !r.clientName) fail('Укажите клиента');
+        r.start = Number(x.start) || now; r.end = Number(x.end) || r.start + DAY;
+        if (r.end < r.start) fail('Дата возврата раньше выдачи');
+        r.price = num(x.price); r.note = txt(x.note, 300);
+        if (!cur) { item.status = 'rented'; item.holder = r.clientName || r.clientId; }
+      } else if (kind === 'repairs') {
+        if (!txt(x.problem)) fail('Опишите неисправность');
+        if (!cur) {
+          if (!item) fail('Выберите технику');
+          if (item.status === 'repair') fail('Эта техника уже в ремонте');
+          r.fleetId = item.id; r.status = 'accepted'; item.status = 'repair'; item.holder = '';
+        }
+        r.problem = txt(x.problem, 300); r.cost = num(x.cost); r.master = txt(x.master, 80); r.note = txt(x.note, 300);
+      } else if (kind === 'stock') {
+        if (!txt(x.name)) fail('Укажите название');
+        r.name = txt(x.name); r.category = txt(x.category, 40); r.unit = txt(x.unit, 12) || 'шт'; r.qty = num(x.qty); r.min = num(x.min); r.note = txt(x.note, 300);
+      } else if (kind === 'transfers') {
+        if (!cur) {
+          if (!item) fail('Выберите технику');
+          if (item.status !== 'free') fail('Эта техника сейчас занята');
+          if (!x.toId || !d.staff[x.toId]) fail('Выберите сотрудника');
+          r.fleetId = item.id; r.toId = x.toId; r.status = 'out'; r.at = Number(x.at) || now;
+          item.status = 'staff'; item.holder = x.toId;
+        }
+        r.note = txt(x.note, 300);
+      } else if (kind === 'services') {
+        if (!txt(x.title)) fail('Укажите услугу');
+        if (!cur) r.status = 'planned';
+        r.title = txt(x.title); r.fleetId = txt(x.fleetId, 20); r.executorId = txt(x.executorId, 20); r.price = num(x.price); r.date = Number(x.date) || now; r.note = txt(x.note, 300);
+      }
+      if (!cur) list.push(r);
+      save(d);
+      return JSON.parse(JSON.stringify(r));
+    },
+    // Действия: rentals/transfers — return; repairs — next (принят → в работе → готов → выдан); stock — add/sub (payload.n); services — done.
+    opsAction: function (kind, id, action, payload) {
+      need('ops.edit');
+      var d = load(), ops = opsData(d), r = (ops[kind] || []).filter(function (q) { return q.id === id; })[0], now = Date.now();
+      if (!r) fail('Запись не найдена');
+      if ((kind === 'rentals' || kind === 'transfers') && action === 'return') {
+        if (r.status !== 'active' && r.status !== 'out') fail('Уже возвращено');
+        r.status = 'returned'; r.returnedAt = now; setFleet(ops, r.fleetId, 'free', '');
+      } else if (kind === 'repairs' && action === 'next') {
+        var i = REPAIR_FLOW.indexOf(r.status);
+        if (i < 0 || i === REPAIR_FLOW.length - 1) fail('Ремонт уже закрыт');
+        r.status = REPAIR_FLOW[i + 1];
+        if (r.status === 'closed') { r.closedAt = now; setFleet(ops, r.fleetId, 'free', ''); }
+      } else if (kind === 'stock' && (action === 'add' || action === 'sub')) {
+        var n = Math.max(1, Math.round(Number(payload && payload.n) || 1));
+        r.qty = Math.max(0, r.qty + (action === 'add' ? n : -n));
+      } else if (kind === 'services' && action === 'done') {
+        if (r.status === 'done') fail('Уже выполнено');
+        r.status = 'done'; r.doneAt = now;
+      } else fail('Неизвестное действие');
+      save(d);
+      return JSON.parse(JSON.stringify(r));
+    },
+    opsDelete: function (kind, id) {
+      need('ops.edit');
+      var d = load(), ops = opsData(d), r = (ops[kind] || []).filter(function (q) { return q.id === id; })[0];
+      if (!r) return;
+      if (kind === 'fleet' && (r.status === 'rented' || r.status === 'staff' || r.status === 'repair')) fail('Техника сейчас занята: сначала верните её или закройте ремонт');
+      if (r.fleetId && ((kind === 'rentals' && r.status === 'active') || (kind === 'transfers' && r.status === 'out') || (kind === 'repairs' && r.status !== 'closed'))) setFleet(ops, r.fleetId, 'free', '');
+      ops[kind] = ops[kind].filter(function (q) { return q.id !== id; });
+      if (kind === 'fleet') ['rentals', 'repairs', 'transfers'].forEach(function (k) { ops[k] = ops[k].filter(function (q) { return q.fleetId !== id; }); });
+      save(d);
+    },
+
+    /* ---------- демо-данные операций (только тестовый режим) ---------- */
+    hasDemoOps: function () {
+      var ops = opsData(load());
+      return OPS_KINDS.some(function (k) { return ops[k].some(function (r) { return r.demo; }); });
+    },
+    seedDemoOps: function () {
+      need('ops.edit');
+      var d = load(), ops = opsData(d), now = Date.now();
+      if (api.hasDemoOps()) return 0;
+      var ago = function (days, hour) { var t = new Date(now - days * DAY); t.setHours(hour == null ? 11 : hour, 0, 0, 0); return t.getTime(); };
+      var staff = Object.keys(d.staff).filter(function (k) { return d.staff[k].active; });
+      var st = function (i) { return staff[i % staff.length]; };
+      var mk = function (kind, o) { o.id = uid(OPS_PREFIX[kind], 6); o.createdAt = now; o.by = me().id; o.demo = true; ops[kind].push(o); return o; };
+      var gear = [
+        ['Sony A7 IV', 'Камера', 'SN-A7M4-0412'], ['Sony FX3', 'Камера', 'SN-FX3-1180'], ['DJI Mavic 3 Pro', 'Дрон', 'SN-M3P-2207'],
+        ['DJI Mini 4 Pro', 'Дрон', 'SN-M4P-0931'], ['GoPro Hero 13 №1', 'Экшн-камера', 'SN-GP13-0101'], ['GoPro Hero 13 №2', 'Экшн-камера', 'SN-GP13-0102'],
+        ['DJI Osmo Pocket 3', 'Экшн-камера', 'SN-OP3-0554'], ['DJI RS 4 Pro', 'Стабилизатор', 'SN-RS4-0720']
+      ].map(function (g) { return mk('fleet', { name: g[0], category: g[1], serial: g[2], status: 'free', holder: '', note: '' }); });
+      var F = function (i) { return gear[i]; };
+      var users = Object.keys(clientsDb().users).map(function (k) { return clientsDb().users[k]; });
+      var cn = function (i, fallback) { var u = users[i]; return u ? { clientId: u.id, clientName: u.name || u.phone } : { clientId: '', clientName: fallback }; };
+      // аренды: две идут (одна просрочена), две закрыты
+      var rent = function (i, who, startD, endD, price, status) {
+        var o = mk('rentals', Object.assign({ fleetId: F(i).id, start: ago(startD), end: ago(endD), price: price, status: status, note: '' }, who));
+        if (status === 'returned') o.returnedAt = o.end;
+        else { F(i).status = 'rented'; F(i).holder = who.clientName; }
+      };
+      rent(4, cn(0, 'Алексей Смирнов'), 3, 1, 1200, 'active');
+      rent(6, cn(1, 'Марина Ковалёва'), 1, -2, 900, 'active');
+      rent(5, cn(2, 'Игорь Белов'), 14, 12, 800, 'returned');
+      rent(3, cn(3, 'Ольга Назарова'), 25, 22, 2500, 'returned');
+      // передачи сотрудникам
+      var tr = function (i, to, daysAgo, status, note) {
+        var o = mk('transfers', { fleetId: F(i).id, toId: st(to), at: ago(daysAgo), status: status, note: note });
+        if (status === 'returned') o.returnedAt = ago(daysAgo - 1);
+        else { F(i).status = 'staff'; F(i).holder = st(to); }
+      };
+      tr(0, 1, 2, 'out', 'Съёмка на трассе, утро');
+      tr(2, 0, 1, 'out', 'Пролёты над склоном');
+      tr(7, 2, 9, 'returned', 'Монтажёру для тестов стабилизации');
+      // ремонты
+      var rep = function (i, problem, status, cost, master, daysAgo) {
+        var o = mk('repairs', { fleetId: F(i).id, problem: problem, status: status, cost: cost, master: master, note: '' });
+        o.createdAt = ago(daysAgo);
+        if (status === 'closed') o.closedAt = ago(daysAgo - 4);
+        else { F(i).status = 'repair'; F(i).holder = ''; }
+      };
+      rep(1, 'Не включается после мороза', 'work', 6500, 'Сервис «Фокус»', 3);
+      rep(7, 'Люфт мотора по оси Pan', 'accepted', 0, '', 1);
+      rep(5, 'Треснуло защитное стекло', 'closed', 1200, 'Сервис «Фокус»', 16);
+      // склад
+      [['Карты SD 128 ГБ V60', 'Носители', 14, 5, 'шт'], ['Аккумуляторы NP-FZ100', 'Питание', 3, 4, 'шт'], ['ND-фильтры 67 мм', 'Оптика', 6, 2, 'шт'],
+       ['Пропеллеры для Mavic 3', 'Дроны', 2, 4, 'пара'], ['Крепления на шлем', 'Аксессуары', 9, 3, 'шт'], ['Салфетки для оптики', 'Уход', 40, 10, 'шт']]
+        .forEach(function (s) { mk('stock', { name: s[0], category: s[1], qty: s[2], min: s[3], unit: s[4], note: '' }); });
+      // услуги мастера
+      var sv = function (title, i, price, daysAgo, status, who) {
+        var o = mk('services', { title: title, fleetId: i == null ? '' : F(i).id, executorId: st(who), price: price, date: ago(daysAgo), status: status, note: '' });
+        if (status === 'done') o.doneAt = o.date;
+      };
+      sv('Чистка матрицы', 0, 1500, -2, 'planned', 2);
+      sv('Калибровка стабилизатора', 7, 1800, 5, 'done', 2);
+      sv('Замена защитных стёкол', 4, 900, 12, 'done', 1);
+      sv('Обновление прошивок парка', null, 2000, -5, 'planned', 2);
+      save(d);
+      return gear.length;
+    },
+    clearDemoOps: function () {
+      need('ops.edit');
+      var d = load(), ops = opsData(d);
+      OPS_KINDS.forEach(function (k) { ops[k] = ops[k].filter(function (r) { return !r.demo; }); });
       save(d);
     },
 
