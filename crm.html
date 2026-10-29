@@ -778,8 +778,8 @@
         <button class="btn" type="button" id="bNewClient">+ Новый клиент</button>
       </div>
       <div class="toolbar" style="margin:16px 0">
-        <input class="input" id="qClients" type="search" placeholder="Поиск: имя, телефон, ID">
-        <select class="select" id="fStatus"><option value="">Все статусы</option></select>
+        <input class="input" id="qClients" aria-label="Поиск клиентов" type="search" placeholder="Поиск: имя, телефон, ID">
+        <select class="select" id="fStatus" aria-label="Фильтр по статусу"><option value="">Все статусы</option></select>
       </div>
       <div id="clientsTable"></div>
     </section>
@@ -809,7 +809,7 @@
       <div class="demo-bar" id="opsDemoBar" hidden></div>
       <div class="proj-bar">
         <div class="seg" id="opsSeg" role="group" aria-label="Фильтр"></div>
-        <input class="input" id="qOps" type="search" placeholder="Поиск" style="max-width:260px">
+        <input class="input" id="qOps" aria-label="Поиск по разделу" type="search" placeholder="Поиск" style="max-width:260px">
       </div>
       <div id="opsList"></div>
     </section>
@@ -818,7 +818,7 @@
     <section id="vDialogs" hidden>
       <div class="dlg" id="dlg">
         <div class="dlg-list">
-          <input class="input" id="qDialogs" type="search" placeholder="Поиск клиента">
+          <input class="input" id="qDialogs" aria-label="Поиск клиента" type="search" placeholder="Поиск клиента">
           <div class="dlg-items" id="dlgItems"></div>
           <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Ширина списка клиентов" tabindex="0" title="Потяните, чтобы изменить ширину. Двойной клик — вернуть как было"></div>
         </div>
@@ -2135,13 +2135,20 @@
   }
 
   /* ================= модальное окно ================= */
+  var modalOpener = null;
   function openModal(html){
+    if (!$('modal').innerHTML) modalOpener = document.activeElement;
     $('modal').innerHTML = '<div class="overlay" id="ov"><div class="drawer" role="dialog" aria-modal="true">' + html + '</div></div>';
     $('ov').addEventListener('click', function(e){ if (e.target.id === 'ov' || e.target.hasAttribute('data-close')) closeModal(); });
     var first = $('modal').querySelector('input:not([disabled]), select, textarea');
     if (first) setTimeout(function(){ first.focus(); }, 40);
   }
-  function closeModal(){ $('modal').innerHTML = ''; }
+  function closeModal(){
+    var had = !!$('modal').innerHTML;
+    $('modal').innerHTML = '';
+    if (had && modalOpener && document.contains(modalOpener) && modalOpener.focus) modalOpener.focus();
+    modalOpener = null;
+  }
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
 
   // Ответ клиента из кабинета в другой вкладке — обновляем экран

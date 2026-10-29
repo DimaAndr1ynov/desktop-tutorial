@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>DOWNSHOT — фото/видео оператор</title>
+<meta name="description" content="Фото и видеосъёмка на горнолыжном склоне: ваш спуск, заезд или целый съёмочный день. Тарифы от 1000 ₽, готовые кадры и ролики.">
+<meta name="theme-color" content="#07090d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -584,6 +586,9 @@
     #cursor-glow{display:none;}
   }
   /* ---------- доступность и тач (общие правила) ---------- */
+  .skip-link{position:fixed;left:12px;top:-60px;z-index:1000;background:var(--blue);color:#fff;padding:10px 16px;border-radius:8px;font-weight:600;text-decoration:none;transition:top .15s;}
+  .skip-link:focus{top:12px;}
+  .nav-links a{padding:13px 6px;margin:-13px -6px;}
   :where(a, button, summary, [role="button"], [tabindex]):focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:6px;}
   a, button, summary, [role="button"], input, select, textarea, label{touch-action:manipulation;}
   button:not(:disabled), [role="button"], select{cursor:pointer;}
@@ -598,8 +603,10 @@
 
 <div class="glow-bg"></div>
 
+<a class="skip-link" href="#main">К содержимому</a>
+
 <header>
-  <nav>
+  <nav aria-label="Основное меню">
     <div class="logo">
       <svg class="iris" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5"/><circle cx="10" cy="10" r="3"/><line x1="10" y1="0.5" x2="10" y2="4.5"/><line x1="10" y1="15.5" x2="10" y2="19.5"/><line x1="0.5" y1="10" x2="4.5" y2="10"/><line x1="15.5" y1="10" x2="19.5" y2="10"/></svg>
       DOWNSHOT
@@ -619,7 +626,7 @@
   </nav>
 </header>
 
-<main>
+<main id="main">
 
   <!-- HERO -->
   <section class="hero">
