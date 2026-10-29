@@ -1,4 +1,4 @@
-var CACHE='habits-v1';
+var CACHE='habits-v2';
 var FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 
 self.addEventListener('install',function(e){
@@ -18,6 +18,14 @@ self.addEventListener('fetch',function(e){
 });
 self.addEventListener('notificationclick',function(e){
   e.notification.close();
+  var hid=e.notification.data&&e.notification.data.habitId;
+  if(e.action==='done'&&hid){
+    e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(list){
+      if(list.length){list.forEach(function(c){c.postMessage({type:'done',habitId:hid})});return}
+      return self.clients.openWindow('./index.html#done='+hid);
+    }));
+    return;
+  }
   e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(list){
     for(var i=0;i<list.length;i++){if('focus' in list[i])return list[i].focus()}
     return self.clients.openWindow('./index.html');
