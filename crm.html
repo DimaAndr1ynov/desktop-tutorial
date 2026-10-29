@@ -667,6 +667,17 @@
   .br-open h4{margin:0 0 10px;font-size:15px;}
   .br-open details{margin:0 0 10px;font-size:13px;}
   .br-open .row{margin-bottom:6px;}
+  .overlay.center{justify-content:center;align-items:center;padding:16px;}
+  .overlay.center .drawer{width:min(580px,100%);height:auto;max-height:calc(100dvh - 32px);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 60px rgba(16,24,40,.28);animation:popIn .22s cubic-bezier(.2,.7,.2,1);}
+  @keyframes popIn{from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){ .overlay.center .drawer{animation:none;} }
+  @media (max-width:560px){ .bs-info{grid-template-columns:minmax(0,1fr);} }
+  .bs-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:16px;}
+  .bs-i{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);}
+  .bs-i span{display:block;font-size:12px;color:var(--muted);margin-bottom:2px;}
+  .bs-i b{font-size:14px;font-weight:600;}
+  .bs-pinrow{display:flex;gap:8px;}
+  .bs-pinrow .pin-in{width:100px;flex:none;}
   .br-flat{margin-top:6px;}
   .br-flat .fl-row{display:grid;grid-template-columns:minmax(0,1fr) 200px 120px 160px;gap:0 10px;}
   .br-flat .field{margin-bottom:12px;}
@@ -2460,7 +2471,7 @@
 
     var focusForm = function(){ var el = $('sbName'); if (el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus({preventScroll:true}); } };
     sec.querySelectorAll('button[data-edit]').forEach(function(btn){
-      btn.addEventListener('click', function(){ brSel = {id: btn.dataset.edit, role:''}; renderBranch(); focusForm(); });
+      btn.addEventListener('click', function(){ openBranchStaff(btn.dataset.edit); });
     });
     sec.querySelectorAll('button[data-del]').forEach(function(btn){
       btn.addEventListener('click', guard(function(){
@@ -2506,6 +2517,51 @@
       try { C.pinPolicySave({tries: $('polTries').value, lockSec: $('polLock').value}); toast('Правила PIN сохранены', 'ok'); $('ePol').textContent = ''; }
       catch(err){ $('ePol').textContent = err.message; }
     });
+  }
+  // Окно «Редактирование сотрудника» из раздела «Настройки филиала»
+  function openBranchStaff(id){
+    var data = C.branchGet(), s = C.staffList().filter(function(x){ return x.id === id; })[0];
+    if (!s) return;
+    var self = id === C.me().id, rd = data.roles.filter(function(r){ return r.id === s.role; })[0];
+    var left = s.pinFail && s.pinFail.until > Date.now() ? Math.ceil((s.pinFail.until - Date.now()) / 1000) : 0;
+    var info = function(k, v){ return '<div class="bs-i"><span>' + k + '</span><b>' + v + '</b></div>'; };
+    openModal(
+      '<div class="drawer-head"><div style="min-width:0"><h3>Редактирование сотрудника</h3>' +
+        '<div class="muted" style="margin-top:4px;font-size:13px;line-height:1.4">Филиал «' + esc(data.branch.name) + '» · ' + esc(s.name) + '</div>' +
+        '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="role ' + s.role + '" style="margin:0">' + esc(C.ROLES[s.role].title) + '</span><span class="spill ss-' + (s.status || 'off') + '">' + esc(ssTitle(s.status || 'off')) + '</span>' + (s.active ? '' : '<span class="muted" style="font-size:12px">доступ отключён</span>') + '</div></div>' +
+        '<button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
+      '<div class="drawer-body"><div class="bs-info">' +
+        info('Права роли', rd ? rd.perms.length + ' ' + plural(rd.perms.length, 'право', 'права', 'прав') : '—') +
+        info('В филиале с', new Date(s.createdAt).toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'})) +
+        info('PIN-код', s.pin ? (left ? 'задан, заблокирован ещё ' + left + ' с' : 'задан') : 'не задан') +
+        info('Оклад', s.salary ? rub(s.salary) + ' в месяц' : '—') +
+      '</div>' +
+      '<form id="fBS" novalidate>' +
+        '<div class="field"><label for="bsName">ФИО сотрудника</label><input class="input" id="bsName" maxlength="80" value="' + esc(s.name) + '"></div>' +
+        '<div class="field"><label for="bsPhone">Телефон (логин для входа)</label><input class="input" id="bsPhone" type="tel" inputmode="tel" value="' + esc(A.formatPhone(s.phone)) + '" placeholder="+7 (900) 000-00-00"></div>' +
+        '<div class="grid2"><div class="field"><label for="bsPin">Новый PIN-код</label><div class="bs-pinrow"><input class="input pin-in" id="bsPin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0 0 0 0"><button class="btn ghost sm" type="button" id="bsRnd">Случайный</button></div><div class="hint-t">Оставьте пустым, чтобы PIN не менялся. Это 4 цифры для кнопки «Сменить сотрудника».</div></div>' +
+        '<div class="field"><label for="bsRole">Роль</label><select class="select" id="bsRole"' + (self ? ' disabled' : '') + '>' + Object.keys(C.ROLES).map(function(k){ return opt(k, C.ROLES[k].title, s.role); }).join('') + '</select></div></div>' +
+        '<label class="check"><input type="checkbox" id="bsActive"' + (s.active ? ' checked' : '') + (self ? ' disabled' : '') + '> Доступ в CRM разрешён</label>' +
+        (self ? '<p class="muted" style="margin:10px 0 0;font-size:13px">Свою роль и доступ изменить нельзя, чтобы не остаться без администратора.</p>' : '') +
+        '<div class="error" id="eBS" role="alert"></div></form></div>' +
+      '<div class="drawer-foot">' + (self ? '' : '<button class="btn danger" type="button" id="bsDel">Удалить</button>') +
+        '<div class="right"><button class="btn ghost" type="button" data-close>Отмена</button><button class="btn" type="submit" form="fBS">Сохранить изменения</button></div></div>');
+    $('ov').classList.add('center');
+    $('bsPhone').addEventListener('input', function(e){ e.target.value = A.formatPhone(e.target.value); });
+    $('bsPin').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/D/g, '').slice(0, 4); });
+    $('bsRnd').addEventListener('click', function(){ var a = new Uint32Array(1); crypto.getRandomValues(a); $('bsPin').value = String(a[0] % 10000).padStart(4, '0'); });
+    $('fBS').addEventListener('submit', function(e){
+      e.preventDefault();
+      try {
+        var pin = $('bsPin').value;
+        C.staffSave({id: s.id, name: $('bsName').value, phone: $('bsPhone').value, role: $('bsRole').value, active: $('bsActive').checked, pin: pin});
+        closeModal(); toast('Сотрудник сохранён' + (pin ? ', новый PIN: ' + pin : ''), 'ok'); startApp();
+      } catch(err){ $('eBS').textContent = err.message; }
+    });
+    if ($('bsDel')) $('bsDel').addEventListener('click', guard(function(){
+      if (!confirm('Удалить сотрудника ' + s.name + '? Это нельзя отменить.')) return;
+      C.staffRemove(s.id); delete brNewPins[s.id]; closeModal(); toast('Сотрудник удалён', 'ok'); startApp();
+    }));
   }
   function plural(n, a, b, c){ var m = n % 100, k = n % 10; return (m > 10 && m < 15) ? c : k === 1 ? a : (k >= 2 && k <= 4) ? b : c; }
   $('fBranch').addEventListener('submit', function(e){
