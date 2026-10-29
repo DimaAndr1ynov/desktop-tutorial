@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Журнал привычек</title>
+<style>
+:root{
+  --bg:#f4f6f3;--surface:#fff;--text:#1f2a24;--muted:#6b7a71;--line:#dfe6e0;
+  --accent:#2f9e63;--accent-soft:#e3f4eb;--warn:#e8a33d;--danger:#d9534f;--today:#fff6dd;--weekend:#f6f8f6;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141a17;--surface:#1c2420;--text:#e6eee9;--muted:#8fa196;--line:#2c3832;--accent:#3fbf7b;--accent-soft:#1f3a2c;--today:#3a3320;--weekend:#202a25}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1{margin:0;font-size:clamp(20px,3vw,28px)}
+.month{display:flex;align-items:center;gap:8px}
+.month b{min-width:150px;text-align:center;font-size:18px;text-transform:capitalize}
+button{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.ghost{border:0;background:none;padding:2px 6px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.card small{color:var(--muted);display:block}
+.card strong{font-size:26px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th,td{padding:0;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;font-size:12px;height:34px}
+th{background:var(--bg);color:var(--muted);font-weight:600;position:sticky;top:0;z-index:2}
+th.dn{min-width:30px}
+th small{display:block;font-weight:400;font-size:10px}
+.we{background:var(--weekend)}
+th.we{background:var(--bg)}
+.td{background:var(--today)!important;color:var(--text)}
+td.name,th.name{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;min-width:190px;padding:0 10px;font-size:14px;border-right:2px solid var(--line)}
+th.name{background:var(--bg);z-index:3}
+td.name{display:flex;align-items:center;gap:6px;height:34px;border-bottom:0}
+tr td.name{border-bottom:1px solid var(--line)}
+td.name span.t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text}
+td.name .acts{opacity:0}
+tr:hover .acts{opacity:1}
+@media (hover:none){td.name .acts{opacity:1}}
+td.cell{cursor:pointer;user-select:none}
+td.cell:hover{background:var(--accent-soft)}
+td.cell.on{background:var(--accent);color:#fff}
+td.cell.future{opacity:.45}
+td.stat{min-width:56px;font-size:13px;padding:0 6px}
+.bar{position:relative;min-width:110px;padding:0 8px}
+.bar i{display:block;height:8px;border-radius:4px;background:var(--accent-soft);overflow:hidden}
+.bar i b{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .25s}
+.bar span{font-size:11px;color:var(--muted)}
+tfoot td{font-weight:600;background:var(--bg);font-size:11px}
+.chart{display:flex;align-items:flex-end;height:28px;gap:1px;padding:0 1px}
+.chart i{flex:1;background:var(--accent);opacity:.8;border-radius:2px 2px 0 0;min-height:1px}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.hint{color:var(--muted);font-size:13px;margin-top:12px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);padding:20px;max-width:360px;width:calc(100% - 32px)}
+dialog::backdrop{background:#0006}
+dialog label{display:block;margin:10px 0 4px;color:var(--muted);font-size:13px}
+dialog input{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)}
+dialog menu{display:flex;gap:8px;justify-content:flex-end;padding:0;margin:16px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📓 Журнал привычек</h1>
+    <div class="month">
+      <button id="prev" aria-label="Предыдущий месяц">←</button>
+      <b id="monthName"></b>
+      <button id="next" aria-label="Следующий месяц">→</button>
+      <button id="todayBtn">Сегодня</button>
+    </div>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="sheet"><table id="tbl"></table></div>
+
+  <div class="tools">
+    <button class="primary" id="add">+ Привычка</button>
+    <button id="export">Экспорт</button>
+    <button id="import">Импорт</button>
+    <input type="file" id="file" accept="application/json" hidden>
+  </div>
+  <p class="hint">Клик по клетке — отметить день. Клик по названию — переименовать. «Цель» — сколько дней в месяце вы хотите выполнить привычку. Данные хранятся в этом браузере.</p>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h3 style="margin:0" id="dlgTitle">Новая привычка</h3>
+    <label for="fName">Название</label>
+    <input id="fName" required maxlength="40" placeholder="Например: Зарядка">
+    <label for="fGoal">Цель, дней в месяц</label>
+    <input id="fGoal" type="number" min="1" max="31" value="20">
+    <menu>
+      <button type="button" id="cancel">Отмена</button>
+      <button class="primary" value="ok">Сохранить</button>
+    </menu>
+  </form>
+</dialog>
+
+<script>
+(function(){
+  var KEY='habit_journal_v1';
+  var MONTHS=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+  var WD=['вс','пн','вт','ср','чт','пт','сб'];
+  var state=load();
+  var cur=new Date();cur=new Date(cur.getFullYear(),cur.getMonth(),1);
+  var editId=null;
+
+  function load(){
+    try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.habits)return s}catch(e){}
+    return {habits:[
+      {id:'h1',name:'Зарядка',goal:20},{id:'h2',name:'Вода 2 л',goal:25},
+      {id:'h3',name:'Чтение 20 мин',goal:20},{id:'h4',name:'Прогулка',goal:15},{id:'h5',name:'Сон до 23:00',goal:20}
+    ],checks:{}};
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  function p2(n){return n<10?'0'+n:''+n}
+  function ds(y,m,d){return y+'-'+p2(m+1)+'-'+p2(d)}
+  function isOn(id,s){return !!state.checks[id+'|'+s]}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  function monthCount(h,y,m,n){var c=0;for(var d=1;d<=n;d++)if(isOn(h.id,ds(y,m,d)))c++;return c}
+  function streak(h){ // текущая серия до сегодня (или до вчера, если сегодня ещё не отмечено)
+    var t=new Date(),d=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+    if(!isOn(h.id,ds(d.getFullYear(),d.getMonth(),d.getDate())))d.setDate(d.getDate()-1);
+    var c=0;
+    while(isOn(h.id,ds(d.getFullYear(),d.getMonth(),d.getDate()))){c++;d.setDate(d.getDate()-1)}
+    return c;
+  }
+  function best(h,y,m,n){var b=0,c=0;for(var d=1;d<=n;d++){if(isOn(h.id,ds(y,m,d))){c++;if(c>b)b=c}else c=0}return b}
+
+  function render(){
+    var y=cur.getFullYear(),m=cur.getMonth(),n=new Date(y,m+1,0).getDate();
+    var now=new Date(),isThis=now.getFullYear()===y&&now.getMonth()===m,tod=isThis?now.getDate():(cur<now?n+1:0);
+    document.getElementById('monthName').textContent=MONTHS[m]+' '+y;
+    var H=state.habits;
+
+    var tbl=document.getElementById('tbl');
+    if(!H.length){tbl.innerHTML='<tbody><tr><td class="empty" style="height:auto;border:0">Привычек пока нет. Нажмите «+ Привычка».</td></tr></tbody>';document.getElementById('cards').innerHTML='';return}
+
+    var hd='<thead><tr><th class="name">Привычка</th>';
+    for(var d=1;d<=n;d++){var w=new Date(y,m,d).getDay();hd+='<th class="dn'+(w==0||w==6?' we':'')+(d===tod&&isThis?' td':'')+'">'+d+'<small>'+WD[w]+'</small></th>'}
+    hd+='<th>Цель</th><th>Сделано</th><th>Прогресс</th><th title="Текущая серия подряд">🔥 Серия</th><th title="Лучшая серия в месяце">Рекорд</th></tr></thead>';
+
+    var bd='<tbody>',tot=0,goalSum=0,perDay=[];
+    for(d=1;d<=n;d++)perDay.push(0);
+    H.forEach(function(h){
+      var c=monthCount(h,y,m,n),pct=Math.min(100,Math.round(c/h.goal*100));
+      tot+=c;goalSum+=h.goal;
+      bd+='<tr data-id="'+h.id+'"><td class="name"><span class="t" data-act="ren" title="Переименовать">'+esc(h.name)+'</span><span class="acts"><button class="ghost" data-act="edit" title="Изменить">✎</button><button class="ghost" data-act="del" title="Удалить">✕</button></span></td>';
+      for(var d2=1;d2<=n;d2++){
+        var s=ds(y,m,d2),on=isOn(h.id,s),w2=new Date(y,m,d2).getDay();
+        if(on)perDay[d2-1]++;
+        bd+='<td class="cell'+(on?' on':'')+(w2==0||w2==6?' we':'')+(d2===tod&&isThis?' td':'')+(d2>tod&&isThis?' future':'')+'" data-d="'+d2+'">'+(on?'✓':'')+'</td>';
+      }
+      bd+='<td class="stat">'+h.goal+'</td><td class="stat"><b>'+c+'</b></td>'+
+        '<td class="bar"><i><b style="width:'+pct+'%"></b></i><span>'+pct+'%</span></td>'+
+        '<td class="stat">'+streak(h)+'</td><td class="stat">'+best(h,y,m,n)+'</td></tr>';
+    });
+    bd+='</tbody>';
+
+    var max=Math.max(1,H.length),ft='<tfoot><tr><td class="name" style="font-size:12px;color:var(--muted)">Выполнено за день</td>';
+    perDay.forEach(function(v){ft+='<td>'+v+'</td>'});
+    ft+='<td colspan="5"></td></tr><tr><td class="name" style="background:var(--bg);border-bottom:0"></td><td colspan="'+n+'" style="padding:4px 0 0"><div class="chart">';
+    perDay.forEach(function(v,i){ft+='<i title="'+(i+1)+': '+v+'/'+H.length+'" style="height:'+Math.max(2,v/max*100)+'%"></i>'});
+    ft+='</div></td><td colspan="5"></td></tr></tfoot>';
+    tbl.innerHTML=hd+'</tr>'+bd+ft;
+
+    // карточки
+    var passed=isThis?now.getDate():(cur<now?n:0);
+    var possible=H.length*passed,rate=possible?Math.round(tot/possible*100):0;
+    var bestH=H.slice().sort(function(a,b){return monthCount(b,y,m,n)-monthCount(a,y,m,n)})[0];
+    var maxStreak=Math.max.apply(null,H.map(streak));
+    document.getElementById('cards').innerHTML=
+      card('Всего отметок',tot)+
+      card('Выполнение за прошедшие дни',rate+'%')+
+      card('Выполнение целей',(goalSum?Math.round(Math.min(tot,goalSum)/goalSum*100):0)+'%')+
+      card('Лучшая привычка',bestH&&monthCount(bestH,y,m,n)?esc(bestH.name):'—')+
+      card('Самая длинная серия сейчас','🔥 '+maxStreak);
+  }
+  function card(t,v){return '<div class="card"><small>'+t+'</small><strong>'+v+'</strong></div>'}
+
+  // события
+  document.getElementById('tbl').addEventListener('click',function(e){
+    var tr=e.target.closest('tr[data-id]');if(!tr)return;
+    var id=tr.dataset.id,h=state.habits.filter(function(x){return x.id===id})[0];
+    var cell=e.target.closest('td.cell');
+    if(cell){
+      var k=id+'|'+ds(cur.getFullYear(),cur.getMonth(),+cell.dataset.d);
+      if(state.checks[k])delete state.checks[k];else state.checks[k]=1;
+      save();render();return;
+    }
+    var a=e.target.closest('[data-act]');if(!a)return;
+    if(a.dataset.act==='del'){
+      if(confirm('Удалить привычку «'+h.name+'» вместе с отметками?')){
+        state.habits=state.habits.filter(function(x){return x.id!==id});
+        Object.keys(state.checks).forEach(function(k){if(k.indexOf(id+'|')===0)delete state.checks[k]});
+        save();render();
+      }
+    }else openDlg(h);
+  });
+  document.getElementById('prev').onclick=function(){cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()};
+  document.getElementById('next').onclick=function(){cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()};
+  document.getElementById('todayBtn').onclick=function(){var t=new Date();cur=new Date(t.getFullYear(),t.getMonth(),1);render()};
+
+  var dlg=document.getElementById('dlg');
+  function openDlg(h){
+    editId=h?h.id:null;
+    document.getElementById('dlgTitle').textContent=h?'Изменить привычку':'Новая привычка';
+    document.getElementById('fName').value=h?h.name:'';
+    document.getElementById('fGoal').value=h?h.goal:20;
+    dlg.showModal();document.getElementById('fName').focus();
+  }
+  document.getElementById('add').onclick=function(){openDlg(null)};
+  document.getElementById('cancel').onclick=function(){dlg.close()};
+  document.getElementById('form').addEventListener('submit',function(){
+    var name=document.getElementById('fName').value.trim();
+    var goal=Math.max(1,Math.min(31,parseInt(document.getElementById('fGoal').value,10)||20));
+    if(!name)return;
+    if(editId){var h=state.habits.filter(function(x){return x.id===editId})[0];h.name=name;h.goal=goal}
+    else state.habits.push({id:'h'+Date.now().toString(36),name:name,goal:goal});
+    save();render();
+  });
+
+  // экспорт / импорт
+  document.getElementById('export').onclick=function(){
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));
+    a.download='habits-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  };
+  document.getElementById('import').onclick=function(){document.getElementById('file').click()};
+  document.getElementById('file').onchange=function(e){
+    var f=e.target.files[0];if(!f)return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{var s=JSON.parse(r.result);if(!s.habits||!s.checks)throw 0;
+        if(confirm('Заменить текущие данные импортированными?')){state=s;save();render()}
+      }catch(x){alert('Не удалось прочитать файл')}
+    };
+    r.readAsText(f);e.target.value='';
+  };
+  window.addEventListener('storage',function(e){if(e.key===KEY){state=load();render()}});
+  render();
+})();
+</script>
+</body>
+</html>
