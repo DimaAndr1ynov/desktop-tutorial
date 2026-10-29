@@ -122,6 +122,16 @@
     .me-acts .btn{width:100%;justify-content:center;padding:9px 12px;}
   }
   .sw-list{display:flex;flex-direction:column;gap:8px;}
+  .pin-who{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .pin-who .avatar{width:48px;height:48px;font-size:16px;}
+  .pin-who b{display:block;font-weight:600;font-size:17px;}
+  .pin-who .role{margin:4px 0 0;}
+  .pin-input{width:100%;text-align:center;font-size:30px;font-weight:700;letter-spacing:.55em;padding:12px 8px 12px calc(8px + .55em);font-family:inherit;}
+  .pin-input.bad{border-color:var(--danger,#d92d20);animation:pinShake .35s;}
+  @keyframes pinShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(3px);}}
+  .pin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-3);font-size:14px;}
+  .pin-new{display:inline-block;font-size:20px;letter-spacing:.2em;font-weight:700;color:var(--text);padding:0 4px;}
+  .pin-warn{margin:10px 0 0;font-size:13px;color:var(--warn,#b45309);line-height:1.45;}
   .sw-item{display:flex;align-items:center;gap:12px;padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color .15s,transform .15s,box-shadow .15s;}
   .sw-item:hover{border-color:rgba(47,127,255,.55);transform:translateY(-1px);box-shadow:0 8px 20px -14px rgba(20,30,60,.4);}
   .sw-pick{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:none;color:var(--text);padding:6px 0;min-height:44px;}
@@ -1000,12 +1010,40 @@
   }
   $('bLogout').addEventListener('click', function(){ toLogin(''); });
   // «Сменить сотрудника»: текущая смена закрывается, дальше код выбранного сотрудника
+  // Шаг «введите PIN-код»: без правильного PIN переключиться на другого сотрудника нельзя
+  function askPin(s){
+    if (!s) return;
+    openModal(
+      '<div class="drawer-head"><h3>Введите PIN-код</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
+      '<div class="drawer-body"><div class="pin-who">' + avatar(s) + '<div><b>' + esc(s.name) + '</b><span class="role ' + s.role + '">' + esc(C.ROLES[s.role].title) + '</span></div></div>' +
+      (s.hasPin
+        ? '<label class="muted" for="pinIn" style="display:block;margin-bottom:8px">PIN-код сотрудника, 4 цифры</label>' +
+          '<input class="input pin-input" id="pinIn" type="password" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]*" aria-describedby="ePin">' +
+          '<div class="error" id="ePin" role="alert"></div>'
+        : '<p class="pin-warn">У этого сотрудника ещё не задан PIN-код. Администратор может создать его в разделе «Сотрудники», в карточке сотрудника.</p>') +
+      '<div style="margin-top:16px"><button class="btn ghost sm" type="button" id="pinBack">← К списку сотрудников</button></div></div>'
+    );
+    $('pinBack').addEventListener('click', function(){ $('bSwitch').click(); });
+    var inp = $('pinIn'); if (!inp) return;
+    inp.addEventListener('input', function(){
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 4);
+      inp.classList.remove('bad'); $('ePin').textContent = '';
+      if (inp.value.length < 4) return;
+      try {
+        var st = C.switchTo(s.id, inp.value);
+        closeModal(); startApp(); toast('Вы вошли как ' + st.name, 'ok');
+      } catch(err){
+        $('ePin').textContent = err.message; inp.classList.add('bad'); inp.value = '';
+        setTimeout(function(){ inp.classList.remove('bad'); inp.focus(); }, 380);
+      }
+    });
+  }
   $('meAv').addEventListener('click', function(e){ var b = e.target.closest('[data-card]'); if (b) guard(function(){ openStaff(b.dataset.card); })(); });
   $('bSwitch').addEventListener('click', guard(function(){
     var list = C.staffChoices();
     openModal(
       '<div class="drawer-head"><h3>Сменить сотрудника</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
-      '<div class="drawer-body"><p class="muted" style="margin:0 0 12px;line-height:1.5">Ваша смена закроется, дальше работает выбранный сотрудник.' + (C.MODE === 'test' ? ' В тестовом режиме код не нужен.' : ' Понадобится его код.') + (C.can('staff.edit') ? ' Наведите на аватар, чтобы открыть карточку.' : '') + '</p>' +
+      '<div class="drawer-body"><p class="muted" style="margin:0 0 12px;line-height:1.5">Ваша смена закроется, дальше работает выбранный сотрудник.' + ' Понадобится его PIN-код.' + (C.can('staff.edit') ? ' Наведите на аватар, чтобы открыть карточку.' : '') + '</p>' +
       (list.length ? '<div class="sw-list">' + list.map(function(s){
         return '<div class="sw-item">' + (C.can('staff.edit') ? '<button type="button" class="av-card" data-card="' + esc(s.id) + '" title="Открыть карточку" aria-label="Открыть карточку: ' + esc(s.name) + '">' + avatar(s) + '</button>' : avatar(s)) +
           '<button type="button" class="sw-pick" data-sw="' + esc(s.id) + '" data-phone="' + esc(s.phone) + '"><span><b>' + esc(s.name) + '</b><small>' + esc(A.formatPhone(s.phone)) + '</small></span><span class="role ' + s.role + '">' + esc(C.ROLES[s.role].title) + '</span></button></div>';
@@ -1016,11 +1054,7 @@
       var cardBtn = e.target.closest('[data-card]');
       if (cardBtn){ guard(function(){ openStaff(cardBtn.dataset.card); })(); return; }
       var b = e.target.closest('[data-sw]'); if (!b) return;
-      if (C.MODE === 'test') guard(function(){
-        var st = C.switchTo(b.dataset.sw);
-        closeModal(); startApp(); toast('Вы вошли как ' + st.name, 'ok');
-      })();
-      else toLogin(b.dataset.phone);
+      askPin(list.filter(function(x){ return x.id === b.dataset.sw; })[0]);
     });
   }));
 
@@ -1968,6 +2002,7 @@
         '<div class="hint-t" id="tRate"></div>' +
         (id ? '<div class="field" style="margin-top:14px"><label for="tStatus">Статус сейчас</label>' + statusSelect('', s.status, ' id="tStatus"') + '<div class="hint-t">Вход в CRM начинает смену, выход заканчивает. Обед, «не на смене», отпуск и больничный в отработанное время не входят.</div></div>' : '') +
         '<label class="check" style="margin-top:14px"><input type="checkbox" id="tActive"' + (s.active ? ' checked' : '') + (self ? ' disabled' : '') + '> Доступ в CRM разрешён</label>' +
+        (id ? '<div class="field" style="margin-top:14px"><label>PIN-код для смены сотрудника</label><div class="pin-row"><span id="pinState">' + (C.staffHasPin(s.id) ? 'Задан' : 'Не задан') + '</span><button class="btn ghost sm" type="button" id="bPinReset">' + (C.staffHasPin(s.id) ? 'Сбросить PIN' : 'Создать PIN') + '</button></div><div class="hint-t">Новый PIN показывается один раз: запишите его и передайте сотруднику.</div></div>' : '') +
         (self ? '<p class="muted" style="margin-top:10px;font-size:13px">Свою роль и доступ изменить нельзя, чтобы не остаться без администратора.</p>' : '') +
         '<div class="error" id="eStaff"></div>' +
       '</form>';
@@ -1993,12 +2028,25 @@
     $('fStaff').addEventListener('submit', function(e){
       e.preventDefault();
       try {
-        C.staffSave({ id: s.id, name: $('tName').value, phone: $('tPhone').value, role: $('tRole').value, active: $('tActive').checked,
+        var saved = C.staffSave({ id: s.id, name: $('tName').value, phone: $('tPhone').value, role: $('tRole').value, active: $('tActive').checked,
           salary: $('tSalary').value, status: $('tStatus') ? $('tStatus').value : undefined });
         toast(id ? 'Сохранено' : 'Сотрудник добавлен', 'ok');
         closeModal(); startApp();
+        if (saved.newPin) openModal(
+          '<div class="drawer-head"><h3>PIN-код сотрудника</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
+          '<div class="drawer-body"><p style="margin:0 0 10px">Сотрудник <b>' + esc(saved.name) + '</b> добавлен. Его PIN-код для смены сотрудника:</p>' +
+          '<div style="text-align:center;margin:14px 0"><span class="pin-new" style="font-size:34px">' + esc(saved.newPin) + '</span></div>' +
+          '<p class="pin-warn">Запишите PIN и передайте сотруднику. Повторно он не показывается; при потере его можно сбросить в карточке сотрудника.</p></div>' +
+          '<div class="drawer-foot"><div class="right"><button class="btn" type="button" data-close>Готово</button></div></div>');
       } catch(err){ $('eStaff').textContent = err.message; }
     });
+    if ($('bPinReset')) $('bPinReset').addEventListener('click', guard(function(){
+      if (C.staffHasPin(s.id) && !confirm('Сбросить PIN-код сотрудника ' + s.name + '? Старый PIN перестанет работать.')) return;
+      var pin = C.staffResetPin(s.id);
+      $('pinState').innerHTML = 'Новый PIN: <b class="pin-new">' + esc(pin) + '</b>';
+      $('bPinReset').textContent = 'Сбросить PIN';
+      toast('PIN создан. Запишите его, повторно он не показывается', 'ok');
+    }));
     if ($('bDelStaff')) $('bDelStaff').addEventListener('click', guard(function(){
       if (!confirm('Удалить сотрудника ' + s.name + '?')) return;
       C.staffRemove(s.id); toast('Сотрудник удалён', 'ok'); closeModal(); render();
