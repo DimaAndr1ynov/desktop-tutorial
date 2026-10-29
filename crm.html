@@ -122,12 +122,18 @@
     .me-acts .btn{width:100%;justify-content:center;padding:9px 12px;}
   }
   .sw-list{display:flex;flex-direction:column;gap:8px;}
-  .sw-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);transition:border-color .15s,transform .15s,box-shadow .15s;}
+  .sw-item{display:flex;align-items:center;gap:12px;padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color .15s,transform .15s,box-shadow .15s;}
   .sw-item:hover{border-color:rgba(47,127,255,.55);transform:translateY(-1px);box-shadow:0 8px 20px -14px rgba(20,30,60,.4);}
-  .sw-item .avatar{width:40px;height:40px;font-size:14px;}
+  .sw-pick{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:none;color:var(--text);padding:6px 0;min-height:44px;}
+  .sw-pick > span:first-child{min-width:0;flex:1;}
   .sw-item b{display:block;font-weight:600;}
   .sw-item small{color:var(--muted);font-size:12.5px;}
-  .sw-item .role{margin:0 0 0 auto;}
+  .sw-item .role{margin:0;flex:none;}
+  .av-card{position:relative;flex:none;border:0;background:none;padding:0;border-radius:50%;line-height:0;}
+  .av-card .avatar{width:42px;height:42px;font-size:14px;transition:filter .2s;}
+  .av-card::after{content:"";position:absolute;inset:0;border-radius:50%;background:rgba(20,30,60,.58) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3' width='11' height='10' rx='1.6'/%3E%3Ccircle cx='6' cy='7' r='1.3'/%3E%3Cpath d='M4 11c.4-1 1.1-1.5 2-1.5s1.6.5 2 1.5M9.5 6.5h2.5M9.5 9h2.5'/%3E%3C/svg%3E") center/20px no-repeat;opacity:0;transition:opacity .18s;}
+  .av-card:hover::after, .av-card:focus-visible::after{opacity:1;}
+  .me-id .av-card .avatar{width:42px;height:42px;}
   .login-links{display:flex;justify-content:space-between;gap:12px;margin-top:16px;font-size:14px;}
   .login-links a{color:var(--muted);transition:color .15s;}
   .login-links a:hover{color:var(--blue-light);}
@@ -994,18 +1000,27 @@
   }
   $('bLogout').addEventListener('click', function(){ toLogin(''); });
   // «Сменить сотрудника»: текущая смена закрывается, дальше код выбранного сотрудника
+  $('meAv').addEventListener('click', function(e){ var b = e.target.closest('[data-card]'); if (b) guard(function(){ openStaff(b.dataset.card); })(); });
   $('bSwitch').addEventListener('click', guard(function(){
     var list = C.staffChoices();
     openModal(
       '<div class="drawer-head"><h3>Сменить сотрудника</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
-      '<div class="drawer-body"><p class="muted" style="margin:0 0 12px;line-height:1.5">Ваша смена закроется. Выберите, кто работает дальше, и введите его код.</p>' +
+      '<div class="drawer-body"><p class="muted" style="margin:0 0 12px;line-height:1.5">Ваша смена закроется, дальше работает выбранный сотрудник.' + (C.MODE === 'test' ? ' В тестовом режиме код не нужен.' : ' Понадобится его код.') + (C.can('staff.edit') ? ' Наведите на аватар, чтобы открыть карточку.' : '') + '</p>' +
       (list.length ? '<div class="sw-list">' + list.map(function(s){
-        return '<button type="button" class="sw-item" data-sw="' + esc(s.phone) + '">' + avatar(s) + '<span><b>' + esc(s.name) + '</b><small>' + esc(A.formatPhone(s.phone)) + '</small></span><span class="role ' + s.role + '">' + esc(C.ROLES[s.role].title) + '</span></button>';
+        return '<div class="sw-item">' + (C.can('staff.edit') ? '<button type="button" class="av-card" data-card="' + esc(s.id) + '" title="Открыть карточку" aria-label="Открыть карточку: ' + esc(s.name) + '">' + avatar(s) + '</button>' : avatar(s)) +
+          '<button type="button" class="sw-pick" data-sw="' + esc(s.id) + '" data-phone="' + esc(s.phone) + '"><span><b>' + esc(s.name) + '</b><small>' + esc(A.formatPhone(s.phone)) + '</small></span><span class="role ' + s.role + '">' + esc(C.ROLES[s.role].title) + '</span></button></div>';
       }).join('') + '</div>' : '<div class="empty-box">Других сотрудников пока нет. Добавьте их в разделе «Сотрудники».</div>') +
       '</div>'
     );
     $('modal').querySelector('.sw-list') && $('modal').querySelector('.sw-list').addEventListener('click', function(e){
-      var b = e.target.closest('[data-sw]'); if (b) toLogin(b.dataset.sw);
+      var cardBtn = e.target.closest('[data-card]');
+      if (cardBtn){ guard(function(){ openStaff(cardBtn.dataset.card); })(); return; }
+      var b = e.target.closest('[data-sw]'); if (!b) return;
+      if (C.MODE === 'test') guard(function(){
+        var st = C.switchTo(b.dataset.sw);
+        closeModal(); startApp(); toast('Вы вошли как ' + st.name, 'ok');
+      })();
+      else toLogin(b.dataset.phone);
     });
   }));
 
@@ -1017,7 +1032,7 @@
     $('meName').textContent = me.name;
     $('meRole').textContent = C.ROLES[me.role].title;
     $('meRole').className = 'role ' + me.role;
-    $('meAv').innerHTML = avatar(me);
+    $('meAv').innerHTML = C.can('staff.edit') ? '<button type="button" class="av-card" data-card="' + esc(me.id) + '" title="Открыть карточку" aria-label="Открыть мою карточку">' + avatar(me) + '</button>' : avatar(me);
     var first = null;
     document.querySelectorAll('#nav button').forEach(function(b){
       var ok = C.can(b.dataset.need);
