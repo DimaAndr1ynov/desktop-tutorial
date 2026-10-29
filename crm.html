@@ -624,6 +624,15 @@
   .msg{box-shadow:0 1px 1.5px rgba(16,24,40,.15);}
   .msg.in{background:#ffffff;color:var(--text);}
   .msg.in.tail::after{background:radial-gradient(circle at 0 0, transparent 9.5px, #ffffff 10px);}
+  /* ---------- доступность и тач (общие правила) ---------- */
+  :where(a, button, summary, [role="button"], [tabindex]):focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:6px;}
+  a, button, summary, [role="button"], input, select, textarea, label{touch-action:manipulation;}
+  button:not(:disabled), [role="button"], select{cursor:pointer;}
+  button:disabled{cursor:not-allowed;}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;}
+  }
+  @media (pointer:coarse){ .btn, .select, .input, .st-select{min-height:44px;} }
 </style>
 </head>
 <body>

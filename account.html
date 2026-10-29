@@ -353,6 +353,14 @@
   @media (max-width:380px){
     .back{font-size:13px;padding:.55em .9em;}
   }
+  /* ---------- доступность и тач (общие правила) ---------- */
+  :where(a, button, summary, [role="button"], [tabindex]):focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:6px;}
+  a, button, summary, [role="button"], input, select, textarea, label{touch-action:manipulation;}
+  button:not(:disabled), [role="button"], select{cursor:pointer;}
+  button:disabled{cursor:not-allowed;}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;}
+  }
 </style>
 </head>
 <body>
