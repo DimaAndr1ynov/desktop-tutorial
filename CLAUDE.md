@@ -102,6 +102,7 @@
 - Публикация: PR → squash-merge в `main` → деплой Pages запускается автоматически
 - НО: коммиты, сделанные workflow-ботом (fetch-*-image), деплой НЕ триггерят — после них запускать `deploy-pages.yml` вручную (workflow_dispatch)
 - **Автосохранение:** хук Stop (`.claude/settings.json` → `.claude/autosave.sh`) после каждого ответа Claude коммитит снимок рабочей папки в ветку `claude/autosave` и пушит её. Рабочая ветка и `main` не меняются, живой сайт не затрагивается. В `main`/на сайт — только через PR и после явного подтверждения владельца
+- **Кеш скриптов**: GitHub Pages отдаёт файлы с кешем ~10 минут, поэтому страницы подключают `assets/auth.js?v=…` и `assets/crm-data.js?v=…`. При изменении любого из этих файлов менять число `v` во всех трёх html (index, account, crm), иначе у пользователя новый html может работать со старым скриптом (например, `staffSave` молча игнорирует новый параметр)
 - Репозиторий публичный (это требование бесплатного GitHub Pages)
 - Проверка вёрстки: Playwright + Chromium `/opt/pw-browsers/chromium`, скриншоты; scroll-анимации на fullPage-скриншоте включать принудительно:
   `document.querySelectorAll('.reveal-group').forEach(g => g.classList.add('in-view'))`
