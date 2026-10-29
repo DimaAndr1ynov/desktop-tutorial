@@ -10,6 +10,7 @@
   var A = window.DSAuth;
   var KEY = 'downshot_crm_v1';
   var TEST_CODE = '123456';
+  var MODE = 'test';
   var MAX_FILE = 25 * 1024 * 1024;
 
   // Все права, которые можно выдать роли (порядок = порядок строк в таблице прав).
@@ -410,7 +411,7 @@
   }
 
   var api = {
-    MODE: 'test',
+    MODE: MODE,
     TEST_CODE: TEST_CODE,
     ROLES: ROLES,
     ROLE_ORDER: ROLE_ORDER,
@@ -474,6 +475,20 @@
       d.session = null; save(d);
     },
 
+    // Мгновенная смена сотрудника — только в тестовом режиме (без кода). В боевом входе нужен код/PIN сотрудника.
+    switchTo: function (staffId) {
+      if (MODE !== 'test') fail('Для смены сотрудника нужен его код');
+      var cur = me(); if (!cur) fail('Войдите в систему');
+      var d = load(), target = d.staff[staffId];
+      if (!target || !target.active) fail('Сотрудник недоступен');
+      if (target.id === cur.id) fail('Вы уже в этой учётной записи');
+      var prev = d.staff[cur.id];
+      if (prev && ['work', 'shoot', 'break', 'lunch'].indexOf(prev.status) !== -1) pushStatus(prev, 'off'); // смена прежнего закрыта
+      d.session = { id: target.id, at: Date.now() };
+      if ((target.status || 'off') === 'off') pushStatus(target, 'work');
+      save(d);
+      return d.staff[target.id];
+    },
     // Список для «Сменить сотрудника»: доступен любому вошедшему, без окладов и прав.
     staffChoices: function () {
       var cur = me(); if (!cur) fail('Войдите в систему');
