@@ -474,6 +474,16 @@
       d.session = null; save(d);
     },
 
+    // Список для «Сменить сотрудника»: доступен любому вошедшему, без окладов и прав.
+    staffChoices: function () {
+      var cur = me(); if (!cur) fail('Войдите в систему');
+      var d = load();
+      return Object.keys(d.staff).map(function (k) { return d.staff[k]; })
+        .filter(function (s) { return s.active && s.id !== cur.id; })
+        .sort(function (a, b) { return a.createdAt - b.createdAt; })
+        .map(function (s) { return { id: s.id, name: s.name, role: s.role, phone: s.phone, status: s.status || 'off' }; });
+    },
+
     /* ---------- персонал (только админ) ---------- */
     staffList: function () {
       need('staff.edit');
