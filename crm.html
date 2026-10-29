@@ -2419,8 +2419,14 @@
     var roleTitle = function(id){ return C.ROLES[id].title; };
     var html = '<h3>Роли и PIN-коды филиала</h3>';
     if (!canStaff) {
-      html += '<p class="muted">Кто сколько человек в каждой роли и что роль может делать.</p><div class="br-roles">' + data.roles.map(function(r){
-        return '<div class="br-role" style="cursor:default"><span class="role ' + r.id + '">' + esc(r.title) + '</span><b>' + r.count + '</b><small>' + plural(r.count, 'сотрудник', 'сотрудника', 'сотрудников') + ' · ' + r.perms.length + ' ' + plural(r.perms.length, 'право', 'права', 'прав') + '</small></div>';
+      var meRec = C.me(), team = C.staffChoices().concat([{id: meRec.id, name: meRec.name, role: meRec.role, hasPin: true, me: true}]);
+      html += '<p class="muted">Нажмите на роль, чтобы увидеть сотрудников и права. Менять роли и PIN-коды может администратор: войдите под ним через «Сменить сотрудника».</p><div class="br-roles">' + data.roles.map(function(r){
+        var open = brOpen === r.id;
+        var inRole = team.filter(function(s){ return s.role === r.id; });
+        return '<button type="button" class="br-role" data-roleview="' + r.id + '" aria-expanded="' + open + '"><span class="role ' + r.id + '">' + esc(r.title) + '</span><b>' + r.count + '</b><small>' + plural(r.count, 'сотрудник', 'сотрудника', 'сотрудников') + ' · ' + r.perms.length + ' ' + plural(r.perms.length, 'право', 'права', 'прав') + '</small><i class="chev"></i></button>' +
+          (open ? '<div class="br-open" id="brOpen"><h4>' + esc(r.title) + ': сотрудники роли</h4>' +
+            (inRole.length ? inRole.map(function(s){ return '<div class="br-row row"><div class="nm"><div><b>' + esc(s.name) + (s.me ? ' <span class="muted" style="font-weight:400">(это вы)</span>' : '') + '</b><div class="meta"><span class="br-pin">PIN: ' + (s.hasPin ? '••••' : 'не задан') + '</span></div></div></div></div>'; }).join('') : '<p class="muted" style="margin:0 0 10px">Сотрудников в этой роли нет.</p>') +
+            '<details><summary class="muted" style="cursor:pointer">Что может роль</summary><ul style="margin:8px 0 0;padding-left:18px;line-height:1.5">' + r.perms.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></details></div>' : '');
       }).join('') + '</div>';
     } else {
       var f = selRec || {name:'', phone:'', role: 'operator', pin: ''};
@@ -2445,7 +2451,12 @@
         '<button class="btn ghost" type="submit">Сохранить правила</button></form><div class="error" id="ePol"></div>';
     }
     sec.innerHTML = html;
-    if (!canStaff) return;
+    if (!canStaff) {
+      sec.querySelectorAll('button[data-roleview]').forEach(function(btn){
+        btn.addEventListener('click', function(){ brOpen = brOpen === btn.dataset.roleview ? '' : btn.dataset.roleview; renderBranch(); });
+      });
+      return;
+    }
 
     var focusForm = function(){ var el = $('sbName'); if (el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.focus({preventScroll:true}); } };
     sec.querySelectorAll('button[data-edit]').forEach(function(btn){
