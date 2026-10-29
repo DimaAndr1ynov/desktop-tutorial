@@ -111,6 +111,23 @@
   .me b{display:block;font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .role{display:inline-block;font-size:11.5px;border-radius:6px;padding:2px 7px;margin-bottom:12px;}
   .me-acts{display:flex;gap:6px;flex-wrap:wrap;}
+  .me-id{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .me-id .avatar{width:42px;height:42px;font-size:15px;}
+  .me-t{min-width:0;}
+  .me-t b{white-space:normal;line-height:1.25;}
+  .me-t .role{margin-bottom:0;}
+  .btn.switch{background:rgba(47,127,255,.08);border-color:rgba(47,127,255,.35);color:#1d4fd0;}
+  @media (min-width:861px){
+    .me-acts{flex-direction:column;}
+    .me-acts .btn{width:100%;justify-content:center;padding:9px 12px;}
+  }
+  .sw-list{display:flex;flex-direction:column;gap:8px;}
+  .sw-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);transition:border-color .15s,transform .15s,box-shadow .15s;}
+  .sw-item:hover{border-color:rgba(47,127,255,.55);transform:translateY(-1px);box-shadow:0 8px 20px -14px rgba(20,30,60,.4);}
+  .sw-item .avatar{width:40px;height:40px;font-size:14px;}
+  .sw-item b{display:block;font-weight:600;}
+  .sw-item small{color:var(--muted);font-size:12.5px;}
+  .sw-item .role{margin:0 0 0 auto;}
   .login-links{display:flex;justify-content:space-between;gap:12px;margin-top:16px;font-size:14px;}
   .login-links a{color:var(--muted);transition:color .15s;}
   .login-links a:hover{color:var(--blue-light);}
@@ -395,7 +412,6 @@
     .kpis{gap:10px;}
     .kpi{padding:14px;}
   }
-  @media (max-width:340px){ .me-acts a{display:none;} } /* ссылка на сайт остаётся в логотипе */
   @media (max-width:400px){
     .side{gap:2px;padding-left:max(10px, env(safe-area-inset-left));padding-right:max(10px, env(safe-area-inset-right));}
     .nav{gap:0;}
@@ -528,7 +544,7 @@
     .nav button .lbl{display:none;}
     .nav button.on .lbl{display:inline;}
     .me{margin:0;border:none;padding:0;display:flex;align-items:center;gap:8px;}
-    .me b, .me .role{display:none;}
+    .me b, .me .role, .me-id{display:none;}
     .main{padding:16px var(--pad-r) 32px var(--pad-l);}
     .hide-sm{display:none;}
     .table thead{display:none;}
@@ -764,13 +780,15 @@
       </button>
     </nav>
     <div class="me">
-      <b id="meName"></b>
-      <span class="role" id="meRole"></span>
+      <div class="me-id">
+        <span id="meAv"></span>
+        <div class="me-t"><b id="meName"></b><span class="role" id="meRole"></span></div>
+      </div>
       <div class="me-acts">
-        <a class="btn ghost sm" href="index.html" title="Открыть сайт">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M1.8 8h12.4M8 1.8c1.7 1.8 2.5 3.9 2.5 6.2S9.7 12.4 8 14.2C6.3 12.4 5.5 10.3 5.5 8S6.3 3.6 8 1.8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          <span class="lbl">На сайт</span>
-        </a>
+        <button class="btn ghost sm switch" type="button" id="bSwitch" title="Сменить сотрудника">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2.5 5.5h10M10 3l2.5 2.5L10 8M13.5 10.5h-10M6 8l-2.5 2.5L6 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="lbl">Сменить сотрудника</span>
+        </button>
         <button class="btn ghost sm" type="button" id="bLogout" title="Выйти">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10.5 11l3-3-3-3M13.5 8H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="lbl">Выйти</span>
@@ -966,12 +984,30 @@
       .then(function(){ $('bCode').disabled = false; });
   });
   $('bBack').addEventListener('click', function(){ $('fCode').hidden = true; $('fPhone').hidden = false; $('sPhone').focus(); });
-  $('bLogout').addEventListener('click', function(){
+  function toLogin(phone){
     C.logout();
     $('appView').hidden = true; $('loginView').hidden = false;
-    $('fCode').hidden = true; $('fPhone').hidden = false; $('sPhone').value = '';
+    $('fCode').hidden = true; $('fPhone').hidden = false;
+    $('sPhone').value = phone ? A.formatPhone(phone) : '';
     closeModal();
-  });
+    if (phone) $('fPhone').requestSubmit(); // сразу к вводу кода выбранного сотрудника
+  }
+  $('bLogout').addEventListener('click', function(){ toLogin(''); });
+  // «Сменить сотрудника»: текущая смена закрывается, дальше код выбранного сотрудника
+  $('bSwitch').addEventListener('click', guard(function(){
+    var list = C.staffChoices();
+    openModal(
+      '<div class="drawer-head"><h3>Сменить сотрудника</h3><button class="x" type="button" data-close aria-label="Закрыть">×</button></div>' +
+      '<div class="drawer-body"><p class="muted" style="margin:0 0 12px;line-height:1.5">Ваша смена закроется. Выберите, кто работает дальше, и введите его код.</p>' +
+      (list.length ? '<div class="sw-list">' + list.map(function(s){
+        return '<button type="button" class="sw-item" data-sw="' + esc(s.phone) + '">' + avatar(s) + '<span><b>' + esc(s.name) + '</b><small>' + esc(A.formatPhone(s.phone)) + '</small></span><span class="role ' + s.role + '">' + esc(C.ROLES[s.role].title) + '</span></button>';
+      }).join('') + '</div>' : '<div class="empty-box">Других сотрудников пока нет. Добавьте их в разделе «Сотрудники».</div>') +
+      '</div>'
+    );
+    $('modal').querySelector('.sw-list') && $('modal').querySelector('.sw-list').addEventListener('click', function(e){
+      var b = e.target.closest('[data-sw]'); if (b) toLogin(b.dataset.sw);
+    });
+  }));
 
   /* ================= КАРКАС ================= */
   function startApp(){
@@ -981,6 +1017,7 @@
     $('meName').textContent = me.name;
     $('meRole').textContent = C.ROLES[me.role].title;
     $('meRole').className = 'role ' + me.role;
+    $('meAv').innerHTML = avatar(me);
     var first = null;
     document.querySelectorAll('#nav button').forEach(function(b){
       var ok = C.can(b.dataset.need);
