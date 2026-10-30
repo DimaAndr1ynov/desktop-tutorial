@@ -261,7 +261,7 @@ input[type=time]{width:auto}
         <button class="si" data-set="rem"><div class="n">Расписание напоминаний<small id="remCount"></small></div><span style="color:var(--muted);font-size:22px">›</span></button>
         <button class="si" data-set="test"><div class="n">Проверить уведомление<small>Отправить тестовое прямо сейчас</small></div></button>
       </div>
-      <p class="note">Напоминания приходят, пока приложение открыто или свёрнуто в памяти. Пропущенные напоминания сохраняются в разделе «Уведомления» и показываются при следующем открытии. Расписание настраивается на вкладке «Напоминания».</p>
+      <p class="note" id="notifyNote">Напоминания приходят, пока приложение открыто или свёрнуто в памяти. Пропущенные напоминания сохраняются в разделе «Уведомления» и показываются при следующем открытии. Расписание настраивается на вкладке «Напоминания».</p>
 
       <h2>Оформление</h2>
       <div class="card set">
@@ -372,7 +372,7 @@ input[type=time]{width:auto}
       }}catch(e){}
     return d;
   }
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}clearTimeout(save.t);save.t=setTimeout(function(){if(typeof syncNative==='function')syncNative()},500)}
   function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
   function p2(n){return n<10?'0'+n:''+n}
   function dk(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
@@ -595,7 +595,34 @@ input[type=time]{width:auto}
     toast(state.settings.notify?'Сохранено':'Сохранено · включите уведомления');
   }
 
-  function permState(){return 'Notification' in window?Notification.permission:'unsupported'}
+  /* ---- нативный слой (Android-приложение через Capacitor) ---- */
+  var NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+  var LN=NATIVE&&Capacitor.Plugins?Capacitor.Plugins.LocalNotifications:null;
+  var nativePerm='prompt';
+  if(LN)LN.checkPermissions().then(function(r){nativePerm=r.display;render();syncNative()}).catch(function(){});
+  function permState(){
+    if(NATIVE)return nativePerm==='granted'||nativePerm==='denied'?nativePerm:'default';
+    return 'Notification' in window?Notification.permission:'unsupported';
+  }
+  // расписание системных уведомлений: срабатывают и при закрытом приложении
+  function syncNative(){
+    if(!LN)return;
+    LN.getPending().then(function(p){return p.notifications.length?LN.cancel({notifications:p.notifications}):0}).then(function(){
+      if(!state.settings.notify||nativePerm!=='granted')return;
+      var list=[],n=0;
+      state.reminders.forEach(function(r){
+        if(!r.on)return;
+        var h=state.habits.filter(function(x){return x.id===r.habitId})[0];
+        if(r.habitId!=='*'&&!h)return;
+        var t=r.time.split(':');
+        r.days.forEach(function(d){
+          list.push({id:++n,title:h?h.emoji+' '+h.name:'Журнал привычек',body:h?'Время отметить привычку':'Проверьте, все ли привычки выполнены сегодня',
+            schedule:{on:{weekday:d+1,hour:+t[0],minute:+t[1]},allowWhileIdle:true}});
+        });
+      });
+      if(list.length)return LN.schedule({notifications:list});
+    }).catch(function(){});
+  }
   function renderSettings(){
     var s=state.settings,p=permState();
     $('swNotify').classList.toggle('on',s.notify&&p==='granted');
@@ -626,7 +653,7 @@ input[type=time]{width:auto}
     state.inbox.unshift({id:Date.now()+Math.random(),t:Date.now(),title:title,body:body,read:view==='notes',habitId:meta.habitId||'',rid:meta.rid||''});
     state.inbox=state.inbox.slice(0,60);save();renderBell();
     if(view==='notes')renderInbox();else if(view==='reminders')renderReminders();
-    if(state.settings.notify&&permState()==='granted'){
+    if(!NATIVE&&state.settings.notify&&permState()==='granted'){
       var opts={body:body,tag:tag||'habit',icon:'icon-192.png',badge:'icon-192.png',data:{habitId:meta.habitId||''}};
       if(meta.habitId)opts.actions=[{action:'done',title:'✅ Выполнено'}];
       try{
@@ -659,6 +686,14 @@ input[type=time]{width:auto}
     if(changed)save();
   }
   function enableNotify(){
+    if(NATIVE){
+      if(!LN){toast('Уведомления недоступны');return}
+      LN.requestPermissions().then(function(r){
+        nativePerm=r.display;state.settings.notify=nativePerm==='granted';save();render();
+        toast(state.settings.notify?'Напоминания включены':'Разрешите уведомления в настройках телефона');
+      }).catch(function(){toast('Не удалось запросить разрешение')});
+      return;
+    }
     if(!('Notification' in window)){toast('Браузер не поддерживает уведомления');return}
     if(Notification.permission==='granted'){state.settings.notify=true;save();render();toast('Напоминания включены');check();return}
     if(Notification.permission==='denied'){toast('Разрешите уведомления в настройках браузера');return}
@@ -811,7 +846,7 @@ input[type=time]{width:auto}
   document.addEventListener('visibilitychange',function(){if(!document.hidden){check();render()}});
   window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(TITLES[h]&&h!==view)go(h)});
 
-  if('serviceWorker' in navigator&&location.protocol!=='file:'){
+  if(!NATIVE&&'serviceWorker' in navigator&&location.protocol!=='file:'){
     navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.type==='done')markDone(e.data.habitId)});
     navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready}).then(function(r){swReg=r}).catch(function(){});
   }
@@ -820,6 +855,10 @@ input[type=time]{width:auto}
   var h0=location.hash.slice(1);
   if(h0.indexOf('done=')===0){markDone(h0.slice(5));h0='today'}
   go(TITLES[h0]?h0:'today');
+  if(NATIVE){
+    $('notifyNote').textContent='Напоминания приходят по расписанию, даже когда приложение закрыто. Расписание настраивается на вкладке «Напоминания».';
+    if(LN)LN.addListener('localNotificationActionPerformed',function(){go('today')});
+  }
   setInterval(check,20000);check();
 })();
 </script>
