@@ -219,7 +219,7 @@ input[type=time]{width:auto}
 .pal button.on{border-color:var(--text)}
 .compose{padding:12px;margin-bottom:14px}
 .compose textarea{width:100%;min-height:64px;resize:none;border:0;outline:0;background:none;color:var(--text);line-height:1.4}
-.compose .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.compose .crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
 .compose .add{background:var(--accent);color:#fff;border-radius:10px;padding:8px 16px;font-weight:600}
 .stk{columns:2;column-gap:12px}
 .sticker{break-inside:avoid;margin:0 0 12px;position:relative;border-radius:4px 4px 14px 4px;padding:10px 10px 8px;color:#2b2b24;box-shadow:0 3px 8px #0003;transform:rotate(var(--r,0deg));animation:pop .25s}
@@ -242,6 +242,10 @@ input[type=time]{width:auto}
 .dl .x{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
 .dl .e{font-size:20px}
 .empty{text-align:center;color:var(--muted);padding:30px 10px}
+.grip{width:28px;height:44px;flex:none;display:grid;place-items:center;color:var(--muted);touch-action:none;cursor:grab;margin-left:-4px;border-radius:8px}
+.grip svg{width:20px;height:20px;fill:currentColor}
+.row.drag{position:relative;z-index:3;box-shadow:0 8px 20px #0003;transform:scale(1.02);transition:box-shadow .15s}
+.row.drag-lift{opacity:1}
 </style>
 </head>
 <body>
@@ -458,7 +462,7 @@ input[type=time]{width:auto}
   }
   function stickersHtml(){
     var T=state.thoughts;
-    var h='<div class="card compose"><textarea id="tNew" maxlength="500" placeholder="Что у вас на уме?"></textarea><div class="row"><div class="pal">'
+    var h='<div class="card compose"><textarea id="tNew" maxlength="500" placeholder="Что у вас на уме?"></textarea><div class="crow"><div class="pal">'
       +TCOL.map(function(c){return '<button class="c-'+c+(c===tColor?' on':'')+'" data-c="'+c+'" aria-label="Цвет"></button>'}).join('')
       +'</div><button class="add" id="tAdd">Приклеить</button></div></div>';
     if(!T.notes.length)return h+'<p class="empty">Пока пусто. Напишите первую мысль — она появится стикером.</p>';
@@ -535,7 +539,7 @@ input[type=time]{width:auto}
   function renderHabits(){
     var H=state.habits;
     $('habitList').innerHTML=H.length?H.map(function(x){
-      return '<div class="card row" data-id="'+x.id+'"><div class="emo">'+esc(x.emoji)+'</div><div class="n"><b>'+esc(x.name)+'</b><small>Цель: '+x.goal+' дн./мес.'+(remTimes(x)?' · ⏰ '+remTimes(x):'')+'</small></div><button class="ib" data-a="edit" aria-label="Изменить"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ib" data-a="del" aria-label="Удалить"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
+      return '<div class="card row" data-id="'+x.id+'"><div class="grip" aria-label="Перетащить"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></div><div class="emo">'+esc(x.emoji)+'</div><div class="n"><b>'+esc(x.name)+'</b><small>Цель: '+x.goal+' дн./мес.'+(remTimes(x)?' · ⏰ '+remTimes(x):'')+'</small></div><button class="ib" data-a="edit" aria-label="Изменить"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="ib" data-a="del" aria-label="Удалить"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
     }).join(''):'<div class="empty">Привычек пока нет.<br>Нажмите «+», чтобы добавить первую.</div>';
   }
   var sPer='month',sCur=startOfDay(new Date());
@@ -869,6 +873,35 @@ input[type=time]{width:auto}
     if(state.checks[k])delete state.checks[k];else{state.checks[k]=1;if(navigator.vibrate)navigator.vibrate(15)}
     save();renderToday();
   };
+  /* перетаскивание привычек за ручку */
+  (function(){
+    var L=$('habitList'),row=null,startY=0,pid=null;
+    L.addEventListener('pointerdown',function(e){
+      var g=e.target.closest('.grip');if(!g)return;
+      row=g.closest('.row');startY=e.clientY;pid=e.pointerId;
+      try{g.setPointerCapture(pid)}catch(x){}
+      row.classList.add('drag');e.preventDefault();
+    });
+    L.addEventListener('pointermove',function(e){
+      if(!row||e.pointerId!==pid)return;
+      var dy=e.clientY-startY;row.style.transform='translateY('+dy+'px) scale(1.02)';
+      var rs=[].slice.call(L.querySelectorAll('.row')),i=rs.indexOf(row),r=row.getBoundingClientRect(),mid=r.top+r.height/2;
+      var prev=rs[i-1],next=rs[i+1],h;
+      if(prev){var pr=prev.getBoundingClientRect();if(mid<pr.top+pr.height/2){var b=r.top;L.insertBefore(row,prev);startY+=row.getBoundingClientRect().top-b;row.style.transform='translateY('+(e.clientY-startY)+'px) scale(1.02)'}}
+      if(next&&row.nextElementSibling===next){var nr=next.getBoundingClientRect();if(mid>nr.top+nr.height/2){var b2=r.top;L.insertBefore(next,row);startY+=row.getBoundingClientRect().top-b2;row.style.transform='translateY('+(e.clientY-startY)+'px) scale(1.02)'}}
+      var m=$('main'),mr=m.getBoundingClientRect();
+      if(e.clientY<mr.top+60)m.scrollTop-=10;else if(e.clientY>mr.bottom-60)m.scrollTop+=10;
+    });
+    function end(e){
+      if(!row||e.pointerId!==pid)return;
+      row.classList.remove('drag');row.style.transform='';
+      var order=[].slice.call(L.querySelectorAll('.row')).map(function(r){return r.dataset.id});
+      row=null;
+      state.habits.sort(function(a,b){return order.indexOf(a.id)-order.indexOf(b.id)});
+      save();render();
+    }
+    L.addEventListener('pointerup',end);L.addEventListener('pointercancel',end);
+  })();
   $('habitList').onclick=function(e){
     var r=e.target.closest('.row'),a=e.target.closest('[data-a]');if(!r||!a)return;
     var h=state.habits.filter(function(x){return x.id===r.dataset.id})[0];
