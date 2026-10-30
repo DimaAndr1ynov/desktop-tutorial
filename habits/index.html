@@ -27,7 +27,7 @@
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
-input,select{font:inherit;color:var(--text);-webkit-user-select:text;user-select:text}
+input,select,textarea{font:inherit;color:var(--text);-webkit-user-select:text;user-select:text}
 .app{max-width:560px;margin:0 auto;height:100%;position:relative;overflow:hidden;background:var(--bg)}
 @media (min-width:600px){body{background:#0001}.app{box-shadow:0 0 40px #0002}}
 
@@ -50,7 +50,8 @@ h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06
 
 /* нижние вкладки */
 .tabs{position:absolute;bottom:0;left:0;right:0;height:var(--tab);padding-bottom:env(safe-area-inset-bottom);display:flex;background:var(--surface);border-top:1px solid var(--line);z-index:5}
-.tabs button{flex:1;min-width:0;letter-spacing:-.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--muted)}
+.tabs button{flex:1;min-width:0;letter-spacing:-.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:var(--muted)}
+.tabs button{padding:0 1px}
 .tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tabs button.on{color:var(--accent);font-weight:600}
 
@@ -210,6 +211,37 @@ input[type=time]{width:auto}
 .install[hidden]{display:none}
 .install span{flex:1;font-size:14px}
 .install button{background:var(--accent);color:#fff;border-radius:10px;padding:8px 12px;font-size:14px}
+
+/* мысли */
+.tmode{margin-bottom:12px}
+.pal{display:flex;gap:10px;align-items:center}
+.pal button{width:26px;height:26px;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 1px #0002}
+.pal button.on{border-color:var(--text)}
+.compose{padding:12px;margin-bottom:14px}
+.compose textarea{width:100%;min-height:64px;resize:none;border:0;outline:0;background:none;color:var(--text);line-height:1.4}
+.compose .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.compose .add{background:var(--accent);color:#fff;border-radius:10px;padding:8px 16px;font-weight:600}
+.stk{columns:2;column-gap:12px}
+.sticker{break-inside:avoid;margin:0 0 12px;position:relative;border-radius:4px 4px 14px 4px;padding:10px 10px 8px;color:#2b2b24;box-shadow:0 3px 8px #0003;transform:rotate(var(--r,0deg));animation:pop .25s}
+@keyframes pop{from{transform:scale(.85) rotate(var(--r,0deg));opacity:0}}
+.sticker textarea{width:100%;min-height:70px;border:0;outline:0;resize:none;background:none;color:inherit;line-height:1.35;font-size:15px;overflow:hidden;display:block}
+.sticker .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:.6;margin-top:4px}
+.sticker .meta button{font-size:18px;line-height:1;padding:0 2px}
+.c-y{background:#fff3a3}.c-p{background:#ffc9d6}.c-b{background:#bfe3ff}.c-g{background:#c9f0c3}
+.dnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dnav b{font-size:17px;text-align:center}
+.dnav small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.paper{padding:6px 16px 14px;margin-bottom:12px}
+.paper textarea{width:100%;min-height:300px;border:0;outline:0;resize:none;background:repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);background-attachment:local;color:var(--text);line-height:32px;font-size:16px;font-family:Georgia,'Times New Roman',serif;padding:0}
+.moods{display:flex;gap:6px;justify-content:space-between;padding:10px 0 4px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.moods button{font-size:24px;width:44px;height:44px;border-radius:12px;opacity:.45}
+.moods button.on{opacity:1;background:var(--accent-soft)}
+.dl{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.dl:last-child{border-bottom:0}
+.dl .d{flex:none;width:44px;text-align:center;line-height:1.1}.dl .d b{display:block;font-size:20px}.dl .d small{color:var(--muted);font-size:11px;text-transform:uppercase}
+.dl .x{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.dl .e{font-size:20px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
 </style>
 </head>
 <body>
@@ -254,6 +286,11 @@ input[type=time]{width:auto}
       <div id="inbox"></div>
     </section>
 
+    <section class="screen" id="s-thoughts">
+      <div class="seg segw tmode" id="tMode"><button data-m="stickers">🗒 Стикеры</button><button data-m="diary">📔 Дневник</button></div>
+      <div id="tBody"></div>
+    </section>
+
     <section class="screen" id="s-settings">
       <h2 style="margin-top:4px">Уведомления</h2>
       <div class="card set">
@@ -286,7 +323,8 @@ input[type=time]{width:auto}
     <button data-go="today" class="on"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>Сегодня</button>
     <button data-go="habits"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Привычки</button>
     <button data-go="stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Статистика</button>
-    <button data-go="reminders"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M5 3 2 6M19 3l3 3"/></svg>Напоминания</button>
+    <button data-go="thoughts"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Мысли</button>
+    <button data-go="reminders"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M5 3 2 6M19 3l3 3"/></svg>Напомин.</button>
     <button data-go="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Настройки</button>
   </div>
 
@@ -297,6 +335,7 @@ input[type=time]{width:auto}
       <button data-go="today"><svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>Сегодня</button>
       <button data-go="habits"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Мои привычки</button>
       <button data-go="stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Статистика</button>
+      <button data-go="thoughts"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Мысли</button>
       <button data-go="reminders"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M5 3 2 6M19 3l3 3"/></svg>Напоминания</button>
       <button data-go="notes"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Уведомления<em id="dBadge" hidden>0</em></button>
       <hr>
@@ -345,7 +384,7 @@ input[type=time]{width:auto}
   var MG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   var WD=['вс','пн','вт','ср','чт','пт','сб'];
   var EMOS=['💪','💧','📖','🚶','😴','🧘','🥗','🏃','🎧','✍️','🦷','🚭','🧠','💊','🎨','🐶'];
-  var TITLES={today:'Сегодня',habits:'Мои привычки',stats:'Статистика',notes:'Уведомления',reminders:'Напоминания',settings:'Настройки'};
+  var TITLES={today:'Сегодня',habits:'Мои привычки',stats:'Статистика',notes:'Уведомления',thoughts:'Мысли',reminders:'Напоминания',settings:'Настройки'};
   var $=function(id){return document.getElementById(id)};
 
   var state=load();
@@ -359,14 +398,14 @@ input[type=time]{width:auto}
       {id:'h3',name:'Чтение 20 мин',emoji:'📖',goal:20,remind:''},
       {id:'h4',name:'Прогулка',emoji:'🚶',goal:15,remind:''},
       {id:'h5',name:'Сон до 23:00',emoji:'😴',goal:20,remind:''}
-    ],checks:{},settings:{theme:'auto',weekStart:1,notify:false,dailyOn:true,daily:'20:00'},inbox:[],fired:{},reminders:[{id:'r1',habitId:'*',time:'20:00',days:[0,1,2,3,4,5,6],on:true}]};
+    ],checks:{},settings:{theme:'auto',weekStart:1,notify:false,dailyOn:true,daily:'20:00'},inbox:[],fired:{},thoughts:{mode:'stickers',notes:[],diary:{},moods:{}},reminders:[{id:'r1',habitId:'*',time:'20:00',days:[0,1,2,3,4,5,6],on:true}]};
   }
   function load(){
     var d=defaults();
     try{var s=JSON.parse(localStorage.getItem(KEY));
       if(s&&s.habits){
         s.habits.forEach(function(h,i){if(!h.emoji)h.emoji=EMOS[i%EMOS.length];if(h.remind==null)h.remind=''});
-        s.settings=Object.assign(d.settings,s.settings||{});s.inbox=s.inbox||[];s.fired=s.fired||{};s.checks=s.checks||{};
+        s.settings=Object.assign(d.settings,s.settings||{});s.inbox=s.inbox||[];s.thoughts=Object.assign(d.thoughts,s.thoughts||{});s.fired=s.fired||{};s.checks=s.checks||{};
         if(!s.reminders){s.reminders=[];s.habits.forEach(function(h){if(h.remind)s.reminders.push({id:'r'+h.id,habitId:h.id,time:h.remind,days:[0,1,2,3,4,5,6],on:true})});s.reminders.push({id:'rdaily',habitId:'*',time:s.settings.daily,days:[0,1,2,3,4,5,6],on:s.settings.dailyOn!==false})}
         return s;
       }}catch(e){}
@@ -403,6 +442,64 @@ input[type=time]{width:auto}
   function openDrawer(){$('drawer').classList.add('on');$('scrim').classList.add('on')}
   function closeDrawer(){$('drawer').classList.remove('on');if(!$('sheet').classList.contains('on'))$('scrim').classList.remove('on')}
 
+
+  /* ---------- мысли: стикеры и дневник ---------- */
+  var TCOL=['y','p','b','g'],tColor='y',dDay=startOfDay(new Date());
+  var MOODS=['😄','🙂','😐','😟','😡'];
+  var MONTHS_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  var WDF=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  function fitTa(t){t.style.height='auto';t.style.height=Math.max(70,t.scrollHeight)+'px'}
+  function fmtShort(ts){var d=new Date(ts);return d.getDate()+' '+MONTHS_G[d.getMonth()]+', '+p2(d.getHours())+':'+p2(d.getMinutes())}
+  function renderThoughts(){
+    var T=state.thoughts;
+    document.querySelectorAll('#tMode button').forEach(function(b){b.classList.toggle('on',b.dataset.m===T.mode)});
+    $('tBody').innerHTML=T.mode==='diary'?diaryHtml():stickersHtml();
+    document.querySelectorAll('#tBody .sticker textarea').forEach(fitTa);
+  }
+  function stickersHtml(){
+    var T=state.thoughts;
+    var h='<div class="card compose"><textarea id="tNew" maxlength="500" placeholder="Что у вас на уме?"></textarea><div class="row"><div class="pal">'
+      +TCOL.map(function(c){return '<button class="c-'+c+(c===tColor?' on':'')+'" data-c="'+c+'" aria-label="Цвет"></button>'}).join('')
+      +'</div><button class="add" id="tAdd">Приклеить</button></div></div>';
+    if(!T.notes.length)return h+'<p class="empty">Пока пусто. Напишите первую мысль — она появится стикером.</p>';
+    return h+'<div class="stk">'+T.notes.map(function(n,i){
+      var r=((i*37+n.id%7*13)%7-3)*0.5;
+      return '<div class="sticker c-'+n.c+'" style="--r:'+r+'deg"><textarea data-id="'+n.id+'" maxlength="500">'+esc(n.text)+'</textarea><div class="meta"><span>'+fmtShort(n.t)+'</span><button data-del="'+n.id+'" aria-label="Удалить">×</button></div></div>';
+    }).join('')+'</div>';
+  }
+  function diaryHtml(){
+    var T=state.thoughts,k=dk(dDay),today=dk(startOfDay(new Date()))===k;
+    var h='<div class="dnav"><button class="ib" id="dPrev" style="color:var(--text)" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b>'+dDay.getDate()+' '+MONTHS_G[dDay.getMonth()]+' '+dDay.getFullYear()+'<small>'+(today?'Сегодня':WDF[dDay.getDay()])+'</small></b><button class="ib" id="dNext" style="color:var(--text)" aria-label="Вперёд"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>';
+    h+='<div class="card paper"><div class="moods">'+MOODS.map(function(m){return '<button data-mood="'+m+'" class="'+(T.moods[k]===m?'on':'')+'">'+m+'</button>'}).join('')+'</div><textarea id="dText" placeholder="Дорогой дневник…">'+esc(T.diary[k]||'')+'</textarea></div>';
+    var keys=Object.keys(T.diary).filter(function(x){return T.diary[x].trim()&&x!==k}).sort().reverse();
+    if(keys.length){
+      h+='<h2>Прошлые записи</h2><div class="card set">'+keys.map(function(x){
+        var p=x.split('-'),d=new Date(+p[0],+p[1]-1,+p[2]);
+        return '<button class="dl" data-open="'+x+'"><span class="d"><b>'+d.getDate()+'</b><small>'+MONTHS_G[d.getMonth()].slice(0,3)+'</small></span><span class="x">'+esc(T.diary[x].trim().split('\n')[0])+'</span><span class="e">'+(T.moods[x]||'')+'</span></button>';
+      }).join('')+'</div>';
+    }
+    return h;
+  }
+  function thoughtsEvents(){
+    $('tMode').onclick=function(e){var b=e.target.closest('button[data-m]');if(!b)return;state.thoughts.mode=b.dataset.m;save();renderThoughts()};
+    var body=$('tBody');
+    body.onclick=function(e){
+      var T=state.thoughts,t=e.target.closest('button');if(!t)return;
+      if(t.dataset.c){tColor=t.dataset.c;var v=$('tNew').value;renderThoughts();$('tNew').value=v}
+      else if(t.id==='tAdd'){var x=$('tNew').value.trim();if(!x){toast('Напишите мысль');return}T.notes.unshift({id:Date.now(),t:Date.now(),text:x,c:tColor});save();renderThoughts()}
+      else if(t.dataset.del){if(confirm('Удалить стикер?')){T.notes=T.notes.filter(function(n){return String(n.id)!==t.dataset.del});save();renderThoughts()}}
+      else if(t.id==='dPrev'){dDay=addDays(dDay,-1);renderThoughts()}
+      else if(t.id==='dNext'){dDay=addDays(dDay,1);renderThoughts()}
+      else if(t.dataset.mood){var k=dk(dDay);if(T.moods[k]===t.dataset.mood)delete T.moods[k];else T.moods[k]=t.dataset.mood;save();renderThoughts()}
+      else if(t.dataset.open){var p=t.dataset.open.split('-');dDay=new Date(+p[0],+p[1]-1,+p[2]);renderThoughts();$('main').scrollTop=0}
+    };
+    body.oninput=function(e){
+      var T=state.thoughts,t=e.target;
+      if(t.id==='dText'){var k=dk(dDay);if(t.value.trim())T.diary[k]=t.value;else delete T.diary[k];save()}
+      else if(t.dataset.id){fitTa(t);T.notes.forEach(function(n){if(String(n.id)===t.dataset.id)n.text=t.value});save()}
+    };
+  }
+
   /* ---------- отрисовка ---------- */
   function render(){
     renderBell();
@@ -411,6 +508,7 @@ input[type=time]{width:auto}
     else if(view==='habits')renderHabits();
     else if(view==='stats')renderStats();
     else if(view==='notes')renderInbox();
+    else if(view==='thoughts')renderThoughts();
     else if(view==='reminders')renderReminders();
     else if(view==='settings')renderSettings();
   }
@@ -732,6 +830,7 @@ input[type=time]{width:auto}
   $('menuBtn').onclick=openDrawer;
   $('scrim').onclick=function(){closeDrawer();closeSheet()};
   $('bellBtn').onclick=function(){go('notes')};
+  thoughtsEvents();
   $('tabs').onclick=function(e){var b=e.target.closest('button[data-go]');if(b)go(b.dataset.go)};
   $('dm').onclick=function(e){
     var b=e.target.closest('button');if(!b)return;
