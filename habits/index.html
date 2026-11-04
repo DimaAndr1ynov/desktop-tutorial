@@ -224,7 +224,8 @@ input[type=time]{width:auto}
 .stk{columns:2;column-gap:12px}
 .sticker{break-inside:avoid;margin:0 0 12px;position:relative;border-radius:4px 4px 14px 4px;padding:10px 10px 8px;color:#2b2b24;box-shadow:0 3px 8px #0003;transform:rotate(var(--r,0deg));animation:pop .25s}
 @keyframes pop{from{transform:scale(.85) rotate(var(--r,0deg));opacity:0}}
-.sticker textarea{width:100%;min-height:70px;border:0;outline:0;resize:none;background:none;color:inherit;line-height:1.35;font-size:15px;overflow:hidden;display:block}
+.sticker textarea{width:100%;height:94px;min-height:70px;border:0;outline:0;resize:none;background:none;color:inherit;line-height:1.35;font-size:15px;overflow:hidden;display:block}
+.sticker.expanded textarea{height:auto;overflow:visible}
 .sticker .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:.6;margin-top:4px}
 .sticker .meta button{font-size:18px;line-height:1;padding:0 2px}
 .c-y{background:#fff3a3}.c-p{background:#ffc9d6}.c-b{background:#bfe3ff}.c-g{background:#c9f0c3}
@@ -457,7 +458,6 @@ input[type=time]{width:auto}
     var T=state.thoughts;
     document.querySelectorAll('#tMode button').forEach(function(b){b.classList.toggle('on',b.dataset.m===T.mode)});
     $('tBody').innerHTML=T.mode==='diary'?diaryHtml():stickersHtml();
-    document.querySelectorAll('#tBody .sticker textarea').forEach(fitTa);
   }
   function stickersHtml(){
     var T=state.thoughts;
@@ -487,6 +487,16 @@ input[type=time]{width:auto}
     $('tMode').onclick=function(e){var b=e.target.closest('button[data-m]');if(!b)return;state.thoughts.mode=b.dataset.m;save();renderThoughts()};
     var body=$('tBody');
     body.onclick=function(e){
+      var sticker=e.target.closest('.sticker');
+      if(sticker&&!e.target.closest('[data-del]')){
+        if(sticker.classList.contains('expanded')){
+          if(!e.target.closest('textarea')){sticker.classList.remove('expanded');sticker.querySelector('textarea').style.height=''}
+        }else{
+          sticker.classList.add('expanded');fitTa(sticker.querySelector('textarea'));
+        }
+      }else if(!sticker){
+        body.querySelectorAll('.sticker.expanded').forEach(function(item){item.classList.remove('expanded');item.querySelector('textarea').style.height=''});
+      }
       var T=state.thoughts,t=e.target.closest('button');if(!t)return;
       if(t.dataset.c){tColor=t.dataset.c;var v=$('tNew').value;renderThoughts();$('tNew').value=v}
       else if(t.id==='tAdd'){var x=$('tNew').value.trim();if(!x){toast('Напишите мысль');return}T.notes.unshift({id:Date.now(),t:Date.now(),text:x,c:tColor});save();renderThoughts()}
@@ -499,7 +509,7 @@ input[type=time]{width:auto}
     body.oninput=function(e){
       var T=state.thoughts,t=e.target;
       if(t.id==='dText'){var k=dk(dDay);if(t.value.trim())T.diary[k]=t.value;else delete T.diary[k];save()}
-      else if(t.dataset.id){fitTa(t);T.notes.forEach(function(n){if(String(n.id)===t.dataset.id)n.text=t.value});save()}
+      else if(t.dataset.id){if(t.closest('.sticker').classList.contains('expanded'))fitTa(t);T.notes.forEach(function(n){if(String(n.id)===t.dataset.id)n.text=t.value});save()}
     };
   }
 
